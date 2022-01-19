@@ -1,0 +1,233 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    app:layout_behavior="@string/appbar_scrolling_view_behavior"
+    tools:context=".MainActivity"
+    tools:showIn="@layout/activity_main">
+
+
+<!--    <fragment-->
+<!--        android:id="@+id/sceneform_fragment"-->
+<!--        android:name="com.arcore.jinghuaz.demo.WritingArFragment"-->
+<!--        android:layout_width="403dp"-->
+<!--        android:layout_height="558dp"-->
+<!--        app:layout_constraintBottom_toTopOf="@id/gallery_layout"-->
+<!--        app:layout_constraintEnd_toEndOf="parent"-->
+<!--        app:layout_constraintStart_toStartOf="parent"-->
+<!--        app:layout_constraintTop_toTopOf="parent"-->
+<!--        app:layout_constraintVertical_chainStyle="spread"-->
+<!--        app:layout_constraintVertical_weight="9" />-->
+
+    <fragment
+        android:id="@+id/sceneform_fragment"
+        android:name="com.arcore.jinghuaz.demo.WritingArFragment"
+        android:layout_width="410dp"
+        android:layout_height="569dp"
+
+        app:layout_constraintBottom_toTopOf="@id/gallery_layout"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="1.0"
+        app:layout_constraintVertical_chainStyle="spread"
+        app:layout_constraintVertical_weight="9" />
+
+
+    <fragment
+        android:id="@+id/container"
+        android:name="com.arcore.jinghuaz.demo.Camera2BasicFragment"
+        android:layout_width="177dp"
+        android:layout_height="297dp"
+        android:layout_marginEnd="236dp"
+        app:layout_constraintBottom_toTopOf="@id/gallery_layout"
+
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.94"
+        app:layout_constraintVertical_chainStyle="spread" />
+
+    <RelativeLayout
+        android:id="@+id/gallery_layout"
+        android:layout_width="409dp"
+        android:layout_height="72dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/sceneform_fragment"
+        app:layout_constraintVertical_chainStyle="spread"
+        app:layout_constraintVertical_weight="1">
+
+
+        <Button
+            android:id="@+id/autoD"
+            android:layout_width="68dp"
+            android:layout_height="38dp"
+            android:layout_alignParentTop="true"
+            android:layout_alignParentRight="true"
+            android:layout_gravity="right"
+            android:layout_marginTop="33dp"
+            android:layout_marginRight="86dp"
+
+            android:text="autoD" />
+
+        <Spinner
+            android:id="@+id/MDE"
+            android:layout_width="37dp"
+            android:layout_height="wrap_content"
+            android:layout_alignParentLeft="true"
+
+            android:layout_alignParentBottom="true"
+            android:layout_marginLeft="115dp"
+            android:layout_marginBottom="17dp"
+            android:visibility="visible" />
+
+        <Spinner
+            android:id="@+id/policy"
+            android:layout_width="34dp"
+            android:layout_height="11dp"
+            android:layout_alignParentLeft="true"
+
+            android:layout_alignParentBottom="true"
+            android:layout_marginLeft="11dp"
+            android:layout_marginBottom="22dp" />
+
+        <Button
+            android:id="@+id/predict"
+            android:layout_width="66dp"
+            android:layout_height="36dp"
+            android:layout_alignParentTop="true"
+            android:layout_alignParentRight="true"
+            android:layout_gravity="right"
+            android:layout_marginTop="27dp"
+            android:layout_marginRight="10dp"
+            android:text="predict" />
+
+        <Spinner
+            android:id="@+id/modelSelect2"
+            android:layout_width="wrap_content"
+            android:layout_height="11dp"
+            android:layout_alignParentLeft="true"
+
+            android:layout_alignParentBottom="true"
+            android:layout_marginLeft="186dp"
+            android:layout_marginBottom="14dp"
+            android:visibility="visible" />
+
+        <Button
+            android:id="@+id/placeObjButton"
+            android:layout_width="66dp"
+            android:layout_height="32dp"
+            android:layout_alignParentTop="true"
+            android:layout_alignParentRight="true"
+            android:layout_gravity="right"
+            android:layout_marginTop="-4dp"
+            android:layout_marginRight="11dp"
+            android:text="Place Object" />
+
+        <Spinner
+            android:id="@+id/modelSelect"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentLeft="true"
+
+            android:layout_alignParentBottom="true"
+            android:layout_marginLeft="14dp"
+            android:layout_marginBottom="45dp" />
+
+        <Switch
+            android:id="@+id/refSwitch"
+            android:layout_width="75dp"
+            android:layout_height="38dp"
+            android:layout_marginRight="86dp"
+            android:layout_toLeftOf="@id/placeObjButton"
+            android:text="Dec All" />
+
+        <Switch
+            android:id="@+id/un_percSwitch3"
+            android:layout_width="0dp"
+            android:layout_height="16dp"
+            android:layout_marginRight="119dp"
+            android:layout_toLeftOf="@id/placeObjButton"
+            android:checked="false"
+            android:clickable="true"
+            android:showText="false"
+            android:splitTrack="false"
+            android:text="UndP"
+            android:visibility="invisible"
+            tools:checked="false" />
+
+        <Switch
+            android:id="@+id/refSwitch4"
+            android:layout_width="72dp"
+            android:layout_height="41dp"
+            android:layout_marginRight="18dp"
+            android:layout_toLeftOf="@id/placeObjButton"
+            android:text="prd" />
+
+        <Spinner
+            android:id="@+id/WSelect"
+            android:layout_width="28dp"
+            android:layout_height="wrap_content"
+            android:layout_alignParentLeft="true"
+
+            android:layout_alignParentBottom="true"
+            android:layout_marginLeft="82dp"
+            android:layout_marginBottom="45dp"
+            android:visibility="visible" />
+
+        <Spinner
+            android:id="@+id/Bwidth"
+            android:layout_width="38dp"
+            android:layout_height="14dp"
+            android:layout_alignParentLeft="true"
+
+            android:layout_alignParentBottom="true"
+            android:layout_marginLeft="59dp"
+            android:layout_marginBottom="10dp"
+            android:visibility="visible" />
+
+    </RelativeLayout>
+
+    <SeekBar
+        android:id="@+id/simpleBar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:indeterminate="false"
+        android:max="101"
+        android:scrollbarSize="10dp"
+        app:layout_constraintBottom_toTopOf="@+id/gallery_layout"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/sceneform_fragment"
+        app:layout_constraintVertical_bias="1.0" />
+
+    <Button
+        android:id="@+id/clearButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_constraintTop_toTopOf="@+id/sceneform_fragment"
+        app:layout_constraintRight_toRightOf="@+id/sceneform_fragment"
+        android:text="Clear"
+         />
+
+    <TextView
+        android:id="@+id/simpleBarText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:background="@color/cardview_light_background"
+        app:layout_constraintBottom_toTopOf="@+id/simpleBar"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/sceneform_fragment"
+        app:layout_constraintVertical_bias="1.0" />
+
+    <android.support.constraint.Guideline
+        android:id="@+id/guideline2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        app:layout_constraintGuide_end="411dp" />
+
+
+</android.support.constraint.ConstraintLayout>

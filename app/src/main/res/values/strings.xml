@@ -1,0 +1,38 @@
+<resources>
+
+
+    <string name="picture">Picture</string>
+    <string name="description_info">Info</string>
+    <string name="request_permission">This sample needs camera permission.</string>
+    <string name="camera_error">This device doesn\'t support Camera2 API.</string>
+    <string name="toggle_turn_on">NN:On</string>
+    <string name="toggle_turn_off">NN:Off</string>
+    <string name="toggle">Use NNAPI</string>
+    <string name="tflite">tflite</string>
+    <string name="nnapi">NNAPI</string>
+    <string name="gpu">GPU</string>
+    <string name="cpu">CPU</string>
+    <string name="modelLabel">Model</string>
+    <string name="deviceLabel">Device</string>
+    <string name="mobilenetV1Quant">mobilenet v1 quant</string>
+    <string name="mobilenetV1Float">mobilenet v1 float</string>
+
+
+
+    <string name="app_name">demo</string>
+    <string name="action_settings">Settings</string>
+    <string name="obj_num">TextView</string>
+    <string name="camera_position">Camera Position:</string>
+    <string-array name="user_score">
+        <item>1</item>
+        <item>2</item>
+        <item>3</item>
+        <item>4</item>
+        <item>5</item>
+    </string-array>
+
+
+
+
+
+</resources>
