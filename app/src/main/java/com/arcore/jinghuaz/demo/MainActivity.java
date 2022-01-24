@@ -22,6 +22,7 @@ import android.content.Intent;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
+import android.support.design.widget.Snackbar;
 import android.util.Log;
 
 import java.lang.ref.WeakReference;
@@ -1271,16 +1272,25 @@ else{
         });
 
 
+
+
+
         Button Auto_decimate_butt = (Button) findViewById(R.id.autoD);
         Auto_decimate_butt.setOnClickListener(new View.OnClickListener() {
             public void onClick(View view) {
 
                 TextView  posText = (TextView) findViewById(R.id.dec_req);
 
+                Toast toast = Toast.makeText(MainActivity.this,
+                        "Please Upload the decimated objects to the Phone storage", Toast.LENGTH_LONG);
+
+                toast.show();
+
+
                 int repeat=6; // num of decimation loop, if it is one, just gathers the data of the first  iteration (original objects on the screen)
                 final int[] start = {0};
                 final float[] ratio = {90};
-                countDownTimer = new CountDownTimer(Long.MAX_VALUE, 80000) {
+                countDownTimer = new CountDownTimer(Long.MAX_VALUE, 10000) {
 
                     // This is called after every 80 sec interval.
                     public void onTick(long millisUntilFinished) {
@@ -1291,7 +1301,7 @@ else{
                           //  posText.setText( String.valueOf(AI_tasks));
 
                             countDownTimer.cancel();
-                            //    onPause();
+                              onPause();
 
                         }
 
