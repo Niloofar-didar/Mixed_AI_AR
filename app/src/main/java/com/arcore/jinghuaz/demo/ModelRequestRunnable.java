@@ -4,6 +4,8 @@ import android.os.Environment;
 import android.os.Message;
 import android.os.Process;
 import android.util.Log;
+import android.widget.Toast;
+
 import java.util.*;
 import java.io.BufferedInputStream;
 import java.io.BufferedReader;
@@ -84,6 +86,13 @@ public class ModelRequestRunnable implements Runnable {
 
 // for using the local memory undo the comment
         if (!new_file.exists()&& perc!=1) {
+
+            Toast toast = Toast.makeText(context.getApplicationContext(),
+                    "Please Upload the decimated objects to the Phone storage", Toast.LENGTH_LONG);
+
+            toast.show();
+
+
 //the bellow code is foe general try
    //    if(((perc!=cacheratio || !new_file.exists() ) && perc!=1)||  (!new_file.exists() && perc==1) ){
 
