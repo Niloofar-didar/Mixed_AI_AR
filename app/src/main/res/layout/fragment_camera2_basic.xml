@@ -49,6 +49,14 @@
             android:textSize="20sp"
             android:textStyle="bold" />
 
+        <Button
+            android:id="@+id/stop"
+            android:layout_width="78dp"
+            android:layout_height="111dp"
+
+            android:layout_weight="60"
+            android:text="Stop" />
+
     </LinearLayout>
 
     <LinearLayout

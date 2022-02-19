@@ -19,6 +19,7 @@ package com.arcore.jinghuaz.demo;
 import android.app.Activity;
 import android.content.res.AssetFileDescriptor;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.os.Environment;
 import android.os.SystemClock;
@@ -233,6 +234,8 @@ public abstract class ImageClassifier {
 
   //nill
   boolean usegpu=false;
+  boolean usecpu=false;
+  boolean usenp=false;
 
   private float last_response_time=0;
   /** Tag for the {@link Log}. */
@@ -241,6 +244,7 @@ public abstract class ImageClassifier {
   /** Number of results to show in the UI. */
   private static final int RESULTS_TO_SHOW = 3;
 int requests=1;
+boolean breakC=false;
 String model="quant";
   /** Dimensions of inputs. */
   private static final int DIM_BATCH_SIZE = 1;
@@ -270,7 +274,7 @@ String model="quant";
 
   private static final int FILTER_STAGES = 3;
   private static final float FILTER_FACTOR = 0.4f;
-  List<Thread> inf_thread = new ArrayList<>();
+
 
   private PriorityQueue<Map.Entry<String, Float>> sortedLabels =
       new PriorityQueue<>(
@@ -306,13 +310,163 @@ String model="quant";
 
   /** Classifies a frame from the preview stream. */
   //void classifyFrame(Bitmap bitmap, SpannableStringBuilder builder, File time_gpu) {
-  void classifyFrame(Bitmap bitmap, SpannableStringBuilder builder)throws InterruptedException {
 
-//    for(int i=0;i<2;i++) {
-//      inf_thread.add(i, new Thread() {
-//
-//        @Override
-//        public void run() {
+  SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss:SSS");
+  String path2=Environment.getExternalStorageDirectory()+"/Android/data/com.arcore.jinghuaz.demo/files";
+int count=0;
+  void classifyFrame2()  {// no access to UI thread
+    if (tflite == null) {
+      Log.e(TAG, "Image classifier has not been initialized; Skipped.");
+
+    }
+    File root = Environment.getExternalStorageDirectory();
+    String path= root+ "/chair.jpg";
+    Bitmap  bitmap = BitmapFactory.decodeFile(path);
+    convertBitmapToByteBuffer(bitmap);
+    bitmap.recycle();
+    List<Double> rTime= new ArrayList<>();
+    List<String> curTime= new ArrayList<>();
+    List<String> labels= new ArrayList<>();
+    List<Thread> inf_thread = new ArrayList<>();
+    final boolean[] onetWrite = {false};
+    List<Integer> countL= new ArrayList<>();
+
+    for(int i = 0; i< requests; i++) {//
+      //if(breakC)
+       // break;
+      int finalI = i;
+      inf_thread.add(i, new Thread() {//
+        @Override
+        public void run() {//
+
+          try{
+            //for(int i = 0; i< num; i++){
+            while(true){
+              if(breakC) {
+
+                if(!onetWrite[0]) // to write data one time -> not by all the threads!!!
+                { try (PrintWriter writer = new PrintWriter(new FileOutputStream(path2 + "/Response_t.csv", true))) {
+
+                  int i = 0;
+                  while (i < curTime.size() && i< rTime.size() && i< labels.size() && i< countL.size()) {
+                    StringBuilder sbb = new StringBuilder();
+                    sbb.append(curTime.get(i));
+                    sbb.append(',');
+                    sbb.append(labels.get(i));
+                    sbb.append(',');
+                    sbb.append(rTime.get(i));
+                    sbb.append(',');
+                    sbb.append(requests);
+                    sbb.append(',');
+                    sbb.append(model);
+                    sbb.append(',');
+                    sbb.append(countL.get(i));
+                    sbb.append('\n');
+                    writer.write(sbb.toString());
+                    i++;
+                  }
+
+                } catch (FileNotFoundException e) {
+                  System.out.println(e.getMessage());
+                }
+
+              onetWrite[0] =true;
+              }
+                break;
+              }
+
+              long duration=0;
+              long startTime = SystemClock.uptimeMillis();
+              runInference();
+              countL.add(count);
+
+              long endTime = SystemClock.uptimeMillis();
+              duration = endTime - startTime;
+              rTime.add((double) duration);
+              curTime.add(dateFormat.format(new Date()));
+              String label_accu= printTopKLabels();
+              labels.add(label_accu);
+              Log.d(TAG, "Thread ID" + Integer.toString(finalI)+ " "+ count + "#iteration  inference time: " + Long.toString(duration) );
+              count++;
+
+            }
+          }
+          catch (Exception e)
+          {
+            System.out.println( "Thread Exception Caught ID " + finalI +": " + e.getMessage());
+            int count1 = 0;
+            int maxTries = 3;
+            while(true) {
+              if(breakC) {
+                if(!onetWrite[0]) // to write data one time -> not by all the threads!!!
+                { try (PrintWriter writer = new PrintWriter(new FileOutputStream(path2 + "/Response_t.csv", true))) {
+
+                  int i = 0;
+                  while (i < curTime.size() && i< rTime.size() && i< labels.size() && i< countL.size()) {
+                    StringBuilder sbb = new StringBuilder();
+                    sbb.append(curTime.get(i));
+                    sbb.append(',');
+                    sbb.append(labels.get(i));
+                    sbb.append(',');
+                    sbb.append(rTime.get(i));
+                    sbb.append(',');
+                    sbb.append(requests);
+                    sbb.append(',');
+                    sbb.append(model);
+                    sbb.append(',');
+                    sbb.append(countL.get(i));
+                    sbb.append('\n');
+                    writer.write(sbb.toString());
+                    i++;
+                  }
+
+                } catch (FileNotFoundException e2) {
+                  System.out.println(e2.getMessage());
+                }
+
+                  onetWrite[0] =true;
+                }
+
+                break;
+              }
+
+              try {
+                long duration=0;
+                long startTime = SystemClock.uptimeMillis();
+                runInference();
+
+                long endTime = SystemClock.uptimeMillis();
+                duration = endTime - startTime;
+                rTime.add((double) duration);
+                curTime.add(dateFormat.format(new Date()));
+                Log.d(TAG, "Thread ID" + Integer.toString(finalI)+ " "+ count + "#iteration  inference time: " + Long.toString(duration) );
+                countL.add(count);
+                count++;
+                String label_accu=
+                        printTopKLabels();
+                labels.add(label_accu);
+              } catch (Exception e2) {
+                if (++count1 == maxTries) {
+                  System.out.println( "Three times trial Thread Exception Caught ID " + finalI +": " + e2.getMessage());
+
+                }
+              }
+            }
+          }
+        }////nil added all the lines with // after the code
+      });//
+      if(inf_thread.get(i)!=null)
+        inf_thread.get(i).start();//
+    }
+
+
+    //inf_thread.clear();
+
+  }
+
+
+
+  void classifyFrame(Bitmap bitmap, SpannableStringBuilder builder)throws InterruptedException {
 
     if (tflite == null) {
       Log.e(TAG, "Image classifier has not been initialized; Skipped.");
@@ -326,15 +480,9 @@ String model="quant";
     if(last_response_time<desired && last_response_time != 0){
       // waite for elapse time (16.6 - last_response_time//otherwise, start the inference immidiately.
      long delay =(long) (desired - (float)last_response_time);
-  //    try {
+
       Thread.sleep(delay);
-       // TimeUnit.MILLISECONDS.sleep(delay );
-//      } catch (InterruptedException e) {
-//        e.printStackTrace();
-//      }
     }
-
-
     runInference();
     long endTime = SystemClock.uptimeMillis();
     Log.d(TAG, "Timecost to run model inference: " + Long.toString(endTime - startTime));
@@ -344,8 +492,8 @@ String model="quant";
     applyFilter();
 
     // Print the results.
-    String label_accu=
-    printTopKLabels(builder);
+    String label_accu="";
+    //printTopKLabels(builder);
     long duration = endTime - startTime;
     SpannableString span = new SpannableString(duration + " ms");
     span.setSpan(new ForegroundColorSpan(Color.LTGRAY), 0, span.length(), 0);
@@ -362,20 +510,6 @@ String model="quant";
 
 
     String path=Environment.getExternalStorageDirectory()+"/Android/data/com.arcore.jinghuaz.demo/files";
-//    try {
-//     // new File(path).mkdir();
-//      File file = new File(path+  "/time_gpu.txt");
-//      if (!file.exists()) {
-//        file.createNewFile();
-//      }
-//      FileOutputStream fileOutputStream = new FileOutputStream(file,true);
-//
-//     fileOutputStream.write((item2+ System.getProperty("line.separator")).getBytes());
-//    }  catch(FileNotFoundException ex) {
-//      Log.d(TAG, ex.getMessage());
-//    }  catch(IOException ex) {
-//      Log.d(TAG, ex.getMessage());
-//    }
 
 
 
@@ -394,24 +528,6 @@ String model="quant";
       } catch (FileNotFoundException e) {
         System.out.println(e.getMessage());
       }
-
-
-
-
-
-
-
-
-
-
-//nill
-
-//        }
-//      });
-//      inf_thread.get(i).start();
-//    }
-//    inf_thread.clear();
-
 
   }
 
@@ -448,6 +564,7 @@ String model="quant";
 
     usegpu=true;
 
+
     if (gpuDelegate == null) {
       GpuDelegate.Options options = new GpuDelegate.Options();
       options.setQuantizedModelsAllowed(true);
@@ -459,17 +576,19 @@ String model="quant";
   }
 
   public void useCPU() {
-    usegpu=false;
+
+    usecpu=true;
     recreateInterpreter();
   }
 
   public void useNNAPI() {
+    usenp=true;
     nnapiDelegate = new NnApiDelegate();
     tfliteOptions.addDelegate(nnapiDelegate);
     recreateInterpreter();
   }
 
-  public void setNumThreads(int numThreads) {
+  public void setNumThreads(int numThreads) { // this is to ask some threads in paralled work on one frame, while we need a scenario that multiple threads work on diff images and separately send a  reuest
     tfliteOptions.setNumThreads(numThreads);
     recreateInterpreter();
   }
@@ -514,24 +633,9 @@ String model="quant";
  // private MappedByteBuffer loadModelFile(Activity activity) throws IOException {
   private MappedByteBuffer loadModelFile(Activity activity) throws IOException {
 
-   // AssetFileDescriptor descriptor=activity.getResources().getAssets().open("labels_imagenet_slim.txt");
 
-
-//check if it can access this address
-//    try {
-//      InputStream is = activity.getAssets().open("labels_imagenet_slim.txt");
-//      int size = is.available();
-//      byte[] buffer = new byte[size];
-//      is.read(buffer);} catch (IOException e) {
-//      e.printStackTrace();
-//    }
 
     AssetFileDescriptor fileDescriptor = activity.getAssets().openFd(getModelPath());
-
-            //;
-
-  //  FileInputStream inputStream = new FileInputStream(String.valueOf(activity.getResources().getAssets().open(getModelPath())));
-    //(inputStream.getFD()); gives file descriptor
 
     FileInputStream inputStream = new FileInputStream(fileDescriptor.getFileDescriptor());
     FileChannel fileChannel = inputStream.getChannel();
@@ -563,7 +667,7 @@ String model="quant";
   /** Prints top-K labels, to be shown in UI as the results.
    * nill */
   //private void printTopKLabels(SpannableStringBuilder builder) {
-  private String printTopKLabels(SpannableStringBuilder builder) {
+  private String printTopKLabels() {
 
 
     String label_prob="";
@@ -580,6 +684,12 @@ String model="quant";
    // String device= "GPU";
     if (usegpu==true)
       device="GPU";
+
+    else if (usecpu==true)
+      device="CPU";
+
+    else if (usenp==true)
+      device="NNAPI";
 
     final int size = sortedLabels.size();
     for (int i = 0; i < size; i++) {
@@ -602,7 +712,7 @@ String model="quant";
         span.setSpan(new RelativeSizeSpan(sizeScale), 0, span.length(), 0);
       }
       span.setSpan(new ForegroundColorSpan(color), 0, span.length(), 0);
-      builder.insert(0, span);
+      //builder.insert(0, span);
     }
 
     return label_prob;
