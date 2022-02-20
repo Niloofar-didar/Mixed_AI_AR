@@ -24,8 +24,8 @@
     <fragment
         android:id="@+id/sceneform_fragment"
         android:name="com.arcore.MixedAIAR.WritingArFragment"
-        android:layout_width="410dp"
-        android:layout_height="569dp"
+        android:layout_width="412dp"
+        android:layout_height="657dp"
 
         app:layout_constraintBottom_toTopOf="@id/gallery_layout"
         app:layout_constraintEnd_toEndOf="parent"
@@ -38,42 +38,31 @@
     <fragment
         android:id="@+id/container"
         android:name="com.arcore.MixedAIAR.Camera2BasicFragment"
-        android:layout_width="177dp"
-        android:layout_height="297dp"
-        android:layout_marginEnd="236dp"
+        android:layout_width="172dp"
+        android:layout_height="164dp"
+        android:layout_marginEnd="232dp"
         app:layout_constraintBottom_toTopOf="@id/gallery_layout"
 
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.94"
+        app:layout_constraintVertical_bias="0.963"
         app:layout_constraintVertical_chainStyle="spread" />
 
     <RelativeLayout
         android:id="@+id/gallery_layout"
-        android:layout_width="409dp"
-        android:layout_height="72dp"
+        android:layout_width="422dp"
+        android:layout_height="71dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
+
         app:layout_constraintTop_toBottomOf="@+id/sceneform_fragment"
         app:layout_constraintVertical_chainStyle="spread"
         app:layout_constraintVertical_weight="1">
 
 
-        <Button
-            android:id="@+id/autoD"
-            android:layout_width="68dp"
-            android:layout_height="38dp"
-            android:layout_alignParentTop="true"
-            android:layout_alignParentRight="true"
-            android:layout_gravity="right"
-            android:layout_marginTop="33dp"
-            android:layout_marginRight="86dp"
-
-            android:text="autoD" />
-
-        <Spinner
+                <Spinner
             android:id="@+id/MDE"
             android:layout_width="37dp"
             android:layout_height="wrap_content"
@@ -82,6 +71,19 @@
             android:layout_alignParentBottom="true"
             android:layout_marginLeft="115dp"
             android:layout_marginBottom="17dp"
+            android:visibility="invisible" />
+
+        <Button
+            android:id="@+id/autoD"
+            android:layout_width="68dp"
+            android:layout_height="38dp"
+            android:layout_alignParentTop="true"
+            android:layout_alignParentRight="true"
+            android:layout_gravity="right"
+            android:layout_marginTop="31dp"
+            android:layout_marginRight="15dp"
+
+            android:text="autoD"
             android:visibility="visible" />
 
         <Spinner
@@ -92,7 +94,8 @@
 
             android:layout_alignParentBottom="true"
             android:layout_marginLeft="11dp"
-            android:layout_marginBottom="22dp" />
+            android:layout_marginBottom="22dp"
+            android:visibility="invisible" />
 
         <Button
             android:id="@+id/predict"
@@ -101,9 +104,10 @@
             android:layout_alignParentTop="true"
             android:layout_alignParentRight="true"
             android:layout_gravity="right"
-            android:layout_marginTop="27dp"
+            android:layout_marginTop="34dp"
             android:layout_marginRight="10dp"
-            android:text="predict" />
+            android:text="predict"
+            android:visibility="invisible" />
 
         <Spinner
             android:id="@+id/modelSelect2"
@@ -114,17 +118,17 @@
             android:layout_alignParentBottom="true"
             android:layout_marginLeft="186dp"
             android:layout_marginBottom="14dp"
-            android:visibility="visible" />
+            android:visibility="invisible" />
 
         <Button
             android:id="@+id/placeObjButton"
-            android:layout_width="66dp"
-            android:layout_height="32dp"
+            android:layout_width="69dp"
+            android:layout_height="38dp"
             android:layout_alignParentTop="true"
             android:layout_alignParentRight="true"
             android:layout_gravity="right"
             android:layout_marginTop="-4dp"
-            android:layout_marginRight="11dp"
+            android:layout_marginRight="8dp"
             android:text="Place Object" />
 
         <Spinner
@@ -134,14 +138,15 @@
             android:layout_alignParentLeft="true"
 
             android:layout_alignParentBottom="true"
-            android:layout_marginLeft="14dp"
-            android:layout_marginBottom="45dp" />
+            android:layout_marginLeft="41dp"
+            android:layout_marginBottom="25dp"
+            android:visibility="visible" />
 
         <Switch
             android:id="@+id/refSwitch"
             android:layout_width="75dp"
             android:layout_height="38dp"
-            android:layout_marginRight="86dp"
+            android:layout_marginRight="93dp"
             android:layout_toLeftOf="@id/placeObjButton"
             android:text="Dec All" />
 
@@ -174,11 +179,11 @@
             android:layout_alignParentLeft="true"
 
             android:layout_alignParentBottom="true"
-            android:layout_marginLeft="82dp"
-            android:layout_marginBottom="45dp"
-            android:visibility="visible" />
+            android:layout_marginLeft="129dp"
+            android:layout_marginBottom="26dp"
+            android:visibility="invisible" />
 
-        <Spinner
+                <Spinner
             android:id="@+id/Bwidth"
             android:layout_width="38dp"
             android:layout_height="14dp"
@@ -187,7 +192,7 @@
             android:layout_alignParentBottom="true"
             android:layout_marginLeft="59dp"
             android:layout_marginBottom="10dp"
-            android:visibility="visible" />
+            android:visibility="invisible" />
 
     </RelativeLayout>
 
@@ -207,10 +212,11 @@
         android:id="@+id/clearButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        app:layout_constraintTop_toTopOf="@+id/sceneform_fragment"
-        app:layout_constraintRight_toRightOf="@+id/sceneform_fragment"
+        android:layout_marginTop="600dp"
+        android:layout_marginRight="144dp"
         android:text="Clear"
-         />
+        app:layout_constraintRight_toRightOf="@+id/sceneform_fragment"
+        app:layout_constraintTop_toTopOf="@+id/sceneform_fragment" />
 
     <TextView
         android:id="@+id/simpleBarText"
