@@ -38,8 +38,8 @@
     <fragment
         android:id="@+id/container"
         android:name="com.arcore.MixedAIAR.Camera2BasicFragment"
-        android:layout_width="172dp"
-        android:layout_height="164dp"
+        android:layout_width="179dp"
+        android:layout_height="158dp"
         android:layout_marginEnd="232dp"
         app:layout_constraintBottom_toTopOf="@id/gallery_layout"
 
