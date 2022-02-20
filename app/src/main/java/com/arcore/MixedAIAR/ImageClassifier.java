@@ -330,7 +330,7 @@ public abstract class ImageClassifier {
     List<Thread> inf_thread = new ArrayList<>();
     final boolean[] onetWrite = {false};
     List<Integer> countL= new ArrayList<>();
-
+    float desired= 16.6f;
     for(int i = 0; i< requests; i++) {//
       //if(breakC)
       // break;
@@ -339,6 +339,7 @@ public abstract class ImageClassifier {
         @Override
         public void run() {//
 
+          long duration=0;
           try{
             //for(int i = 0; i< num; i++){
             while(true){
@@ -375,7 +376,13 @@ public abstract class ImageClassifier {
                 break;
               }
 
-              long duration=0;
+
+              if(duration<desired && duration != 0){
+                // waite for elapse time (16.6 - last_response_time//otherwise, start the inference immidiately.
+                long delay =(long) (desired - (float)last_response_time);
+                Thread.sleep(delay);
+              }
+
               long startTime = SystemClock.uptimeMillis();
               runInference();
               countL.add(count);
@@ -431,10 +438,17 @@ public abstract class ImageClassifier {
               }
 
               try {
-                long duration=0;
+               // long duration=0;
+
+                if(duration<desired && duration != 0){
+                  // waite for elapse time (16.6 - last_response_time//otherwise, start the inference immidiately.
+                  long delay =(long) (desired - (float)last_response_time);
+                  Thread.sleep(delay);
+                }
+
+
                 long startTime = SystemClock.uptimeMillis();
                 runInference();
-
                 long endTime = SystemClock.uptimeMillis();
                 duration = endTime - startTime;
                 rTime.add((double) duration);
@@ -474,7 +488,7 @@ public abstract class ImageClassifier {
     }
     convertBitmapToByteBuffer(bitmap);
     // Here's where the magic happens!!!
-    long startTime = SystemClock.uptimeMillis();
+
 
     float desired= 16.6f;
     if(last_response_time<desired && last_response_time != 0){
@@ -483,6 +497,7 @@ public abstract class ImageClassifier {
 
       Thread.sleep(delay);
     }
+    long startTime = SystemClock.uptimeMillis();
     runInference();
     long endTime = SystemClock.uptimeMillis();
     Log.d(TAG, "Timecost to run model inference: " + Long.toString(endTime - startTime));

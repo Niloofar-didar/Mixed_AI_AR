@@ -396,41 +396,6 @@ else{
             return;
         }
 
-//        public void print(AdapterView<?> parent, int pos) {
-//            Frame frame = fragment.getArSceneView().getArFrame();
-//            String item = "--REFERENCE OBJECT-- --" + fileName + "--\n" +
-//                    "User Score: " + parent.getItemAtPosition(pos).toString() + "\n" +
-//                    "Time: " + new SimpleDateFormat("yyyy_MM_dd_HH:mm:ss", java.util.Locale.getDefault()).format(new Date()) + "\n";
-//
-//            item += "Camera position: " +
-//                    "[" + posFormat.format(frame.getCamera().getPose().tx()) +
-//                    "], [" + posFormat.format(frame.getCamera().getPose().ty()) +
-//                    "], [" + posFormat.format(frame.getCamera().getPose().tz()) +
-//                    "]\n";
-//
-//            item += ("Object position: ["
-//                    + posFormat.format(baseAnchor.getWorldPosition().x) +
-//                    "], [" + posFormat.format(baseAnchor.getWorldPosition().y) +
-//                    "], [" + posFormat.format(baseAnchor.getWorldPosition().z) +
-//                    "]\n");
-//
-//            item += ("Distance from camera: "
-//                    + Math.sqrt((Math.pow((baseAnchor.getWorldPosition().x - frame.getCamera().getPose().tx()), 2)
-//                    + Math.pow((baseAnchor.getWorldPosition().y - frame.getCamera().getPose().ty()), 2)
-//                    + Math.pow((baseAnchor.getWorldPosition().z - frame.getCamera().getPose().tz()), 2)))
-//                    + " m\n");
-//
-//            item += "\n\n";
-//
-//
-//            try {
-//                FileOutputStream os = new FileOutputStream(dateFile, true);
-//                os.write(item.getBytes());
-//                os.close();
-//            } catch (IOException e) {
-//                Log.e("StatWriting", e.getMessage());
-//            }
-//        }
 
 
         //public void distance(AdapterView<?> parent, int pos)
@@ -602,45 +567,6 @@ else{
 
         }
 
-//        public void print(AdapterView<?> parent, int pos) {
-//            Frame frame = fragment.getArSceneView().getArFrame(); // it's OK
-//            SeekBar seekBar = (SeekBar) findViewById(R.id.simpleBar);
-//            String item =
-//                    "==DECIMATED OBJECT== ==" + fileName + "==\n" +
-//                            "Simplification Percentage: " + seekBar.getProgress() + "%" +
-//                            " - User Score: " + parent.getItemAtPosition(pos).toString() + "\n" +
-//                            "Date & time: " + new SimpleDateFormat("yyyy_MM_dd_HH:mm:ss", java.util.Locale.getDefault()).format(new Date()) + "\n";
-//
-//            item += "Camera position: " +
-//                    "[" + posFormat.format(frame.getCamera().getPose().tx()) +
-//                    "[" + posFormat.format(frame.getCamera().getPose().tx()) +
-//                    "], [" + posFormat.format(frame.getCamera().getPose().ty()) +
-//                    "], [" + posFormat.format(frame.getCamera().getPose().tz()) +
-//                    "]\n";
-//
-//            item += ("Object position: ["
-//                    + posFormat.format(baseAnchor.getWorldPosition().x) +
-//                    "], [" + posFormat.format(baseAnchor.getWorldPosition().y) +
-//                    "], [" + posFormat.format(baseAnchor.getWorldPosition().z) +
-//                    "]\n");
-//
-//            item += ("Distance from camera: "
-//                    + Math.sqrt((Math.pow((baseAnchor.getWorldPosition().x - frame.getCamera().getPose().tx()), 2)
-//                    + Math.pow((baseAnchor.getWorldPosition().y - frame.getCamera().getPose().ty()), 2)
-//                    + Math.pow((baseAnchor.getWorldPosition().z - frame.getCamera().getPose().tz()), 2)))
-//                    + " m\n");
-//
-//            item += "\n\n";
-//
-//
-//            try {
-//                FileOutputStream os = new FileOutputStream(dateFile, true);
-//                os.write(item.getBytes());
-//                os.close();
-//            } catch (IOException e) {
-//                Log.e("StatWriting", e.getMessage());
-//            }
-//        }
 
 
     }
