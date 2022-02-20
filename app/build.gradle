@@ -4,7 +4,7 @@ android {
     compileSdkVersion 28
     //buildToolsVersion "28"
     defaultConfig {
-        applicationId "com.arcore.jinghuaz.demo"
+        applicationId "com.arcore.MixedAIAR"
         minSdkVersion 24
         //noinspection ExpiredTargetSdkVersion
         targetSdkVersion 28

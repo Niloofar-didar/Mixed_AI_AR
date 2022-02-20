@@ -54,7 +54,8 @@
     <include
         android:id="@+id/include"
         layout="@layout/content_main"
-        android:layout_height="640dp" />
+        android:layout_height="640dp"
+        android:layout_width="match_parent" />
 
     <!--    <include-->
 <!--        android:id="@+id/include"-->

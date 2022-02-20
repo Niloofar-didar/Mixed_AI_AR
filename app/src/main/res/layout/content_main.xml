@@ -23,7 +23,7 @@
 
     <fragment
         android:id="@+id/sceneform_fragment"
-        android:name="com.arcore.jinghuaz.demo.WritingArFragment"
+        android:name="com.arcore.MixedAIAR.WritingArFragment"
         android:layout_width="410dp"
         android:layout_height="569dp"
 
@@ -37,7 +37,7 @@
 
     <fragment
         android:id="@+id/container"
-        android:name="com.arcore.jinghuaz.demo.Camera2BasicFragment"
+        android:name="com.arcore.MixedAIAR.Camera2BasicFragment"
         android:layout_width="177dp"
         android:layout_height="297dp"
         android:layout_marginEnd="236dp"
