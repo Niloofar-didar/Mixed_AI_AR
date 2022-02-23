@@ -314,6 +314,11 @@ public abstract class ImageClassifier {
   SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss:SSS");
   String path2=Environment.getExternalStorageDirectory()+"/Android/data/com.arcore.MixedAIAR/files";
   int count=0;
+
+
+
+
+
   void classifyFrame2()  {// no access to UI thread
     if (tflite == null) {
       Log.e(TAG, "Image classifier has not been initialized; Skipped.");
@@ -347,9 +352,10 @@ public abstract class ImageClassifier {
 
                 if(!onetWrite[0]) // to write data one time -> not by all the threads!!!
                 { try (PrintWriter writer = new PrintWriter(new FileOutputStream(path2 + "/Response_t.csv", true))) {
-
+                  onetWrite[0] =true;
                   int i = 0;
                   while (i < curTime.size() && i< rTime.size() && i< labels.size() && i< countL.size()) {
+
                     StringBuilder sbb = new StringBuilder();
                     sbb.append(curTime.get(i));
                     sbb.append(',');
@@ -371,7 +377,7 @@ public abstract class ImageClassifier {
                   System.out.println(e.getMessage());
                 }
 
-                  onetWrite[0] =true;
+
                 }
                 break;
               }
@@ -383,18 +389,23 @@ public abstract class ImageClassifier {
                 Thread.sleep(delay);
               }
 
+              curTime.add(dateFormat.format(new Date()));
+
               long startTime = SystemClock.uptimeMillis();
               runInference();
-              countL.add(count);
-
               long endTime = SystemClock.uptimeMillis();
+
               duration = endTime - startTime;
+              countL.add(count);
               rTime.add((double) duration);
-              curTime.add(dateFormat.format(new Date()));
-              String label_accu= printTopKLabels();
-              labels.add(label_accu);
-              Log.d(TAG, "Thread ID" + Integer.toString(finalI)+ " "+ count + "#iteration  inference time: " + Long.toString(duration) );
+              labels.add(deviceUsed());
               count++;
+
+              Log.d(TAG, "Thread ID" + Integer.toString(finalI)+ " "+ count + "#iteration  inference time: " + Long.toString(duration) );
+
+
+
+
 
             }
           }
@@ -406,7 +417,9 @@ public abstract class ImageClassifier {
             while(true) {
               if(breakC) {
                 if(!onetWrite[0]) // to write data one time -> not by all the threads!!!
-                { try (PrintWriter writer = new PrintWriter(new FileOutputStream(path2 + "/Response_t.csv", true))) {
+                {
+                  onetWrite[0] =true;
+                  try (PrintWriter writer = new PrintWriter(new FileOutputStream(path2 + "/Response_t.csv", true))) {
 
                   int i = 0;
                   while (i < curTime.size() && i< rTime.size() && i< labels.size() && i< countL.size()) {
@@ -431,14 +444,14 @@ public abstract class ImageClassifier {
                   System.out.println(e2.getMessage());
                 }
 
-                  onetWrite[0] =true;
+
                 }
 
                 break;
               }
 
               try {
-               // long duration=0;
+                // long duration=0;
 
                 if(duration<desired && duration != 0){
                   // waite for elapse time (16.6 - last_response_time//otherwise, start the inference immidiately.
@@ -446,19 +459,18 @@ public abstract class ImageClassifier {
                   Thread.sleep(delay);
                 }
 
-
+                curTime.add(dateFormat.format(new Date()));
                 long startTime = SystemClock.uptimeMillis();
                 runInference();
                 long endTime = SystemClock.uptimeMillis();
                 duration = endTime - startTime;
-                rTime.add((double) duration);
-                curTime.add(dateFormat.format(new Date()));
-                Log.d(TAG, "Thread ID" + Integer.toString(finalI)+ " "+ count + "#iteration  inference time: " + Long.toString(duration) );
                 countL.add(count);
+                rTime.add((double) duration);
+                labels.add(deviceUsed());
                 count++;
-                String label_accu=
-                        printTopKLabels();
-                labels.add(label_accu);
+
+                Log.d(TAG, "Thread ID" + Integer.toString(finalI)+ " "+ count + "#iteration  inference time: " + Long.toString(duration) );
+
               } catch (Exception e2) {
                 if (++count1 == maxTries) {
                   System.out.println( "Three times trial Thread Exception Caught ID " + finalI +": " + e2.getMessage());
@@ -472,6 +484,9 @@ public abstract class ImageClassifier {
       if(inf_thread.get(i)!=null)
         inf_thread.get(i).start();//
     }
+
+
+
 
 
     //inf_thread.clear();
@@ -682,6 +697,24 @@ public abstract class ImageClassifier {
   /** Prints top-K labels, to be shown in UI as the results.
    * nill */
   //private void printTopKLabels(SpannableStringBuilder builder) {
+
+  private String deviceUsed(){
+
+    String device= "CPU";
+    // String device= "GPU";
+    if (usegpu==true)
+      device="GPU";
+
+    else if (usecpu==true)
+      device="CPU";
+
+    else if (usenp==true)
+      device="NNAPI";
+
+
+    return device;
+  }
+
   private String printTopKLabels() {
 
 
@@ -709,24 +742,25 @@ public abstract class ImageClassifier {
     final int size = sortedLabels.size();
     for (int i = 0; i < size; i++) {
       Map.Entry<String, Float> label = sortedLabels.poll();
-      SpannableString span =
-              new SpannableString(String.format("%s: %4.2f\n", label.getKey(), label.getValue()));
-      int color;
+      //SpannableString span = new SpannableString(String.format("%s: %4.2f\n", label.getKey(), label.getValue()));
+      //int color;
       // Make it white when probability larger than threshold.
       if (label.getValue() > GOOD_PROB_THRESHOLD) {
-        color = android.graphics.Color.WHITE;
+       // color = android.graphics.Color.WHITE;
         //nill
         String accuracy= String.valueOf((float)(Math.round((float)( label.getValue() * 100))) / 100);
         label_prob = label.getKey() +","+ device +","+accuracy ;
-      } else {
-        color = SMALL_COLOR;
       }
-      // Make first item bigger.
-      if (i == size - 1) {
-        float sizeScale = (i == size - 1) ? 1.25f : 0.8f;
-        span.setSpan(new RelativeSizeSpan(sizeScale), 0, span.length(), 0);
-      }
-      span.setSpan(new ForegroundColorSpan(color), 0, span.length(), 0);
+
+//      else {
+//        color = SMALL_COLOR;
+//      }
+//      // Make first item bigger.
+//      if (i == size - 1) {
+//        float sizeScale = (i == size - 1) ? 1.25f : 0.8f;
+//        span.setSpan(new RelativeSizeSpan(sizeScale), 0, span.length(), 0);
+//      }
+//      span.setSpan(new ForegroundColorSpan(color), 0, span.length(), 0);
       //builder.insert(0, span);
     }
 

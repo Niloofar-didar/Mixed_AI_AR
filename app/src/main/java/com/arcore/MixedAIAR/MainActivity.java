@@ -655,7 +655,7 @@ else{
             StringBuilder sbb = new StringBuilder();
             sbb.append("time2"); sbb.append(','); sbb.append("tris");
             sbb.append(',');sbb.append("gpu");sbb.append(',');
-            sbb.append("distance");sbb.append(',');  sbb.append("serv_req");
+            sbb.append("distance"); //sbb.append(',');  sbb.append("serv_req");
             sbb.append(',');  sbb.append(" lastobj ");
 
             sbb.append('\n');
@@ -674,10 +674,12 @@ else{
         try (PrintWriter writer = new PrintWriter(new FileOutputStream( currentFolder + File.separator +  "Response_t.csv", false))) {
 
             StringBuilder sbb2 = new StringBuilder();
-            sbb2.append("time1"); sbb2.append(','); sbb2.append("label");
-            sbb2.append(',');      sbb2.append("device");  sbb2.append(','); sbb2.append( "accuracy" ); sbb2.append(',');
+            sbb2.append("time1");// sbb2.append(','); //sbb2.append("label");
+            sbb2.append(',');      sbb2.append("device"); // sbb2.append(','); sbb2.append( "accuracy" );
+            sbb2.append(',');
             sbb2.append("duration");sbb2.append(',');
-            sbb2.append("requests");sbb2.append(',');  sbb2.append("model, iteration");
+            sbb2.append("requests");sbb2.append(',');
+            sbb2.append("model, iteration");
 
             // String item2 = dateFormat.format(new Date()) + " "+label_accu+ " time " + duration + " ms" + " requests " + requests + " model " + model;
 
@@ -3080,9 +3082,7 @@ public float delta (float a, float b , float c1,float creal,  float d, float gam
                         dateFormat.format(new Date());
                         String current_gpu = null;
                         try {
-                            //Process process;
-                            //  int i = 0;
-                            //  for (i = 0; i < 3; i++) {
+
                             String[] InstallBusyBoxCmd = new String[]{
                                     "su", "-c", "cat /sys/class/kgsl/kgsl-3d0/gpu_busy_percentage"};
 
@@ -3097,8 +3097,6 @@ public float delta (float a, float b , float c1,float creal,  float d, float gam
                                 mean_gpu = mean_gpu + Float.parseFloat(separator[0]);
                             }
 
-                            //  }
-                            //mean_gpu = mean_gpu / i;
 
                         } catch (IOException e) {
                             e.printStackTrace();
@@ -3109,32 +3107,6 @@ public float delta (float a, float b , float c1,float creal,  float d, float gam
                             sreqs += value;
 
                         String item2 = dateFormat.format(new Date()) + " num_of_tris: " + total_tris + " current_gpu " + mean_gpu + " dis " + dist +  " lastobj "+ filname + objectCount+ "\n";
-                        // + " virtual area " + total_area + " virtual vol " + total_vol + " " + fileName + "\n";
-//                   try {
-//                       FileOutputStream os = new FileOutputStream(GPU_usage, true);
-//                       os.write(item2.getBytes());
-//                       os.close();
-//                       System.out.println(item2);
-//
-//
-//                   } catch (IOException e) {
-//                       Log.e("StatWriting", e.getMessage());
-//                   }
-
-                        // new nill added
-
-//               try {
-//                   FileOutputStream os = new FileOutputStream(niloo2, true);
-//                   StringBuilder sb = new StringBuilder();
-//
-//                   os.write(item2.getBytes());
-//                   os.close();
-//                   System.out.println(item2);
-//
-//
-//               } catch (IOException e) {
-//                   Log.e("StatWriting", e.getMessage());
-//               }
 
 
                         try (PrintWriter writer = new PrintWriter(new FileOutputStream(FILEPATH, true))) {
@@ -3142,7 +3114,8 @@ public float delta (float a, float b , float c1,float creal,  float d, float gam
                             StringBuilder sb = new StringBuilder();
                             sb.append(dateFormat.format(new Date())); sb.append(',');
                             sb.append(total_tris); sb.append(',');sb.append(mean_gpu);sb.append(',');
-                            sb.append(dist); sb.append(','); sb.append(sreqs);
+                            sb.append(dist);
+                            //sb.append(','); sb.append(sreqs);
                             sb.append(',');  sb.append(filname);
                             sb.append(objectCount);
                             sb.append('\n');
