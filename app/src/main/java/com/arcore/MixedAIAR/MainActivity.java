@@ -1227,7 +1227,7 @@ else{
                           //  posText.setText( String.valueOf(AI_tasks));
 
                             countDownTimer.cancel();
-                              onPause();
+                              //onPause();
 
                         }
 
@@ -1595,270 +1595,105 @@ else{
 
         String currentFolder2 = getExternalFilesDir(null).getAbsolutePath();
         String FILEPATH2 = currentFolder2 + File.separator + "extra_inf.txt";
-        Toast.makeText(this,"FILE PATH: " + FILEPATH2, Toast.LENGTH_LONG).show();
+
         PrintWriter fileOut2 = null;
         PrintStream streamOut2 = null;
 
 
 
         int size = current.size();
-        errorAnalysis2(size);
+      //  errorAnalysis2(size);
         String currentFolder = getExternalFilesDir(null).getAbsolutePath();
         String FILEPATH = currentFolder + File.separator + "Extra_inf.csv";
-
-        String[] elements = quality_log.get(0).split(","); // num of quality or deg-error log
-        // write down headers
-        try (PrintWriter writer = new PrintWriter(new FileOutputStream(FILEPATH, false))) {
-
-            StringBuilder sb = new StringBuilder();
-            sb.append("name");
-            sb.append(',');
-            sb.append("Time_log");
-            for (int i=0; i<= elements.length; i++)
-                sb.append(',');
-
-
-            for (int i=0; i< elements.length; i++)
-                sb.append("Q"+(i+1)+",");
-            sb.append(',');
-            sb.append(",");
-
-            for (int i=0; i< elements.length; i++)
-                sb.append("Dis"+(i+1)+",");
-
-            for (int i=0; i< elements.length; i++)
-                sb.append("DegE"+(i+1)+",");
-            sb.append('\n');
-            writer.write(sb.toString());
-        } catch (FileNotFoundException e) {
-            System.out.println(e.getMessage());
-        }
-
-
-
-        try {
-            fileOut2 = new PrintWriter(new FileOutputStream(FILEPATH2, false));
-
-            ///fileOut2.println();
-            //fileOut2.println("object information");
-            //int ind=0;
-            for (int ind = 0; ind < objectCount; ind++) {
-                fileOut2.println( renderArray[ind].fileName + " Time_log " + time_log.get(ind) + " QualityLog " + quality_log.get(ind) + " DistanceLog " + distance_log.get(ind) + " DEGlog " + deg_error_log.get(ind)
-                        + " calculated_GPU_eng_log " + GPU_Ut_log.get(ind) + " Engnetw " + eng_dec.get(ind)
-                        + " server_req_freq " + Server_reg_Freq.get(ind));
-
-                // for csv file, nill added
-                try (PrintWriter writer = new PrintWriter(new FileOutputStream(FILEPATH, true))) {
-
-                    StringBuilder sbb = new StringBuilder();
-                    sbb.append(renderArray[ind].fileName);    sbb.append(',');
-
-                    sbb.append(time_log.get(ind)); sbb.append(','); sbb.append(quality_log.get(ind));
-                    sbb.append(',');  sbb.append(distance_log.get(ind)); ;sbb.append(',');
-                    sbb.append(deg_error_log.get(ind));sbb.append(',');
-                    //sbb.append(GPU_Ut_log.get(ind));  sbb.append(',');
-                    //  sbb.append(Server_reg_Freq.get(ind));
-                    sbb.append('\n');
-                    writer.write(sbb.toString());
-                    System.out.println("done!");
-                } catch (FileNotFoundException e) {
-                    System.out.println(e.getMessage());
-                }
-
-
-
-            }
-            float total_gpu = compute_GPU_ut( decision_p / decision_p, total_tris); // for one second
-            fileOut2.println("total_tris " + total_tris + " total_GPUusage_every_second " + total_gpu + " window " + finalw + " Bandwith "+ bwidth + " policy " + policy + " Maxdeg_parameter " + max_d_parameter);
-
-
-
-
-            fileOut2.close();
-
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        }
-
-
-        //String currentFolder = getExternalFilesDir(null).getAbsolutePath();
-        FILEPATH = currentFolder + File.separator + "output.txt";
         Toast.makeText(this,"FILE PATH: " + FILEPATH, Toast.LENGTH_LONG).show();
-        PrintWriter fileOut = null;
-        PrintStream streamOut = null;
 
-        try {
-            fileOut = new PrintWriter(new FileOutputStream(FILEPATH, false));
+        if(quality_log.size()!=0) {
+            String[] elements = quality_log.get(0).split(","); // num of quality or deg-error log
+            // write down headers
+            try (PrintWriter writer = new PrintWriter(new FileOutputStream(FILEPATH, false))) {
 
-
-            double t=0;
-            for (int j = 0; j < maxtime; j++)
-            {
-                t+=0.5;
-                fileOut.println();
-                fileOut.println("Predicted Confidence Area for "+ (t));
-                for (int i = 0; i < size; i++) {
-
-                    float lenght= Math.abs(prmap.get(j).get(i).get(4)- prmap.get(j).get(i).get(6));
-                    float width= Math.abs(prmap.get(j).get(i).get(3)- prmap.get(j).get(i).get(5));
-                    float carea= lenght*width;
+                StringBuilder sb = new StringBuilder();
+                sb.append("name");
+                sb.append(',');
+                sb.append("Time_log");
+                for (int i = 0; i <= elements.length; i++)
+                    sb.append(',');
 
 
-                    fileOut.println(timeLog.get(i) + " " + current.get(i).get(0) + " " + current.get(i).get(1) + " " + current.get(i).get(2) + " " +
-                            (timeLog.get(i) + t) + " " + prmap.get(j).get(i).get(0) + " " + prmap.get(j).get(i).get(1
-                    ) + " " + prmap.get(j).get(i).get(2) + " " + prmap.get(j).get(i).get(3) + " " + prmap.get(j).get(i).get(4) + " " + prmap.get(j).get(i).get(5) + " " + prmap.get(j).get(i).get(6) + " " + prmap.get(j).get(i).get(7) + " " + prmap.get(j).get(i).get(8) + " " + prmap.get(j).get(i).get(9) + " " + marginmap.get(j).get(i).get(0) + " " + marginmap.get(j).get(i).get(1) + " " + errormap.get(j).get(i).get(0) + " " + errormap.get(j).get(i).get(1)+ " area " + carea);
-                }
+                for (int i = 0; i < elements.length; i++)
+                    sb.append("Q" + (i + 1) + ",");
+                sb.append(',');
+                sb.append(",");
 
+                for (int i = 0; i < elements.length; i++)
+                    sb.append("Dis" + (i + 1) + ",");
+
+                for (int i = 0; i < elements.length; i++)
+                    sb.append("DegE" + (i + 1) + ",");
+                sb.append('\n');
+                writer.write(sb.toString());
+            } catch (FileNotFoundException e) {
+                System.out.println(e.getMessage());
             }
 
-            fileOut.println();
-            fileOut.println("Error Analysis: ");
-            //int k=0;
-            for (int j = 0; j < size - maxtime; j++) {
-                float l=0.5f;
-                String s="";
-                for (int k = 0; k < maxtime; k++) {
 
-                    String s1= (timeLog.get(j) + l) + " " + booleanmap.get(k).get(j).get(0) + " " + booleanmap.get(k).get(j).get(1) + " ";
-                    s+=s1;
-                    l+=0.5;
+            try {
+                fileOut2 = new PrintWriter(new FileOutputStream(FILEPATH2, false));
+
+                ///fileOut2.println();
+                //fileOut2.println("object information");
+                //int ind=0;
+                for (int ind = 0; ind < objectCount; ind++) {
+
+
+                  /*  fileOut2.println(renderArray[ind].fileName + " Time_log " + time_log.get(ind) + " QualityLog " + quality_log.get(ind) + " DistanceLog " + distance_log.get(ind) + " DEGlog " + deg_error_log.get(ind)
+                            + " calculated_GPU_eng_log " + GPU_Ut_log.get(ind) + " Engnetw " + eng_dec.get(ind));
+*/
+
+                    // for csv file, nill added
+                    try (PrintWriter writer = new PrintWriter(new FileOutputStream(FILEPATH, true))) {
+
+                        StringBuilder sbb = new StringBuilder();
+                        sbb.append(renderArray[ind].fileName);
+                        sbb.append(',');
+
+                        sbb.append(time_log.get(ind));
+                        sbb.append(',');
+                        sbb.append(quality_log.get(ind));
+                        sbb.append(',');
+                        sbb.append(distance_log.get(ind));
+                        ;
+                        sbb.append(',');
+                        sbb.append(deg_error_log.get(ind));
+                        sbb.append(',');
+
+                        sbb.append('\n');
+                        writer.write(sbb.toString());
+                        System.out.println("done!");
+                    } catch (FileNotFoundException e) {
+                        System.out.println(e.getMessage());
+                    }
+
+
                 }
-                fileOut.println(s);
+                float total_gpu = compute_GPU_ut(decision_p / decision_p, total_tris); // for one second
+                //fileOut2.println("total_tris " + total_tris + " total_GPUusage_every_second " + total_gpu + " window " + finalw + " Bandwith " + bwidth + " policy " + policy + " Maxdeg_parameter " + max_d_parameter);
+
+
+                fileOut2.close();
+
+            } catch (FileNotFoundException e) {
+                e.printStackTrace();
             }
-            fileOut.close();
-        } catch (IOException e) {
         }
+
 
      //   t2.cancel();
         //process2.destroy();
 
 
     }
-//    public void onPause() {
-//        super.onPause();
-//
-//
-//
-//
-//        String currentFolder2 = getExternalFilesDir(null).getAbsolutePath();
-//        String FILEPATH2 = currentFolder2 + File.separator + "extra_inf.txt";
-//        Toast.makeText(this,"FILE PATH: " + FILEPATH2, Toast.LENGTH_LONG).show();
-//        PrintWriter fileOut2 = null;
-//        PrintStream streamOut2 = null;
-//
-//
-//
-//        int size = current.size();
-//        errorAnalysis2(size);
-//        String currentFolder = getExternalFilesDir(null).getAbsolutePath();
-//        String FILEPATH = currentFolder + File.separator + "Extra_inf.csv";
-//
-//        String[] elements = quality_log.get(0).split(","); // num of quality or deg-error log
-//        // write down headers
-//        try (PrintWriter writer = new PrintWriter(new FileOutputStream(FILEPATH, false))) {
-//
-//            StringBuilder sb = new StringBuilder();
-//            sb.append("name");
-//            sb.append(',');
-//            sb.append("Time_log");
-//            for (int i=0; i<= elements.length; i++)
-//                sb.append(',');
-//
-//
-//            for (int i=0; i< elements.length; i++)
-//                sb.append("Q"+(i+1)+",");
-//            sb.append(',');
-//            sb.append(",");
-//
-//            for (int i=0; i< elements.length; i++)
-//                sb.append("Dis"+(i+1)+",");
-//
-//            for (int i=0; i< elements.length; i++)
-//                sb.append("DegE"+(i+1)+",");
-//            sb.append('\n');
-//            writer.write(sb.toString());
-//        } catch (FileNotFoundException e) {
-//            System.out.println(e.getMessage());
-//        }
-//
-//
-//
-//        try {
-//            fileOut2 = new PrintWriter(new FileOutputStream(FILEPATH2, false));
-//
-//            ///fileOut2.println();
-//            //fileOut2.println("object information");
-//            //int ind=0;
-//            for (int ind = 0; ind < objectCount; ind++)
-//                fileOut2.println("quality_log_object " + ind + " "+renderArray[ind].fileName + " Time_log "+ time_log.get(ind)  +" QualityLog " + quality_log.get(ind) + " DistanceLog "+  distance_log.get(ind) +" DEGlog " + deg_error_log.get(ind)
-//                        + " calculated_GPU_eng_log " + GPU_Ut_log.get(ind) + " Engnetw " + eng_dec.get(ind)
-//                        + " server_req_freq " + Server_reg_Freq.get(ind));
-//
-//            float total_gpu = compute_GPU_ut( decision_p / decision_p, total_tris); // for one second
-//            fileOut2.println("total_tris " + total_tris + " total_GPUusage_every_second " + total_gpu + " window " + finalw + " Bandwith "+ bwidth + " policy " + policy + " Maxdeg_parameter " + max_d_parameter);
-//
-//
-//
-//
-//            fileOut2.close();
-//
-//        } catch (FileNotFoundException e) {
-//            e.printStackTrace();
-//        }
-//
-//         currentFolder = getExternalFilesDir(null).getAbsolutePath();
-//         FILEPATH = currentFolder + File.separator + "output.txt";
-//        Toast.makeText(this,"FILE PATH: " + FILEPATH, Toast.LENGTH_LONG).show();
-//        PrintWriter fileOut = null;
-//        PrintStream streamOut = null;
-//
-//        try {
-//            fileOut = new PrintWriter(new FileOutputStream(FILEPATH, false));
-//
-//
-//            double t=0;
-//            for (int j = 0; j < maxtime; j++)
-//            {
-//                t+=0.5;
-//                fileOut.println();
-//                fileOut.println("Predicted Confidence Area for "+ (t));
-//                for (int i = 0; i < size; i++) {
-//
-//                    float lenght= Math.abs(prmap.get(j).get(i).get(4)- prmap.get(j).get(i).get(6));
-//                    float width= Math.abs(prmap.get(j).get(i).get(3)- prmap.get(j).get(i).get(5));
-//                    float carea= lenght*width;
-//
-//
-//                    fileOut.println(timeLog.get(i) + " " + current.get(i).get(0) + " " + current.get(i).get(1) + " " + current.get(i).get(2) + " " +
-//                            (timeLog.get(i) + t) + " " + prmap.get(j).get(i).get(0) + " " + prmap.get(j).get(i).get(1
-//                    ) + " " + prmap.get(j).get(i).get(2) + " " + prmap.get(j).get(i).get(3) + " " + prmap.get(j).get(i).get(4) + " " + prmap.get(j).get(i).get(5) + " " + prmap.get(j).get(i).get(6) + " " + prmap.get(j).get(i).get(7) + " " + prmap.get(j).get(i).get(8) + " " + prmap.get(j).get(i).get(9) + " " + marginmap.get(j).get(i).get(0) + " " + marginmap.get(j).get(i).get(1) + " " + errormap.get(j).get(i).get(0) + " " + errormap.get(j).get(i).get(1)+ " area " + carea);
-//                }
-//
-//            }
-//
-//            fileOut.println();
-//            fileOut.println("Error Analysis: ");
-//            //int k=0;
-//            for (int j = 0; j < size - maxtime; j++) {
-//                float l=0.5f;
-//                String s="";
-//                for (int k = 0; k < maxtime; k++) {
-//
-//                        String s1= (timeLog.get(j) + l) + " " + booleanmap.get(k).get(j).get(0) + " " + booleanmap.get(k).get(j).get(1) + " ";
-//                        s+=s1;
-//                l+=0.5;
-//                }
-//                fileOut.println(s);
-//            }
-//            fileOut.close();
-//        } catch (IOException e) {
-//        }
-//
-//        t2.cancel();
-//        //process2.destroy();
-//
-//
-//    }
+
 
 
     public ArrayList<ArrayList<Float>> findW (int ind)
@@ -3273,8 +3108,7 @@ public float delta (float a, float b , float c1,float creal,  float d, float gam
                         for (int value : Server_reg_Freq)
                             sreqs += value;
 
-                        String item2 = dateFormat.format(new Date()) + " num_of_tris: " + total_tris + " current_gpu " + mean_gpu + " dis " + dist + " serv_req "
-                                + sreqs + " lastobj "+ filname + objectCount+ "\n";
+                        String item2 = dateFormat.format(new Date()) + " num_of_tris: " + total_tris + " current_gpu " + mean_gpu + " dis " + dist +  " lastobj "+ filname + objectCount+ "\n";
                         // + " virtual area " + total_area + " virtual vol " + total_vol + " " + fileName + "\n";
 //                   try {
 //                       FileOutputStream os = new FileOutputStream(GPU_usage, true);
@@ -3331,85 +3165,7 @@ public float delta (float a, float b , float c1,float creal,  float d, float gam
                 1000);
     };
 
-   /* public void givenUsingTimer_whenSchedulingTaskOnce_thenCorrect() {
 
-
-        Timer  t = new Timer();
-
-        t.scheduleAtFixedRate(
-
-
-
-
-                new TimerTask() {
-//        TimerTask task = new TimerTask() {
-           public void run() {
-           //    if(objectCount>=0) { // remove- ni april 21 temperory
-                   Float mean_gpu = 0f;
-                   float dist = 0;
-                   if (renderArray[1] != null)
-                       dist = renderArray[0].return_distance();
-
-                   String filname=" ";
-
-                   if(objectCount>0)
-                       filname= renderArray[objectCount-1].fileName;
-
-                   SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss:SSS");
-                   dateFormat.format(new Date());
-                   String current_gpu = null;
-                   try {
-                       //Process process;
-                     //  int i = 0;
-                     //  for (i = 0; i < 3; i++) {
-                           String[] InstallBusyBoxCmd = new String[]{
-                                   "su", "-c", "cat /sys/class/kgsl/kgsl-3d0/gpu_busy_percentage"};
-
-                           process2 = Runtime.getRuntime().exec(InstallBusyBoxCmd);
-                           BufferedReader stdInput = new BufferedReader(new
-                                   InputStreamReader(process2.getInputStream()));
-// Read the output from the command
-                           //System.out.println("Here is the standard output of the command:\n");
-                           current_gpu = stdInput.readLine();
-                           if (current_gpu != null) {
-                               String[] separator = current_gpu.split("%");
-                               mean_gpu = mean_gpu + Float.parseFloat(separator[0]);
-                           }
-
-                     //  }
-                       //mean_gpu = mean_gpu / i;
-
-                   } catch (IOException e) {
-                       e.printStackTrace();
-                   }
-
-                   int sreqs = 0;
-                   for (int value : Server_reg_Freq)
-                       sreqs += value;
-
-                   String item2 = dateFormat.format(new Date()) + " num_of_tris: " + total_tris + " current_gpu " + mean_gpu + " dis " + dist + " serv_req "
-                           + sreqs + " lastobj "+ filname + objectCount+ "\n";
-                   // + " virtual area " + total_area + " virtual vol " + total_vol + " " + fileName + "\n";
-                   try {
-                       FileOutputStream os = new FileOutputStream(GPU_usage, true);
-                       os.write(item2.getBytes());
-                       os.close();
-                       System.out.println(item2);
-
-
-                   } catch (IOException e) {
-                       Log.e("StatWriting", e.getMessage());
-                   }
-
-               }
-
-          //  }
-                },
-                0,      // run first occurrence immediatetly
-                1000);
-        };
-
-*/
 
 
     private boolean isObjectVisible(Vector3 worldPosition)
