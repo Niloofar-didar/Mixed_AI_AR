@@ -18,6 +18,7 @@ import android.app.Activity;
 import android.app.ActivityManager;
 import android.app.Application;
 import android.app.DownloadManager;
+import android.content.ContextWrapper;
 import android.content.Intent;
 import android.os.Handler;
 import android.os.Looper;
@@ -1324,15 +1325,46 @@ else{
 
 
 
-
-
-
-
-
         //Clear all objects button setup
         Button clearButton = (Button) findViewById(R.id.clearButton);
         clearButton.setOnClickListener(new View.OnClickListener() {
             public void onClick(View view) {
+                File f1=      getApplicationContext().getCacheDir();
+
+
+                File directory =   getApplicationContext().getFilesDir();
+                File file = new File(directory, "Niloo");
+
+
+
+                ContextWrapper c = new ContextWrapper(MainActivity.this);
+                Toast.makeText(MainActivity.this, c.getFilesDir().getPath(), Toast.LENGTH_LONG).show();
+                File f3= new File("hello.py");
+               String s= c.getFilesDir().getPath();
+                File tris = new File(MainActivity.this.getFilesDir(), "hello.py");
+
+                if(tris.exists())
+                    System.out.println("success");
+
+                if(f3.exists())
+                    System.out.println("success");
+
+
+                String com = "ls ";
+                           //"python  ~/Desktop/HelloAR-master-App-sfb (working on now added AI)/app/python hello.py";
+
+                System.out.println(com);
+                    try {
+                        Process	p = Runtime.getRuntime().exec(com);
+                        p.waitFor();
+
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+
+
                 for (int i = 0; i < objectCount; i++) {
                     renderArray[i].detach();
 
