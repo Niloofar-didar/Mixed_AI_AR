@@ -1329,40 +1329,57 @@ else{
         Button clearButton = (Button) findViewById(R.id.clearButton);
         clearButton.setOnClickListener(new View.OnClickListener() {
             public void onClick(View view) {
-                File f1=      getApplicationContext().getCacheDir();
 
 
-                File directory =   getApplicationContext().getFilesDir();
-                File file = new File(directory, "Niloo");
-
-
-
-                ContextWrapper c = new ContextWrapper(MainActivity.this);
-                Toast.makeText(MainActivity.this, c.getFilesDir().getPath(), Toast.LENGTH_LONG).show();
-                File f3= new File("hello.py");
-               String s= c.getFilesDir().getPath();
-                File tris = new File(MainActivity.this.getFilesDir(), "hello.py");
-
-                if(tris.exists())
-                    System.out.println("success");
-
-                if(f3.exists())
-                    System.out.println("success");
-
-
-                String com = "ls ";
-                           //"python  ~/Desktop/HelloAR-master-App-sfb (working on now added AI)/app/python hello.py";
-
-                System.out.println(com);
-                    try {
-                        Process	p = Runtime.getRuntime().exec(com);
-                        p.waitFor();
-
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
+               // List<Double> rTime
+                List<Double>  what     =  Camera2BasicFragment.getInstance().rTime;
+                double []x= new double[]{
+                0.0,
+                146803.0,
+                293606.0,
+                440409.0,
+                587212.0,
+                734015.0,
+                880818.0,
+                1027621.0,
+                1174424.0,
+                1321227.0,
+                1468030.0,
+                1614833.0,
+                1761636.0,
+                1908439.0,
+                2055242.0,
+                2202045.0,
+                2348848.0,
+                2495651.0,
+                2642454.0,
+                2789257.0,
+                2936060.0,};
+                double []y= new double[]{47.84688995215311,
+                        36.84210526315789,
+                        38.88888888888889,
+                        33.0188679245283,
+                        35.0,
+                        32.96703296703297,
+                        43.24324324324324,
+                        38.96103896103896,
+                        38.88888888888889,
+                        28.688524590163937,
+                        34.146341463414636,
+                        31.25,
+                        28.34008097165992,
+                        32.25806451612903,
+                        25.735294117647058,
+                        28.0,
+                        22.80130293159609,
+                        27.888446215139442,
+                        27.34375,
+                        23.333333333333336,
+                        21.08559498956159,};
+                LinearRegression lRegression=new LinearRegression(x,y);
+                double slope=lRegression.slope;
+                double intercept=lRegression.intercept;
+                double rmse=lRegression.getRmse();
 
 
                 for (int i = 0; i < objectCount; i++) {

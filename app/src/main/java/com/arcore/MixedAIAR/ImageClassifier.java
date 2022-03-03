@@ -358,6 +358,15 @@ public abstract class ImageClassifier {
 
   /** Labels corresponding to the output of the vision model. */
   private List<String> labelList;
+  List<Double> throughput= new ArrayList<>();
+  List<Double> rTime= new ArrayList<>();// holds data of all response time collected but it is refreshed every 500 ms
+  List<Double> periodicTime= new ArrayList<>();// holds responsetime every 500ms
+  List<String> periodicCur= new ArrayList<>();// holds current time every 500ms
+  List<String> curTime= new ArrayList<>();// holds  data of current time of datacollection
+  List<String> labels= new ArrayList<>();
+  List<Integer> countL= new ArrayList<>();
+  List<String> periodicLabels= new ArrayList<>();
+  List<Integer> periodicCountL= new ArrayList<>();
 
   /** A ByteBuffer to hold image data, to be feed into Tensorflow Lite as inputs. */
   protected ByteBuffer imgData = null;
@@ -368,6 +377,35 @@ public abstract class ImageClassifier {
   private static final int FILTER_STAGES = 3;
   private static final float FILTER_FACTOR = 0.4f;
 
+
+
+  public void colTimeData() {
+
+    Timer t = new Timer();
+    final int[] count = {0}; // should be before here
+    t.scheduleAtFixedRate(
+            new
+
+                    TimerTask() {
+                      public void run () {
+
+                          if( !rTime.isEmpty() && !curTime.isEmpty() && !labels.isEmpty() && !countL.isEmpty() )
+                          {
+                           periodicTime.add( rTime.get(0));// gets the time data ecery 500ms
+                            rTime.clear();
+                            periodicCur.add(curTime.get(0));
+                            curTime.clear();
+                            periodicLabels.add(labels.get(0));
+                            labels.clear();
+                            periodicCountL.add(countL.get(0));
+                            countL.clear();
+                          }
+                      }
+                    },
+            0,      // run first occurrence immediatetl
+            (long)(500));
+
+  }
 
   private PriorityQueue<Map.Entry<String, Float>> sortedLabels =
           new PriorityQueue<>(
@@ -386,6 +424,7 @@ public abstract class ImageClassifier {
 
   /** Initializes an {@code ImageClassifier}. */
   ImageClassifier(Activity activity) throws IOException {
+    colTimeData();
     tfliteModel = loadModelFile(activity);
     tflite = new Interpreter(tfliteModel, tfliteOptions);
     labelList = loadLabelList(activity);
@@ -423,12 +462,11 @@ public abstract class ImageClassifier {
     Bitmap  bitmap = BitmapFactory.decodeFile(path);
     convertBitmapToByteBuffer(bitmap);
     bitmap.recycle();
-    List<Double> rTime= new ArrayList<>();
-    List<String> curTime= new ArrayList<>();
-    List<String> labels= new ArrayList<>();
+
+
     List<Thread> inf_thread = new ArrayList<>();
     final boolean[] onetWrite = {false};
-    List<Integer> countL= new ArrayList<>();
+
     float desired= 16.6f;
     for(int i = 0; i< requests; i++) {//
       //if(breakC)
@@ -448,20 +486,20 @@ public abstract class ImageClassifier {
                 { try (PrintWriter writer = new PrintWriter(new FileOutputStream(path2 + "/Response_t.csv", true))) {
                   onetWrite[0] =true;
                   int i = 0;
-                  while (i < curTime.size() && i< rTime.size() && i< labels.size() && i< countL.size()) {
+                  while (i < periodicCur.size() && i< periodicTime.size() && i< periodicLabels.size() && i< periodicCountL.size()) {
 
                     StringBuilder sbb = new StringBuilder();
-                    sbb.append(curTime.get(i));
+                    sbb.append(periodicCur.get(i));
                     sbb.append(',');
-                    sbb.append(labels.get(i));
+                    sbb.append(periodicLabels.get(i));
                     sbb.append(',');
-                    sbb.append(rTime.get(i));
+                    sbb.append(periodicTime.get(i));
                     sbb.append(',');
                     sbb.append(requests);
                     sbb.append(',');
                     sbb.append(model);
                     sbb.append(',');
-                    sbb.append(countL.get(i));
+                    sbb.append(periodicCountL.get(i));
                     sbb.append('\n');
                     writer.write(sbb.toString());
                     i++;
@@ -497,10 +535,6 @@ public abstract class ImageClassifier {
 
               Log.d(TAG, "Thread ID" + Integer.toString(finalI)+ " "+ count + "#iteration  inference time: " + Long.toString(duration) );
 
-
-
-
-
             }
           }
           catch (Exception e)
@@ -516,23 +550,24 @@ public abstract class ImageClassifier {
                   try (PrintWriter writer = new PrintWriter(new FileOutputStream(path2 + "/Response_t.csv", true))) {
 
                   int i = 0;
-                  while (i < curTime.size() && i< rTime.size() && i< labels.size() && i< countL.size()) {
-                    StringBuilder sbb = new StringBuilder();
-                    sbb.append(curTime.get(i));
-                    sbb.append(',');
-                    sbb.append(labels.get(i));
-                    sbb.append(',');
-                    sbb.append(rTime.get(i));
-                    sbb.append(',');
-                    sbb.append(requests);
-                    sbb.append(',');
-                    sbb.append(model);
-                    sbb.append(',');
-                    sbb.append(countL.get(i));
-                    sbb.append('\n');
-                    writer.write(sbb.toString());
-                    i++;
-                  }
+                    while (i < periodicCur.size() && i< periodicTime.size() && i< periodicLabels.size() && i< periodicCountL.size()) {
+
+                      StringBuilder sbb = new StringBuilder();
+                      sbb.append(periodicCur.get(i));
+                      sbb.append(',');
+                      sbb.append(periodicLabels.get(i));
+                      sbb.append(',');
+                      sbb.append(periodicTime.get(i));
+                      sbb.append(',');
+                      sbb.append(requests);
+                      sbb.append(',');
+                      sbb.append(model);
+                      sbb.append(',');
+                      sbb.append(periodicCountL.get(i));
+                      sbb.append('\n');
+                      writer.write(sbb.toString());
+                      i++;
+                    }
 
                 } catch (FileNotFoundException e2) {
                   System.out.println(e2.getMessage());
@@ -579,15 +614,21 @@ public abstract class ImageClassifier {
         inf_thread.get(i).start();//
     }
 
-
-
-
-
-    //inf_thread.clear();
-
   }
 
+public void calThroughput(){
 
+  for (double time : rTime)
+    throughput.add(1/time);
+
+
+//  LinearRegression lRegression=new LinearRegression(x,y);// we don't have x here, tris
+//  double slope=lRegression.slope;
+//  double intercept=lRegression.intercept;
+//  double rmse=lRegression.getRmse();
+
+
+}
 
   void classifyFrame(Bitmap bitmap, SpannableStringBuilder builder)throws InterruptedException {
 

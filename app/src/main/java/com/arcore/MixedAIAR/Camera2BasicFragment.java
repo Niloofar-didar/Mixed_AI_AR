@@ -83,6 +83,8 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import android.graphics.Bitmap;
@@ -90,7 +92,8 @@ import android.graphics.BitmapFactory;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
-
+import android.os.CountDownTimer;
+import java.util.concurrent.TimeUnit;
 
 import org.tensorflow.lite.support.image.TensorImage;
 import org.tensorflow.lite.support.label.Category;
@@ -100,209 +103,270 @@ public class Camera2BasicFragment extends Fragment
 
   implements FragmentCompat.OnRequestPermissionsResultCallback {
 
-  /** Tag for the {@link Log}. */
-  private static final String TAG = "TfLiteCameraDemo";
+    /**
+     * Tag for the {@link Log}.
+     */
+    private static final String TAG = "TfLiteCameraDemo";
 
- // private static final String FRAGMENT_DIALOG = "dialog";
+    // private static final String FRAGMENT_DIALOG = "dialog";
 
-  private static final String HANDLE_THREAD_NAME = "CameraBackground";
-   int requests=1;
-   String model="quant";
-  private static final int PERMISSIONS_REQUEST_CODE = 1;
+    private static final String HANDLE_THREAD_NAME = "CameraBackground";
+    int requests = 1;
+    String model = "quant";
+    private static final int PERMISSIONS_REQUEST_CODE = 1;
 
-  private final Object lock = new Object();
-  private boolean runClassifier = false;
-  private boolean checkedPermissions = false;
-  private TextView textView;
-  private NumberPicker np;
-  private ImageClassifier classifier;
-  private ListView deviceView;
-  private ListView modelView;
-  //File time_gpu=new File(getActivity().getExternalFilesDir(null), "time_gpu.txt");;
-   boolean breakC=false;
-  //List<Thread> inf_thread = new ArrayList<>();
+    private final Object lock = new Object();
+    public boolean runClassifier = false;
+    private boolean checkedPermissions = false;
+    private TextView textView;
+    private NumberPicker np;
+    public ImageClassifier classifier;
+    private ListView deviceView;
+    private ListView modelView;
+    //File time_gpu=new File(getActivity().getExternalFilesDir(null), "time_gpu.txt");;
+    boolean breakC = false;
+    //List<Thread> inf_thread = new ArrayList<>();
 
-  /** Max preview width that is guaranteed by Camera2 API */
-  private static final int MAX_PREVIEW_WIDTH = 1920;
+    /**
+     * Max preview width that is guaranteed by Camera2 API
+     */
+    private static final int MAX_PREVIEW_WIDTH = 1920;
 
-  /** Max preview height that is guaranteed by Camera2 API */
-  private static final int MAX_PREVIEW_HEIGHT = 1080;
+    /**
+     * Max preview height that is guaranteed by Camera2 API
+     */
+    private static final int MAX_PREVIEW_HEIGHT = 1080;
+    public List<Double> rTime;
 
 
-
-  // Model parameter constants.
-  private String gpu;
-  private String cpu;
-  private String nnApi;
-  private String mobilenetV1Quant;
-  private String mobilenetV1Float;
-
+    // Model parameter constants.
+    private String gpu;
+    private String cpu;
+    private String nnApi;
+    private String mobilenetV1Quant;
+    private String mobilenetV1Float;
 
 
 //  /** ID of the current {@link CameraDevice}. */
 //  private String cameraId;
 
-  /** An {@link AutoFitTextureView} for camera preview. */
-  private AutoFitTextureView textureView;
+    /**
+     * An {@link AutoFitTextureView} for camera preview.
+     */
+    private AutoFitTextureView textureView;
 
 
-  /** The {@link android.util.Size} of camera preview. */
-  private Size previewSize;
+    /**
+     * The {@link android.util.Size} of camera preview.
+     */
+    private Size previewSize;
 
 
+    private ArrayList<String> deviceStrings = new ArrayList<String>();
+    private ArrayList<String> modelStrings = new ArrayList<String>();
 
-  private ArrayList<String> deviceStrings = new ArrayList<String>();
-  private ArrayList<String> modelStrings = new ArrayList<String>();
+    /**
+     * Current indices of device and model.
+     */
+    int currentDevice = -1;
 
-  /** Current indices of device and model. */
-  int currentDevice = -1;
+    int currentModel = -1;
 
-  int currentModel = -1;
+    int currentNumThreads = -1;
 
-  int currentNumThreads = -1;
+    /**
+     * An additional thread for running tasks that shouldn't block the UI.
+     */
+    private HandlerThread backgroundThread;
 
-  /** An additional thread for running tasks that shouldn't block the UI. */
-  private HandlerThread backgroundThread;
-
-  /** A {@link Handler} for running tasks in the background. */
-  private Handler backgroundHandler;
-
+    /**
+     * A {@link Handler} for running tasks in the background.
+     */
+    private Handler backgroundHandler;
 
 
-  /**
-   * Shows a {@link Toast} on the UI thread for the classification results.
-   *
-   *
-   */
-  private void showToast(String s) {
-    SpannableStringBuilder builder = new SpannableStringBuilder();
-    SpannableString str1 = new SpannableString(s);
-    builder.append(str1);
-    showToast(builder);
-  }
-
-  private void showToast(SpannableStringBuilder builder) {
-    final Activity activity = getActivity();
-    if (activity != null) {
-      activity.runOnUiThread(
-          new Runnable() {
-            @Override
-            public void run() {
-              textView.setText(builder, TextView.BufferType.SPANNABLE);
-            }
-          });
+    /**
+     * Shows a {@link Toast} on the UI thread for the classification results.
+     */
+    private void showToast(String s) {
+        SpannableStringBuilder builder = new SpannableStringBuilder();
+        SpannableString str1 = new SpannableString(s);
+        builder.append(str1);
+        showToast(builder);
     }
-  }
+
+    private void showToast(SpannableStringBuilder builder) {
+        final Activity activity = getActivity();
+        if (activity != null) {
+            activity.runOnUiThread(
+                    new Runnable() {
+                        @Override
+                        public void run() {
+                            textView.setText(builder, TextView.BufferType.SPANNABLE);
+                        }
+                    });
+        }
+    }
+
+    public static Camera2BasicFragment Instance
+            = new Camera2BasicFragment();
+
+    public static Camera2BasicFragment getInstance() {
+
+        return Instance;
+    }
 
 
+//  public static Camera2BasicFragment newInstance() {
+//
+//    return new Camera2BasicFragment();
+//  }
 
-  public static Camera2BasicFragment newInstance() {
+    /**
+     * Layout the preview and buttons.
+     */
+    @Override
+    public View onCreateView(
+            LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
 
-    return new Camera2BasicFragment();
-  }
+        Timer t = new Timer();
+        final int[] count = {0}; // should be before here
+        t.scheduleAtFixedRate(
+                new
 
-  /** Layout the preview and buttons. */
-  @Override
-  public View onCreateView(
-      LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-    return inflater.inflate(R.layout.fragment_camera2_basic, container, false);
+                        TimerTask() {
+                            public void run () {
+                                if(classifier!=null)
+                                    getInstance().rTime=classifier.periodicTime;// gets data od every 500ms
 
-
-  }
-
-// nill -> manually changed the options in the menu fr device and models
-  private void updateActiveModel() {
-    // Get UI information before delegating to background
-    //Nil changed
-    final int modelIndex =modelView.getCheckedItemPosition();
-   // Gpu=1
-    final int deviceIndex = deviceView.getCheckedItemPosition();
-      int  numThreads=  np.getValue();
-
-      switch (numThreads) {
-          case 1:
-              numThreads = 1;
-              break;
-          case 2:
-              numThreads = 3;
-              break;
-          case 3:
-              numThreads = 6;
-              break;
-      }
-    //nill added
+                            }
+                        },
+                0,      // run first occurrence immediatetl
+                (long)(5000));
 
 
-      int finalNumThreads = numThreads;
-      backgroundHandler.post(
-        () -> {
-          if (modelIndex == currentModel
-              && deviceIndex == currentDevice
-              && finalNumThreads == currentNumThreads) {
-            return;
-          }
-          currentModel = modelIndex;
-          currentDevice =
-                  deviceIndex;
-          currentNumThreads = 1;
+        return inflater.inflate(R.layout.fragment_camera2_basic, container, false);
 
-          // Disable classifier while updating
-          if (classifier != null) {
+
+    }
+
+    // nill -> manually changed the options in the menu fr device and models
+    private void updateActiveModel() {
+        // Get UI information before delegating to background
+        //Nil changed
+
+        System.out.println("change"); // this is to stop active classifier
+        if (classifier != null)// to stop while thread loop of classifier -> it first comes here, then goes above
+        {
+            classifier.breakC = true;
+            try {
+                Thread.sleep(5000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+
+        if (classifier != null && classifier.breakC == true) { // to stop classifier after stopping the threads
+
             classifier.close();
             classifier = null;
-          }
-
-          // Lookup names of parameters.
-          String model = modelStrings.get(modelIndex);
-          String device = deviceStrings.get(deviceIndex);
-
-          Log.i(TAG, "Changing model to " + model + ", device " + device   );
-
-          // Try to load model.
-          try {
-            if (model.equals(mobilenetV1Quant)) {
-              classifier = new ImageClassifierQuantizedMobileNet( getActivity());
-
-            } else if (model.equals(mobilenetV1Float)) {
-              classifier = new ImageClassifierFloatMobileNet(getActivity());
-            } else {
-              showToast("Failed to load model");
-            }
-          } catch (IOException e) {
-            Log.d(TAG, "Failed to load", e);
-            classifier = null;
-          }
-
-          // Customize the interpreter to the type of device we want to use.
-          if (classifier == null) {
-            return;
-          }
-
-            if( classifier != null)
-            {
-                if(modelIndex==0)
-                    model="quant";// to store in a file
-                else
-                    model="float";
-                classifier.setModel(model);// to store inf to a file
-            }
-
-            classifier.requests= finalNumThreads; // this is to request more more than one operations at a time
-          classifier.setNumThreads(1); // this refers to the num of threads in the original app, to do one operation in parallell
-
-          if (device.equals(cpu)) {
-          } else if (device.equals(gpu)) {
-            classifier.useGpu();
-
-          } else if (device.equals(nnApi)) {
-            classifier.useNNAPI();
-          }
-
-          classifier.classifyFrame2();
+        }
 
 
-        });
-  }
+        final int modelIndex = modelView.getCheckedItemPosition();
+        // Gpu=1
+        final int deviceIndex = deviceView.getCheckedItemPosition();
+        int numThreads = np.getValue();
+
+        switch (numThreads) {
+            case 1:
+                numThreads = 1;
+                break;
+            case 2:
+                numThreads = 3;
+                break;
+            case 3:
+                numThreads = 6;
+                break;
+        }
+        //nill added
+
+
+        int finalNumThreads = numThreads;
+        backgroundHandler.post(
+                () -> {
+
+//                    if (modelIndex == currentModel
+//                            && deviceIndex == currentDevice
+//                            && finalNumThreads == currentNumThreads) {
+//                        return;
+//                    }
+
+
+                    currentModel = modelIndex;
+                    currentDevice =
+                            deviceIndex;
+                    currentNumThreads = 1;
+
+
+                    // Lookup names of parameters.
+                    String model = modelStrings.get(modelIndex);
+                    String device = deviceStrings.get(deviceIndex);
+
+                    Log.i(TAG, "Changing model to " + model + ", device " + device);
+
+                    // Try to load model.
+                    try {
+                        if (model.equals(mobilenetV1Quant)) {
+                            classifier = new ImageClassifierQuantizedMobileNet(getActivity());
+
+                        } else if (model.equals(mobilenetV1Float)) {
+                            classifier = new ImageClassifierFloatMobileNet(getActivity());
+                        } else {
+                            showToast("Failed to load model");
+                        }
+                    } catch (IOException e) {
+                        Log.d(TAG, "Failed to load", e);
+                        classifier = null;
+                    }
+
+                    // Customize the interpreter to the type of device we want to use.
+                    if (classifier == null) {
+                        return;
+                    }
+
+                    if (classifier != null) {
+                        if (modelIndex == 0)
+                            model = "quant";// to store in a file
+                        else
+                            model = "float";
+                        classifier.setModel(model);// to store inf to a file
+                    }
+
+                    classifier.requests = finalNumThreads; // this is to request more more than one operations at a time
+                    classifier.setNumThreads(1); // this refers to the num of threads in the original app, to do one operation in parallell
+
+                    if (device.equals(cpu)) {
+                    } else if (device.equals(gpu)) {
+                        classifier.useGpu();
+
+                    } else if (device.equals(nnApi)) {
+                        classifier.useNNAPI();
+                    }
+
+                    classifier.classifyFrame2();
+
+
+                });
+    }
+
+
+
+
+
+
+
+
 
   /** Connect the buttons to their event handler. */
     /** Connect the buttons to their event handler. */
@@ -342,6 +406,7 @@ public class Camera2BasicFragment extends Fragment
 
               if ( classifier != null && classifier.breakC==true){ // to stop classifier after stopping the threads
 
+               // getInstance(). rTime=classifier.rTime;
                   classifier.close();
                   classifier = null;
               }
@@ -369,23 +434,6 @@ public class Camera2BasicFragment extends Fragment
           @Override
           public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
 
-              // first stop the current thread and then update the model
-              if (classifier != null)// to stop while thread loop of classifier -> it first comes here, then goes above
-              {
-                  classifier.breakC = true;
-                  try {
-                      Thread.sleep(6000);
-                  } catch (InterruptedException e) {
-                      e.printStackTrace();
-                  }
-              }
-              if ( classifier != null && classifier.breakC==true){ // to stop classifier after stopping the threads
-                  classifier.close();
-                  classifier = null;
-              }
-              // first stop the current thread and then update the model
-
-
             updateActiveModel();
           }
         });
@@ -404,7 +452,7 @@ public class Camera2BasicFragment extends Fragment
           @Override
           public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
 
-
+          updateActiveModel();
           }
         });
 
@@ -418,6 +466,7 @@ public class Camera2BasicFragment extends Fragment
         new NumberPicker.OnValueChangeListener() {
           @Override
           public void onValueChange(NumberPicker picker, int oldVal, int newVal) {
+
 
               // does nothing
           }
