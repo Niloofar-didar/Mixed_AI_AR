@@ -8,4 +8,5 @@ blender-2.80rc2-linux-glibc217-x86_64/blender -b -P blenderSimplifyConvertObj.py
 The python program will generate the decimated versions of the objects in a corresponding folder in obj_objects. Then automatically, those files will be converted to sfb and you can see the final results in sfb_objects folder.
 Now, the decimated objects are ready for you to transfer them to your phone's local storage.
 
-/home/niloofar/Pictures/Screenshot from 2022-03-02 20-50-45.png
+
+![Screenshot from 2022-03-02 20-50-45](https://user-images.githubusercontent.com/27611369/156481031-f93e2521-5fb9-49e2-9d7e-25df3e9f39f2.png)
