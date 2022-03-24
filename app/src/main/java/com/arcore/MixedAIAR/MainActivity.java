@@ -1,6 +1,9 @@
 package com.arcore.MixedAIAR;
 
+
 import java.io.BufferedReader;
+import java.util.Map.Entry;
+import java.util.stream.Collectors;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
@@ -23,6 +26,7 @@ import android.content.Intent;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
+import android.os.SystemClock;
 import android.support.design.widget.Snackbar;
 import android.util.Log;
 
@@ -79,6 +83,9 @@ import com.google.ar.sceneform.ux.TransformableNode;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.List;
+import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.ListMultimap;
+import com.google.common.collect.Multimap;
 
 import java.lang.Math;
 import java.io.InputStream;
@@ -99,12 +106,6 @@ import static java.lang.Math.abs;
 public class MainActivity extends AppCompatActivity implements AdapterView.OnItemSelectedListener {
 
 
-
-
-
-
-
-
     private ArFragment fragment;
     private PointerDrawable pointer = new PointerDrawable();
     private static final String GLTF_ASSET = "https://storage.googleapis.com/ar-answers-in-search-models/static/Tiger/model.glb";
@@ -123,13 +124,58 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
     private boolean isHitting;
     int obj_count=600;
      baseRenderable renderArray[] = new baseRenderable[obj_count];
-     float ratioArray[] = new float[obj_count];
+     float ratioArray[] = new float[obj_count]; // holds latest decimation ratio for each object
      float cacheArray[] = new float[obj_count];
-     float updateratio[] = new float[obj_count];
+  //   float updateratio[] = new float[obj_count];
     float updatednetw[] = new float[obj_count];
-    int maxtime=20; // should be even num
+    int maxtime=4; // 20 means calculates data for next 10 sec ->>>should be even num
     // if 5, goes up to 2.5 s. if 10, goes up to 5s
 
+    //for RE modeling and algorithm
+
+    List<Double> rE= new ArrayList<>();// keeps the record of RE
+    List< List<Double>> rERegList= new ArrayList<List<Double>>();// keeps the record of RE
+
+    long curTrisTime = 0;// holds the time when tot triangle count changes
+    private float ref_ratio=0.5f;
+    float sensitivity[] = new float[obj_count];
+    float tris_share[] = new float[obj_count];
+    Map <Integer, Float> candidate_obj;
+    float []coarse_Ratios=new float[]{1f,0.8f, 0.6f , 0.4f, 0.2f, 0.05f};
+    //ArrayList <ArrayList<Float>> F_profit= new ArrayList<>();
+    float [][]fProfit= new float[obj_count][coarse_Ratios.length];
+    float [][] tRemainder= new float[obj_count][coarse_Ratios.length];
+    int [][] track_obj= new int[obj_count][coarse_Ratios.length];
+    //float candidate_obj[] = new float[total_obj];
+    float tMin[] = new float[obj_count];
+
+    float des_Q= 1- (0.3f); //# this is avg desired Q
+    float des_Thr = 50f;
+
+
+    ListMultimap<Double, Double> trisMeanThr = ArrayListMultimap.create();//  a map from tot tris to mean throughput
+    Double[] meanThr =  trisMeanThr.values().toArray(new Double[0]);
+    Double[] totTris =  trisMeanThr.keySet().toArray(new Double[0]); // gets tot tris for keys
+    List<Double> totTrisList= new LinkedList<>();
+
+    ListMultimap<Double, Double> trisMeanDisk = ArrayListMultimap.create();//  a map from tot tris to mean dis at current period
+    Double[] meanDisk =  trisMeanDisk.values().toArray(new Double[0]);
+
+    ListMultimap<Double, Double> trisMeanDiskk = ArrayListMultimap.create();//  a map from tot tris to mean dis at next period
+    Double[] meanDiskk =  trisMeanDiskk.values().toArray(new Double[0]);
+
+    ListMultimap<Double, Double> trisRe = ArrayListMultimap.create();//  a map from tot tris to measured RE
+    ListMultimap<Double, List<Double>> reParamList = ArrayListMultimap.create();//  a map from tot tris to measured RE
+
+
+
+    double thSlope=-0.00001136 ;
+    double thIntercept=56.39;
+    double thRmse;
+
+    //for RE modeling and algorithm
+
+    int orgTrisAllobj=0;
     public int objectCount = 0;
     private String[] assetList = null;
     private Integer[] objcount = new Integer[]{1, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120, 130, 140, 160, 170, 180, 190, 200, 220, 240, 260, 300, 340, 380, 430, 500};
@@ -147,8 +193,8 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
     float bgpu=44.82908722f;
     float bwidth= 600;
 
-    private SimpleDateFormat newsecond, oldsecond;
-    String time = "";
+
+
     List<String> mLines = new ArrayList<>();
     //  List<String> time_tris = new ArrayList<>();
     Map<String, Integer> time_tris = new HashMap<>();
@@ -204,6 +250,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
     List<String> time_log = new ArrayList<>();
     List<String> distance_log = new ArrayList<>();
     List<String> deg_error_log = new ArrayList<>();
+    //List <Float> lastQuality=new ArrayList<Float>();
     List<String> GPU_Ut_log = new ArrayList<>();
     List<Integer> Server_reg_Freq = new ArrayList<>();
     List<Thread> current_thread = new ArrayList<>();
@@ -221,14 +268,16 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
     private Integer[] MDE_Selection= new Integer []{2,6};
     int finalw=4;
     float max_d_parameter=0.2f;
-    //=0.2f;
-    //int[] intArray =
 
+//@@@ periodicTotTris of main instance is changed not actual main-> to access it always use getInstance.periodicTotTris
+    List<Double> preiodicTotTris= new ArrayList<Double>();// to collect triangle count every 500 ms
+    //double l
 
     float area_percentage=0.5f;
+
     // Conservative , or mean are other options
     float total_tris=0;
-    //List<Boolean>  = new ArrayList<>();
+
     private boolean hit_distance[] = new boolean[800];
 
     ///prediction - Nil/Saloni
@@ -253,9 +302,12 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
     private float objX, objZ;
     private ArrayList<ArrayList<Float> > nextfivesec = new ArrayList<ArrayList<Float> >();
 
+    // RE regression parameters
     private float alpha = 0.7f;
     int max_datapoint=25;
-
+    double reRegRMSE= Double.POSITIVE_INFINITY;
+    double reRegalpha = 7.18208816882466E-07, reRegbetta=0.051009877415992f, reReggamma=-0.0313110940797337f, reRegteta=3.08118086288001582f;
+    double nextTris=0; // triangles for the next period
 
     private static final int KEEP_ALIVE_TIME = 500;
     private final int CORE_THREAD_POOL_SIZE = 10;
@@ -316,10 +368,16 @@ else{
         public TransformableNode baseAnchor;
         public String fileName;
         private int ID;
+        public float orig_tris;
+        //public float current_tris;
 
+//        public float getcur_tris() {
+//            return current_tris;
+//        }
+        public float getOrg_tris() {
+            return orig_tris;
+        }
 
-        //public float getOldp() { return old_percentage; }
-        //public float getNewp() { return new_percentage; }
         public void setAnchor(TransformableNode base) {
             baseAnchor = base;
         }
@@ -379,8 +437,10 @@ else{
 
     //reference renderables, cannot be changed when decimation percentage is selected
     private class refRenderable extends baseRenderable {
-        refRenderable(String filename) {
+        refRenderable(String filename, float tris) {
             this.fileName = filename;
+            this.orig_tris=tris;
+         //   this.current_tris=tris;
             setID(nextID);
             nextID++;
         }
@@ -438,8 +498,10 @@ else{
 
     //Decimated renderable -- has the ability to redraw and make model request from the manager
     private class decimatedRenderable extends baseRenderable {
-        decimatedRenderable(String filename) {
+        decimatedRenderable(String filename, float tris) {
             this.fileName = filename;
+            this.orig_tris=tris;
+          //  this.current_tris=tris;
             setID(nextID);
             nextID++;
         }
@@ -577,18 +639,13 @@ else{
     protected void onCreate(Bundle savedInstanceState) {
 
 
-
-
-//
-//
-//
-
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         TextView posText1 = (TextView) findViewById(R.id.objnum);
         posText1.setText("obj_num: " + 0);
+
 
         //create the file to store user score data
         dateFile = new File(getExternalFilesDir(null),
@@ -597,7 +654,7 @@ else{
         Nil = new File(getExternalFilesDir(null), "Nil.txt");
         obj = new File(getExternalFilesDir(null), "obj.txt");
         tris_num = new File(getExternalFilesDir(null), "tris_num.txt");
-        GPU_usage= new File(getExternalFilesDir(null), "GPU_usage.txt");
+        GPU_usage = new File(getExternalFilesDir(null), "GPU_usage.txt");
         //user score setup
         Spinner ratingSpinner = (Spinner) findViewById(R.id.userScoreSpinner);
         ratingSpinner.setOnItemSelectedListener(this);
@@ -627,7 +684,7 @@ else{
 
 //14 sep
         givenUsingTimer_whenSchedulingTaskOnce_thenCorrect();
-       //new filewrite(MainActivity.this).run();
+        //new filewrite(MainActivity.this).run();
 
         StringBuilder sb = new StringBuilder();
 
@@ -641,12 +698,10 @@ else{
 
         Spinner MDESpinner = (Spinner) findViewById(R.id.MDE);
         MDESpinner.setOnItemSelectedListener(this);
-        ArrayAdapter<Integer> MDESelectAdapter = new ArrayAdapter<Integer>(MainActivity.this,android.R.layout.simple_list_item_1, MDE_Selection);
+        ArrayAdapter<Integer> MDESelectAdapter = new ArrayAdapter<Integer>(MainActivity.this, android.R.layout.simple_list_item_1, MDE_Selection);
         //  ArrayAdapter WSelectAdapter1 = new ArrayAdapter(MainActivity.this,android.R.layout.simple_list_item_1, Collections.singletonList(W_Selection));
         MDESelectAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         MDESpinner.setAdapter(MDESelectAdapter);
-
-
 
 
         String currentFolder = getExternalFilesDir(null).getAbsolutePath();
@@ -654,13 +709,17 @@ else{
         try (PrintWriter writer = new PrintWriter(new FileOutputStream(FILEPATH, false))) {
 
             StringBuilder sbb = new StringBuilder();
-            sbb.append("time2"); sbb.append(','); sbb.append("tris");
-            sbb.append(',');sbb.append("gpu");sbb.append(',');
+            sbb.append("time2");
+            sbb.append(',');
+            sbb.append("tris");
+            sbb.append(',');
+            sbb.append("gpu");
+            sbb.append(',');
             sbb.append("distance"); //sbb.append(',');  sbb.append("serv_req");
-            sbb.append(',');  sbb.append(" lastobj ");
+            sbb.append(',');
+            sbb.append(" lastobj ");
 
             sbb.append('\n');
-
 
 
             writer.write(sbb.toString());
@@ -672,14 +731,17 @@ else{
         }
 
 
-        try (PrintWriter writer = new PrintWriter(new FileOutputStream( currentFolder + File.separator +  "Response_t.csv", false))) {
+        try (PrintWriter writer = new PrintWriter(new FileOutputStream(currentFolder + File.separator + "Response_t.csv", false))) {
 
             StringBuilder sbb2 = new StringBuilder();
             sbb2.append("time1");// sbb2.append(','); //sbb2.append("label");
-            sbb2.append(',');      sbb2.append("device"); // sbb2.append(','); sbb2.append( "accuracy" );
             sbb2.append(',');
-            sbb2.append("duration");sbb2.append(',');
-            sbb2.append("requests");sbb2.append(',');
+            sbb2.append("device"); // sbb2.append(','); sbb2.append( "accuracy" );
+            sbb2.append(',');
+            sbb2.append("duration");
+            sbb2.append(',');
+            sbb2.append("requests");
+            sbb2.append(',');
             sbb2.append("model, iteration");
 
             // String item2 = dateFormat.format(new Date()) + " "+label_accu+ " time " + duration + " ms" + " requests " + requests + " model " + model;
@@ -693,7 +755,6 @@ else{
 
 //        int intfactMDE= (int)   MDESpinner.getSelectedItem();
 //        max_d_parameter= intfactMDE /10f;
-
 
 
         try {
@@ -716,8 +777,8 @@ else{
                 excel_tris.add(Integer.parseInt(cols[5]));
                 excel_mindis.add(Float.parseFloat(cols[7]));
                 excel_filesize.add(Float.parseFloat(cols[8]));
-                excelname.add((String)(cols[6]));
-                        //.substring(2, cols[6].length() - 2));
+                excelname.add((String) (cols[6]));
+                //.substring(2, cols[6].length() - 2));
 
                 max_d.add(max_d_parameter * Float.parseFloat(cols[4]));
 
@@ -732,7 +793,7 @@ else{
 
 
 // prediction codes Requirements
-        for ( int i=0; i<maxtime; i++) {
+        for (int i = 0; i < maxtime; i++) {
             prmap.put(i, new ArrayList<ArrayList<Float>>());
             marginmap.put(i, new ArrayList<ArrayList<Float>>());
             errormap.put(i, new ArrayList<ArrayList<Float>>());
@@ -741,58 +802,23 @@ else{
         }
 
         //for(int i=0;i < max_datapoint;i++)
-          //  last_errors.add(i, new LinkedList<>());
+        //  last_errors.add(i, new LinkedList<>());
 
 
-            for(int i=0;i < maxtime/2;i++) {
+        for (int i = 0; i < maxtime / 2; i++) {
             nextfivesec.add(new ArrayList<Float>());
 
             nextfive_fourcenters.put(i, new ArrayList<>());
         }
 
-        for ( int i=0; i<maxtime; i++) {
+        for (int i = 0; i < maxtime; i++) {
 
             marginmap.get(i).add(new ArrayList<Float>(Arrays.asList(0.3f, 0.3f)));
 
             errormap.get(i).add(new ArrayList<Float>(Arrays.asList(0f, 0f)));
 
         }
-/*
 
-        try {
-            InputStream iS = getResources().getAssets().open("tristime.txt");
-            //BufferedReader reader = new BufferedReader(new InputStreamReader(is));
-            InputStreamReader inputreader = new InputStreamReader(iS);
-            BufferedReader reader = new BufferedReader(inputreader);
-            String line, line1="";
-
-            while ((line = reader.readLine()) != null)
-            { mLines.add(line);}
-        }
-
-
-        catch (IOException e) {
-            e.printStackTrace();
-        }
-
-/*
-
-/*
-        //for gpu_utilization:
-        try {
-            InputStream inputStream = openFileInput("myfile.txt");
-            InputStreamReader inputStreamReader = new InputStreamReader(inputStream);
-            BufferedReader bufferedReader = new BufferedReader(inputStreamReader);
-
-
-
-
-        }
-          catch (IOException e) {
-        // TODO Auto-generated catch block
-        e.printStackTrace();
-           }
-*/
         //Nil
 
 
@@ -834,8 +860,8 @@ else{
         //setup the model drop down for object count selection
         Spinner WSpinner = (Spinner) findViewById(R.id.WSelect);
         WSpinner.setOnItemSelectedListener(this);
-        ArrayAdapter<Integer> WSelectAdapter = new ArrayAdapter<Integer>(MainActivity.this,android.R.layout.simple_list_item_1, W_Selection);
-       //  ArrayAdapter WSelectAdapter1 = new ArrayAdapter(MainActivity.this,android.R.layout.simple_list_item_1, Collections.singletonList(W_Selection));
+        ArrayAdapter<Integer> WSelectAdapter = new ArrayAdapter<Integer>(MainActivity.this, android.R.layout.simple_list_item_1, W_Selection);
+        //  ArrayAdapter WSelectAdapter1 = new ArrayAdapter(MainActivity.this,android.R.layout.simple_list_item_1, Collections.singletonList(W_Selection));
         WSelectAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         WSpinner.setAdapter(WSelectAdapter);
 
@@ -845,14 +871,10 @@ else{
         //setup the model drop down for object count selection
         Spinner BWSpinner = (Spinner) findViewById(R.id.Bwidth);
         BWSpinner.setOnItemSelectedListener(this);
-        ArrayAdapter<Integer> BWSelectAdapter = new ArrayAdapter<Integer>(MainActivity.this,android.R.layout.simple_list_item_1, BW_Selection);
+        ArrayAdapter<Integer> BWSelectAdapter = new ArrayAdapter<Integer>(MainActivity.this, android.R.layout.simple_list_item_1, BW_Selection);
         //  ArrayAdapter WSelectAdapter1 = new ArrayAdapter(MainActivity.this,android.R.layout.simple_list_item_1, Collections.singletonList(W_Selection));
         BWSelectAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         BWSpinner.setAdapter(BWSelectAdapter);
-
-
-
-
 
 
         //setup the model drop down for object count selection
@@ -863,7 +885,7 @@ else{
         policySelectAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         policySpinner.setAdapter(policySelectAdapter);
 
-        policy=policySpinner.getSelectedItem().toString();
+        policy = policySpinner.getSelectedItem().toString();
 
 
         //decimate all obj at the same time
@@ -885,39 +907,9 @@ else{
         multipleSwitch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
-                //if(fisrService==false) {
-                  /*  Intent i = new Intent(Intent.ACTION_MAIN);
-                    i.addCategory(Intent.CATEGORY_LAUNCHER);
-                    i.setPackage("android.example.com.tflitecamerademo");
-                    fisrService=true;
-*/
+
                 if (b) {
                     multipleSwitchCheck = true;
-
-                    //Nil code to check if she can launch tensorflow app here
-
-/*
-                        countDownTimer = new CountDownTimer(Long.MAX_VALUE, 6000) {
-
-                            // This is called after every 3 sec interval.
-                            public void onTick(long millisUntilFinished) {
-
-                                //startService(i);
-                                startActivity(i);
-
-                            }
-
-                            public void onFinish() {
-
-                                stopService(i);
-                                countDownTimer.cancel();
-
-
-                            }
-                        }.start();
-
-*/
-
 
                 } else {
                     multipleSwitchCheck = false;
@@ -944,8 +936,7 @@ else{
 
 
 
-
-
+/*
         //create button listener for predict
         Button predictObjectButton = (Button) findViewById(R.id.predict);
 
@@ -953,75 +944,14 @@ else{
             public void onClick(View view) {
                 // int selectedCount = (int) countSpinner.getSelectedItem();
 
-                    // if (multipleSwitchCheck == true) {
+                // if (multipleSwitchCheck == true) {
 
-                bwidth= (int) BWSpinner.getSelectedItem();
-                 for(int i=0; i< objectCount; i++)
-                    d1_prev.set(i,predicted_distances.get(i).get(0) );
+                bwidth = (int) BWSpinner.getSelectedItem();
+                for (int i = 0; i < objectCount; i++)
+                    d1_prev.set(i, predicted_distances.get(i).get(0));
 
-           //for eAR
-                if (multipleSwitchCheck == true){// nill feb -> multiple = false
-
-                   Timer t = new Timer();
-                    final int[] count = {0}; // should be before here
-                    t.scheduleAtFixedRate(
-                            new TimerTask() {
-                                public void run() {
-
-                                    if(objectCount==0 || multipleSwitchCheck == false) {
-                                        t.cancel();
-                                        percReduction=1;
-                                    }
-                                    ww[0] = (int)WSpinner.getSelectedItem();
-
-                         /*
-                                    int intfactMDE= (int)   MDESpinner.getSelectedItem();
-                                    float  max_d_parameter_tmp= intfactMDE /10f;
-
-
-                             for (int i=0; i< max_d.size(); i++)
-                           {
-
-//                      if(max_d_parameter== 0.2f  )
-                       max_d.set(i, (max_d.get(i) * max_d_parameter_tmp)/max_d_parameter );
-
-
-
-                                 }
-
-                                    max_d_parameter= max_d_parameter_tmp;
-
-
-                             */
-
-                                    finalw=  ww[0];
-                                    int dindex = 0;// shows next time index
-                                    float  d1;
-
-                                    for (int ind = 0; ind < objectCount; ind++) {
-
-                                        new DecisionAlgorithm(MainActivity.this, ind, finalw, dindex).run();
-                                  //  MainActivity.this.algoThreadPool.execute(new DecisionAlgorithm(MainActivity.this, ind, finalw, dindex));
-
-
-
-                                    }
-
-                                    }
-                                },
-                                0,      // run first occurrence immediatetl
-                            (long) (decision_p*1000));
-
-
-
-
-              }
-
-
-
-
-               else if (referenceObjectSwitchCheck==true)
-                {
+                //for eAR
+                if (multipleSwitchCheck == true) {// nill feb -> multiple = false
 
                     Timer t = new Timer();
                     final int[] count = {0}; // should be before here
@@ -1029,27 +959,49 @@ else{
                             new TimerTask() {
                                 public void run() {
 
-                                    if(objectCount==0 || referenceObjectSwitchCheck==false   )
-                                    {t.cancel();
-                                    percReduction=1;}
+                                    if (objectCount == 0 || multipleSwitchCheck == false) {
+                                        t.cancel();
+                                        percReduction = 1;
+                                    }
+                                    ww[0] = (int) WSpinner.getSelectedItem();
 
 
-                                    /*
-                                    int intfactMDE= (int)   MDESpinner.getSelectedItem();
-                                    float  max_d_parameter_tmp= intfactMDE /10f;
 
+                                    finalw = ww[0];
+                                    int dindex = 0;// shows next time index
+                                    float d1;
 
-                                    for (int i=0; i< max_d.size(); i++)
-                                    {
+                                    for (int ind = 0; ind < objectCount; ind++) {
 
-                                        max_d.set(i, (max_d.get(i) * max_d_parameter_tmp)/max_d_parameter );
+                                        new DecisionAlgorithm(MainActivity.this, ind, finalw, dindex).run();
+                                        //  MainActivity.this.algoThreadPool.execute(new DecisionAlgorithm(MainActivity.this, ind, finalw, dindex));
+
 
                                     }
 
-                                    max_d_parameter= max_d_parameter_tmp;
-*/
+                                }
+                            },
+                            0,      // run first occurrence immediatetl
+                            (long) (decision_p * 1000));
+
+
+                } else if (referenceObjectSwitchCheck == true) { // this is for static eAR
+
+                    Timer t = new Timer();
+                    final int[] count = {0}; // should be before here
+                    t.scheduleAtFixedRate(
+                            new TimerTask() {
+                                public void run() {
+
+                                    if (objectCount == 0 || referenceObjectSwitchCheck == false) {
+                                        t.cancel();
+                                        percReduction = 1;
+                                    }
+
+
+
                                     int dindex = 0;// shows next time index
-                                 //   float  d1;
+                                    //   float  d1;
 
                                     for (int ind = 0; ind < objectCount; ind++) {
 
@@ -1059,7 +1011,7 @@ else{
                                         int finalInd = ind;
                                         //  float d1 = predicted_distances.get(finalInd).get(0);// gets the first time, next 1s of every object, ie. d1 of every obj
 
-                                        float d1= renderArray[finalInd].return_distance();
+                                        float d1 = renderArray[finalInd].return_distance();
 
                                         int indq = excelname.indexOf(renderArray[finalInd].fileName);// search in excel file to find the name of current object and get access to the index of current object
                                         // excel file has all information for the degredation model
@@ -1067,54 +1019,59 @@ else{
                                         float a = excel_alpha.get(indq);
                                         float b = excel_betta.get(indq);
                                         float c = excel_c.get(indq);
-                                        float q1= 0.5f;
-                                        float q2= 0.8f;
+                                        float q1 = 0.5f;
+                                        float q2 = 0.8f;
 
-                                        float deg_error1 =Calculate_deg_er(a, b, c, d1, gamma, q1);
-                                        float deg_error2 =Calculate_deg_er(a, b, c,  d1, gamma, q2);
+                                        float deg_error1 = Calculate_deg_er(a, b, c, d1, gamma, q1);
+                                        float deg_error2 = Calculate_deg_er(a, b, c, d1, gamma, q2);
 
-                                        float curQ=1;
-                                        float cur_degerror=0;
-                                        float maxd= max_d.get(indq);
-                                        if(deg_error1 < maxd )
-                                        {  curQ=q1;
-                                            cur_degerror=deg_error1;
-                                        }
+                                        float curQ = 1;
+                                        float cur_degerror = 0;
+                                        float max_nrmd = excel_maxd.get(indq);
 
-                                        else if (deg_error2 <maxd) {
+                                        float maxd = max_d.get(indq);
+                                        if (deg_error1 < maxd) {
+                                            curQ = q1;
+                                            cur_degerror = deg_error1;
+                                        } else if (deg_error2 < maxd) {
                                             curQ = q2;
-                                            cur_degerror=deg_error2;
+                                            cur_degerror = deg_error2;
                                         }
                                         // update total tiri, deg log, quality log, time , and distance log, then redraw obj
-
+                                         cur_degerror=cur_degerror / max_nrmd; // normalize it
                                         // float distance= renderArray[finalInd].return_distance();
-                                        String last_dis=  distance_log.get(finalInd);
-                                        distance_log.set(finalInd, last_dis +","+ d1);
+                                        String last_dis = distance_log.get(finalInd);
+                                        distance_log.set(finalInd, last_dis + "," + d1);
                                         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss:SSS");
-                                        String last_time= time_log.get(finalInd);
-                                        time_log.set(finalInd, last_time+ "," +dateFormat.format(new Date()).toString() );
+                                        String last_time = time_log.get(finalInd);
+                                        time_log.set(finalInd, last_time + "," + dateFormat.format(new Date()).toString());
 
-                                        String lasterror= deg_error_log.get(finalInd);
-                                        cur_degerror= (float)(Math.round((float)(cur_degerror * 10000))) / 10000;
-                                        deg_error_log.set(finalInd, lasterror+ Float.toString(  cur_degerror) + ",");
+                                        String lasterror = deg_error_log.get(finalInd);
+
+                                        cur_degerror = (float) (Math.round((float) (cur_degerror * 10000))) / 10000;
+                                        lastQuality.set(finalInd,1- cur_degerror);// normalized
+                                        deg_error_log.set(finalInd, lasterror + Float.toString(cur_degerror) + ",");
 
                                         //'''upfdate everythong finally'''
                                         String lastq_log = quality_log.get(finalInd);
                                         quality_log.set(finalInd, lastq_log + curQ + ",");
 
-
-                                        if ((curQ ) != updateratio[finalInd]  ) {
+                                        // update total_tris
+                                        if ((curQ) != updateratio[finalInd]) {
                                             total_tris = total_tris - (updateratio[finalInd] * excel_tris.get(indq));// total =total -1*objtris
 
-                                            total_tris = total_tris + (curQ *  excel_tris.get(indq));// total = total + 0.8*objtris
-                                            percReduction=curQ;
+                                            total_tris = total_tris + (curQ * excel_tris.get(indq));// total = total + 0.8*objtris
+                                            curTrisTime= SystemClock.uptimeMillis();
+
+                                           //Camera2BasicFragment.getInstance().update((double) total_tris);// run linear reg
+
+                                            percReduction = curQ;
                                             renderArray[ind].decimatedModelRequest(curQ, ind, referenceObjectSwitchCheck);
-                                         //  renderArray[finalInd].redraw(  finalInd ); // you should have 0.8 and 0.5 for all objects
+                                            //  renderArray[finalInd].redraw(  finalInd ); // you should have 0.8 and 0.5 for all objects
 
                                         }
 
                                         updateratio[finalInd] = curQ;
-
 
 
                                     }
@@ -1122,20 +1079,17 @@ else{
                                 }
                             },
                             0,      // run first occurrence immediatetl
-                            (long) (decision_p*1000));
+                            (long) (decision_p * 1000));
 
 
-            } // end of baseline2
+                } // end of baseline2
 
 
-
-           }// on click
+            }// on click
         });
 
 
-
-
-
+*/
 
         //create button listener for object placer
         Button placeObjectButton = (Button) findViewById(R.id.placeObjButton);
@@ -1143,7 +1097,7 @@ else{
         placeObjectButton.setOnClickListener(new View.OnClickListener() {
             public void onClick(View view) {
 
-                policy= policySpinner.getSelectedItem().toString();
+                policy = policySpinner.getSelectedItem().toString();
 
 
                 int selectedCount = (int) countSpinner.getSelectedItem();
@@ -1159,8 +1113,8 @@ else{
                         public void onTick(long millisUntilFinished) {
 
                             if (objectCount < selectedCount) {
-                                renderArray[objectCount] = new decimatedRenderable(modelSpinner.getSelectedItem().toString());
-
+                                float original_tris=excel_tris.get(excelname.indexOf(currentModel));
+                                renderArray[objectCount] = new decimatedRenderable(modelSpinner.getSelectedItem().toString(),original_tris);
                                 addObject(Uri.parse("models/" + currentModel + ".sfb"), renderArray[objectCount]);
 
                             }
@@ -1183,13 +1137,13 @@ else{
                 } else {// define a counter 3 s to add obj ev time for gpu_model
 
 
-                 //   ImageView simpleAndy = new ImageView(this);
-                  //  simpleAndy.setImageResource(R.drawable.droid_thumb);
-                   // simpleAndy.setContentDescription("andy");
-                    renderArray[objectCount] = new decimatedRenderable(modelSpinner.getSelectedItem().toString());
-                        addObject(Uri.parse("models/" + currentModel + ".sfb"), renderArray[objectCount]);
-
-
+                    //   ImageView simpleAndy = new ImageView(this);
+                    //  simpleAndy.setImageResource(R.drawable.droid_thumb);
+                    // simpleAndy.setContentDescription("andy");
+                    float original_tris=excel_tris.get(excelname.indexOf(currentModel));
+                    renderArray[objectCount] = new decimatedRenderable(modelSpinner.getSelectedItem().toString(),original_tris);
+                    addObject(Uri.parse("models/" + currentModel + ".sfb"), renderArray[objectCount]);
+                   
 
 //nill temporary oct 24
 //                    renderArray[objectCount] = new decimatedRenderable(modelSpinner.getSelectedItem().toString());
@@ -1197,10 +1151,14 @@ else{
 
                 }
 
+
+
             }
+
+
+
+
         });
-
-
 
 
 
@@ -1208,7 +1166,7 @@ else{
         Auto_decimate_butt.setOnClickListener(new View.OnClickListener() {
             public void onClick(View view) {
 
-                TextView  posText = (TextView) findViewById(R.id.dec_req);
+                TextView posText = (TextView) findViewById(R.id.dec_req);
 
                 Toast toast = Toast.makeText(MainActivity.this,
                         "Please Upload the decimated objects to the Phone storage", Toast.LENGTH_LONG);
@@ -1216,7 +1174,7 @@ else{
                 toast.show();
 
 
-                int repeat=6; // num of decimation loop, if it is one, just gathers the data of the first  iteration (original objects on the screen)
+                int repeat = 6; // num of decimation loop, if it is one, just gathers the data of the first  iteration (original objects on the screen)
                 final int[] start = {0};
                 final float[] ratio = {90};
                 countDownTimer = new CountDownTimer(Long.MAX_VALUE, 10000) {
@@ -1224,21 +1182,19 @@ else{
                     // This is called after every 80 sec interval.
                     public void onTick(long millisUntilFinished) {
 
-                        if (start[0] == repeat)
-                        {
-                           //AI_tasks+=1;
-                          //  posText.setText( String.valueOf(AI_tasks));
+                        if (start[0] == repeat) {
+                            //AI_tasks+=1;
+                            //  posText.setText( String.valueOf(AI_tasks));
 
                             countDownTimer.cancel();
-                              //onPause();
+                            //onPause();
 
                         }
 
 
-
                         if (start[0] < repeat) {
 
-                            if(start[0]!=0) {  /// at first we delay the auto decimation for 90 seconds to gather data of all objects in
+                            if (start[0] != 0) {  /// at first we delay the auto decimation for 90 seconds to gather data of all objects in
                                 //screen.  start[0] is for the original objects data collection delay
 
                                 for (int i = 0; i < objectCount; i++) {
@@ -1249,39 +1205,42 @@ else{
                                     if (under_Perc == false) {
                                         total_tris = total_tris - (ratioArray[i] * o_tris.get(i));// total =total -1*objtris
                                         renderArray[i].decimatedModelRequest(ratio[0] / 100f, i, false);
-                                        posText.setText("Request for "+ renderArray[i].fileName + " "+ratio[0] / 100f);
+                                        posText.setText("Request for " + renderArray[i].fileName + " " + ratio[0] / 100f);
 
                                         ratioArray[i] = ratio[0] / 100f;
+                                        // update total_tris
                                         total_tris = total_tris + (ratioArray[i] * o_tris.get(i));// total = total + 0.8*objtris
+
+                                        curTrisTime= SystemClock.uptimeMillis();
+                                        // quality is registered
+
                                     } else {
+
                                         total_tris = total_tris - (ratioArray[i] * o_tris.get(i));// total =total -1*objtris
 
                                         renderArray[i].decimatedModelRequest(ratio[0] / 1000f, i, false);
-                                        posText.setText("Request for "+ renderArray[i].fileName + " "+ratio[0] / 100f);
+                                        posText.setText("Request for " + renderArray[i].fileName + " " + ratio[0] / 100f);
                                         ratioArray[i] = ratio[0] / 1000f;
+                                        // update total_tris
                                         total_tris = total_tris + (ratioArray[i] * o_tris.get(i));// total = total + 0.8*objtris
+
+                                        curTrisTime= SystemClock.uptimeMillis();
+                                        // quality is registered
+
 
                                     }
 
                                     int finalInd = i;
                                     int indq = excelname.indexOf(renderArray[finalInd].fileName);// search in excel file to find the name of current object and get access to the index of current object
 //nill added
-                                    // excel file has all information for the degredation model
-                                    float gamma = excel_gamma.get(indq);
-                                    float a = excel_alpha.get(indq);
-                                    float b = excel_betta.get(indq);
-                                    float c = excel_c.get(indq);
                                     float d1 = renderArray[finalInd].return_distance();
-                                    float curQ = ratio[0] / 100f;
-                                    float deg_error =
-                                            (float) (Math.round((float) (Calculate_deg_er(a, b, c, d1, gamma, curQ) * 10000))) / 10000;
-                                    //Nill added
-                                    float maxd = max_d.get(indq);
-                                    float max_nrmd = excel_maxd.get(indq);
-
+                                    // excel file has all information for the degredation model
+                                    float cur_degerror=calculateQuality(indq, finalInd, ratio[0],d1);
                                     String lasterror = deg_error_log.get(finalInd);
+                                    float curQ = ratio[0] / 100f;
+                                    //lastQuality.set(finalInd,1-cur_degerror );
 
-                                    deg_error_log.set(finalInd, lasterror + Float.toString(deg_error / max_nrmd) + ",");
+                                    deg_error_log.set(finalInd, lasterror + Float.toString(cur_degerror) + ",");
                                     String lastq_log = quality_log.get(finalInd);
                                     quality_log.set(finalInd, lastq_log + curQ + ",");
 
@@ -1298,16 +1257,15 @@ else{
                             }// if start0 != 0
 
 
-
-                            start[0] +=1;
+                            start[0] += 1;
                         }
 
 
                     }
 
                     public void onFinish() {
-                        if (start[0] == repeat)
-                        {   countDownTimer.cancel();
+                        if (start[0] == repeat) {
+                            countDownTimer.cancel();
                             //onPause();
 
                         }
@@ -1323,63 +1281,32 @@ else{
 
 
 
-
-
         //Clear all objects button setup
         Button clearButton = (Button) findViewById(R.id.clearButton);
         clearButton.setOnClickListener(new View.OnClickListener() {
             public void onClick(View view) {
 
 
-               // List<Double> rTime
-                List<Double>  what     =  Camera2BasicFragment.getInstance().rTime;
-                double []x= new double[]{
-                0.0,
-                146803.0,
-                293606.0,
-                440409.0,
-                587212.0,
-                734015.0,
-                880818.0,
-                1027621.0,
-                1174424.0,
-                1321227.0,
-                1468030.0,
-                1614833.0,
-                1761636.0,
-                1908439.0,
-                2055242.0,
-                2202045.0,
-                2348848.0,
-                2495651.0,
-                2642454.0,
-                2789257.0,
-                2936060.0,};
-                double []y= new double[]{47.84688995215311,
-                        36.84210526315789,
-                        38.88888888888889,
-                        33.0188679245283,
-                        35.0,
-                        32.96703296703297,
-                        43.24324324324324,
-                        38.96103896103896,
-                        38.88888888888889,
-                        28.688524590163937,
-                        34.146341463414636,
-                        31.25,
-                        28.34008097165992,
-                        32.25806451612903,
-                        25.735294117647058,
-                        28.0,
-                        22.80130293159609,
-                        27.888446215139442,
-                        27.34375,
-                        23.333333333333336,
-                        21.08559498956159,};
-                LinearRegression lRegression=new LinearRegression(x,y);
-                double slope=lRegression.slope;
-                double intercept=lRegression.intercept;
-                double rmse=lRegression.getRmse();
+                // List<Double> rTime
+
+//                ListMultimap<Integer, Double> multimap =
+//                        ArrayListMultimap.create();
+//                multimap.put(100,3.0);
+//                multimap.put(1,4.0);
+//                multimap.put(2,5.0);
+//                multimap.put(3,6.0);
+//                multimap.get(1).remove(0);
+//                multimap.put(100,7.0);
+//                multimap.put(1,8.0);
+//                multimap.get(1).remove(0);
+//                multimap.put(1,8.0);
+//                int keysize= multimap.keySet().size();
+//                int size1= multimap.get(1).size();
+//                int size= multimap.size();
+//                int size2= multimap.get(2).size();
+//                Double[] values =  multimap.values().toArray(new Double[0]);
+
+
 
 
                 for (int i = 0; i < objectCount; i++) {
@@ -1387,22 +1314,23 @@ else{
 
                     ratioArray[i] = 1;
                     cacheArray[i] = 1;
-                    updateratio[i]=1;
-                    updatednetw[i]=0;
+                 //   updateratio[i] = 1;
+                    updatednetw[i] = 0;
                 }
 
-              //  removePreviousAnchors(); // from net wrong
+                //  removePreviousAnchors(); // from net wrong
                 ModelRequestManager.getInstance().clear();
 
+                orgTrisAllobj=0;
                 objectCount = 0;
-                nextID=0;
+                nextID = 0;
                 TextView posText = (TextView) findViewById(R.id.objnum);
                 posText.setText("obj_num: " + objectCount);
                 total_area = 0;
                 total_vol = 0;
                 redrawed.clear();
                 sum = 0;
-                total_tris=0;
+                total_tris = 0;
                 v_dist.clear();
                 volume_list.clear();
                 area_list.clear();
@@ -1423,6 +1351,7 @@ else{
                 //nextfivesec.clear();
                 GPU_Ut_log.clear();
                 deg_error_log.clear();
+              //  lastQuality.clear();
                 Server_reg_Freq.clear();
                 current_thread.clear();
                 decimate_thread.clear();
@@ -1477,23 +1406,47 @@ else{
 
                         {
 
-                            if (under_Perc == false)
+                            float decRatio;
 
-                            {
-                                total_tris  = total_tris- (ratioArray[i]* o_tris.get(i));// total =total -1*objtris
-                                renderArray[i].decimatedModelRequest(seekBar.getProgress() / 100f, i, referenceObjectSwitchCheck);
+                            if (under_Perc == false) {
+                                total_tris = total_tris - (ratioArray[i] * o_tris.get(i));// total =total -1*objtris
+                                decRatio=seekBar.getProgress() / 100f;
+                                renderArray[i].decimatedModelRequest(decRatio, i, referenceObjectSwitchCheck);
 
-                                ratioArray[i]=seekBar.getProgress() / 100f;
-                                total_tris = total_tris+ (ratioArray[i]* o_tris.get(i));// total = total + 0.8*objtris
+                                ratioArray[i] = seekBar.getProgress() / 100f;
+                                // update total_tris
+                                total_tris = total_tris + (ratioArray[i] * o_tris.get(i));// total = total + 0.8*objtris
+                                curTrisTime= SystemClock.uptimeMillis();
+                                // quality is registered
+                            } else {
+                                total_tris = total_tris - (ratioArray[i] * o_tris.get(i));// total =total -1*objtris
+                                decRatio=seekBar.getProgress() / 1000f;
+                                renderArray[i].decimatedModelRequest(decRatio, i, referenceObjectSwitchCheck);
+                                ratioArray[i] = seekBar.getProgress() / 1000f;
+                                // update total_tris
+                                total_tris = total_tris + (ratioArray[i] * o_tris.get(i));// total = total + 0.8*objtris
+
+                                curTrisTime= SystemClock.uptimeMillis();
+                                // quality is registered
                             }
-                            else {
-                                total_tris= total_tris- (ratioArray[i]* o_tris.get(i));// total =total -1*objtris
 
-                                renderArray[i].decimatedModelRequest(seekBar.getProgress() / 1000f, i, referenceObjectSwitchCheck);
-                                ratioArray[i]=seekBar.getProgress() / 1000f;
-                                total_tris = total_tris+ (ratioArray[i]* o_tris.get(i));// total = total + 0.8*objtris
+/*
+                            float gamma = excel_gamma.get(i);
+                            float a = excel_alpha.get(i);
+                            float b = excel_betta.get(i);
+                            float c = excel_c.get(i);
+                            float d1 = renderArray[i].return_distance();
 
-                            }
+                            float deg_error =
+                                    (float) (Math.round((float) (Calculate_deg_er(a, b, c, d1, gamma, decRatio) * 10000))) / 10000;
+                            float max_nrmd = excel_maxd.get(i);
+                            float cur_degerror=deg_error / max_nrmd;
+                            lastQuality.set(i,1-cur_degerror );*/
+
+
+
+
+
                         }
 
 
@@ -1510,14 +1463,13 @@ else{
         initializeGallery();
         fragment = (ArFragment)
                 getSupportFragmentManager().findFragmentById(R.id.sceneform_fragment);
-        fragment.getArSceneView().getScene().addOnUpdateListener(frameTime -> {fragment.onUpdate(frameTime);
+        fragment.getArSceneView().getScene().addOnUpdateListener(frameTime -> {
+            fragment.onUpdate(frameTime);
             onUpdate();
 
             //Nill did-> I don't need upadate rtracking called in on update
 
         });
-
-
 
 
         //prediction REQ
@@ -1527,30 +1479,53 @@ else{
                 new TimerTask() {
                     public void run() {
 
-                        if(objectCount>= 1) { // Nil april 21 -> fixed
+//@@@@@@@@@@@ This is to collect total triangle data every 500 ms @@@@@@@@@@@
+
+
+                       // long curTime= SystemClock.uptimeMillis();
+                        if( Camera2BasicFragment.getInstance().classifier!=null) // in the begining we collect data for zero tris
+                            new dataCol(MainActivity.this).run(); // this is to collect mean thr, total_tris. average dis
+
+
+/* since we periodically run the model for thr/RE -> even if there is a wrong point before adding tris count and the model calculates wrong num, it will be adjusted based on new
+// corrected data
+
+                        if ( curTrisTime!=0 && curTime - (curTrisTime+2000)>=0 && curTime - (curTrisTime+2000)<500 )// because this timer runs every 500ms, we want to get regression model
+                            //running at least after 2s that the triangle count changes, to make sure that the new object is on the screen and the change for throughput is applied
+                            //without this condition, we'll have the triangle count change and regression model applied before adding the object to the screen
+                       {
+
+                           new dataCol(MainActivity.this).run(); // after 2s that we put obj on the screen-> this is to collect mean thr, total_tris. average dis
+
+                         //  Camera2BasicFragment.getInstance().update((double) total_tris);// run linear reg for thrughput
+                         //  calculate_RE();// real-time RE calculation -> rE list adds the new point -> then checks if we have at least two points, we
+
+                       }*/
+//@@@@@@@@@@@ This is to collect total triangle data every 500 ms  @@@@@@@@@@@
+
+// This is to collect position prediction every 500 ms
+
+                        if (objectCount >= 1) { // Nil april 21 -> fixed
+
+
+
+
                             Frame frame = fragment.getArSceneView().getArFrame();//OK
                             current.add(new ArrayList<Float>(Arrays.asList(frame.getCamera().getPose().tx(), frame.getCamera().getPose().ty(), frame.getCamera().getPose().tz())));
                             timeLog.add(timeInSec);
                             timeInSec = timeInSec + 0.5f;
+                            float j = 0.5f;
+                            for (int i = 0; i < maxtime; i++) {
+                                prmap.get(i).add(predictNextError2(j, i));
+                                j += 0.5f;
+                            }
+                            if (count[0] % 2 == 0) { // means that we are ignoring 0.5 time data, 0-> next 1s, 2 is for next 2sec , 4 is for row fifth which is 4s in array of next1sec
 
-
-                            float  j=0.5f;
-                            for ( int i=0; i<maxtime; i++)
-                            { prmap.get(i).add(predictNextError2(j, i));
-                                j+=0.5f;}
-
-
-                            if (count[0] %2==0) { // means that we are ignoring 0.5 time data, 0-> next 1s, 2 is for next 2sec , 4 is for row fifth which is 4s in array of next1sec
-
-                                for (int i = 0; i < maxtime/2; i++) // for next 5 sec
-                                {
+                                for (int i = 0; i < maxtime / 2; i++) // for next 5 sec
                                     nextfivesec.set(i, prmap.get(2 * i + 1).get(count[0]));
-
-                                }
 
                                 FindMiniCenters(area_percentage);
                                 Findpredicted_distances();
-
                             }
                             count[0]++;
 
@@ -1559,14 +1534,159 @@ else{
                     }
 
                 },
-                0,      // run first occurrence immediatetly
+                0,      // run first occurrence immediately
                 500);
 
+        // periodic tris collection
+
+    }
+
+    public void calculate_RE( ){
 
 
+
+
+//??? make sure when to call this, if delata RE <>1 or PAR or PAI is very far from 1 or periodically???
+            odraAlg( (float)nextTris);// calls algorithm
+
+
+
+
+   }
+
+
+
+// starting the second loop : note that sensitivity calculation is just to detect the candidate object for decimation/maintaining triangle count-> it is apart from actual decimation ratio calculation
+    void odraAlg(float tUP) {
+
+        candidate_obj = new HashMap<>();
+        Map<Integer, Float> sortedcandidate_obj = new HashMap<>();
+        float sum_org_tris = 0; // sum of all tris of the objects o the screen
+
+        for (int ind = 0; ind < objectCount; ind++) {
+
+            sum_org_tris += renderArray[ind].orig_tris;// this will ne used to cal min of tris needed at each row (object) in bellow
+
+
+            float curtris = renderArray[ind].orig_tris * ratioArray[ind];
+            float r1 = ratioArray[ind]; // current object decimation ratio
+            float r2 = ref_ratio * r1; // wanna compare obj level of sensitivity to see if we decimate object more -> to (ref *curr) ratio, would the current object hurt more than the other ones?
+
+            int indq = excelname.indexOf(renderArray[ind].fileName);// search in excel file to find the name of current object and get access to the index of current object
+            // excel file has all information for the degredation model
+            float gamma = excel_gamma.get(indq);
+            float a = excel_alpha.get(indq);
+            float b = excel_betta.get(indq);
+            float c = excel_c.get(indq);
+            float d_k = renderArray[ind].return_distance();// current distance
+
+            float tmper1 = Calculate_deg_er(a, b, c, d_k, gamma, r1); // deg error for current sit
+            float tmper2 = Calculate_deg_er(a, b, c, d_k, gamma, r2); // deg error for more decimated obj
+
+            if (tmper2 < 0)
+                tmper2 = 0;
+
+            //Qi−Qi,r divided by Ti(1−Rr) = (1-er1) - (1-er2) / ....
+            sensitivity[ind] = (abs(tmper2 - tmper1) / (curtris - (ref_ratio * curtris)));
+            tris_share[ind] = (curtris / tUP);
+            candidate_obj.put(ind, sensitivity[ind] / tris_share[ind]);
+
+
+        }
+        sortedcandidate_obj = sortByValue(candidate_obj, false); // second arg is for order-> ascending or not? NO
+        // Up to here, the candidate objects are known
+
+
+        float updated_sum_org_tris = sum_org_tris; // keeps the last value which is sum_org_tris - tris1-tris2-....
+        for (int i : sortedcandidate_obj.keySet()) { // check this gets the candidate object index to calculate min weight
+            float sum_org_tris_minus = updated_sum_org_tris - renderArray[i].orig_tris; // this is summ of tris for all the objects except the current one
+            updated_sum_org_tris = sum_org_tris_minus;
+            tMin[i] = coarse_Ratios[coarse_Ratios.length - 1] * sum_org_tris_minus;// minimum tris needs for object i+1 to object n
+            ///@@@@ if this line works lonely, delete the extra line for the last object to zero in the alg
+        }
+
+        Map.Entry<Integer, Float> entry = sortedcandidate_obj.entrySet().iterator().next();
+        int key = entry.getKey(); // get access to the first key -> to see if it is the first object for bellow code
+
+        int prevInd = 0;
+        for (int i : sortedcandidate_obj.keySet()){  // line 10 i here is equal to alphai -> the obj with largest candidacy
+            // check this gets the candidate object index to maintain its quality
+            for (int j = 0; j < coarse_Ratios.length; j++) {
+
+                int indq = excelname.indexOf(renderArray[i].fileName);// search in excel file to find the name of current object and get access to the index of current object
+                float gamma = excel_gamma.get(indq);
+                float a = excel_alpha.get(indq);
+                float b = excel_betta.get(indq);
+                float c = excel_c.get(indq);
+                float d_k = renderArray[i].return_distance();// current distance
+
+                float quality = 1 - Calculate_deg_er(a, b, c, d_k, gamma, coarse_Ratios[j]); // deg error for current sit
+
+                if (i == key && tUP >= renderArray[i].getOrg_tris() * coarse_Ratios[j]) { // the first object in the candidate list
+                    fProfit[i][j] = quality;// Fα(i),j ←Qα(i),j -> i is alpha i
+                    tRemainder[i][j] = tUP - (renderArray[i].getOrg_tris() * coarse_Ratios[j]);
+                } else //  here is the dynamic programming section
+                    for (int s = 0; s < coarse_Ratios.length; s++) {
+
+                        float f = fProfit[prevInd][s] + quality;
+                        float t = tRemainder[prevInd][s] - (renderArray[i].getOrg_tris() * coarse_Ratios[j]);
+                        if (t >= tMin[i] && fProfit[i][j] < f) {
+
+                            fProfit[i][j] = f;
+                            tRemainder[i][j] = t;
+                            track_obj[i][j] = s;
+                        }
+
+                    }//
+
+            }//for j  up to here we reach line 25
+        prevInd=i;
+    }// for i
+/// start with object with least priority
+
+        sortedcandidate_obj = sortByValue(candidate_obj, true); // to iterate through the list from lowest to highest values
+
+        int lowPobjIndx = sortedcandidate_obj.entrySet().iterator().next().getKey(); // line 26
+        float tmp=fProfit[lowPobjIndx][0];
+        int j=0;
+        for  (int maxindex=1;maxindex<coarse_Ratios.length;maxindex++) // line 27
+            if(fProfit[lowPobjIndx][maxindex]>tmp)// finds the index of coarse-grain ratio with maximum profit
+            {
+                tmp = fProfit[lowPobjIndx][maxindex];
+                j=maxindex;
+            }
+
+
+        for (int i : sortedcandidate_obj.keySet()) {
+
+                total_tris = total_tris - (ratioArray[i] * o_tris.get(i));// total =total -1*objtris
+                ratioArray[i] = coarse_Ratios[j];
+                renderArray[i].decimatedModelRequest(ratioArray[i], i, referenceObjectSwitchCheck);
+                // update total_tris
+                total_tris = total_tris + (ratioArray[i] *  renderArray[i].orig_tris);// total = total + 0.8*objtris
+                j = track_obj[i][j];
+
+        }
 
 
     }
+
+
+    private static Map<Integer, Float> sortByValue(Map<Integer, Float> unsortMap, final boolean order)
+    {
+        List<Entry<Integer, Float>> list = new LinkedList<>(unsortMap.entrySet());
+
+        // Sorting the list based on values
+        list.sort((o1, o2) -> order ? o1.getValue().compareTo(o2.getValue()) == 0
+                ? o1.getKey().compareTo(o2.getKey())
+                : o1.getValue().compareTo(o2.getValue()) : o2.getValue().compareTo(o1.getValue()) == 0
+                ? o2.getKey().compareTo(o1.getKey())
+                : o2.getValue().compareTo(o1.getValue()));
+        return list.stream().collect(Collectors.toMap(Entry::getKey, Entry::getValue, (a, b) -> b, LinkedHashMap::new));
+
+    }
+
+
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -1728,8 +1848,6 @@ else{
 
                 }
                 float total_gpu = compute_GPU_ut(decision_p / decision_p, total_tris); // for one second
-                //fileOut2.println("total_tris " + total_tris + " total_GPUusage_every_second " + total_gpu + " window " + finalw + " Bandwith " + bwidth + " policy " + policy + " Maxdeg_parameter " + max_d_parameter);
-
 
                 fileOut2.close();
 
@@ -2010,36 +2128,40 @@ private float computeWidth(ArrayList<Float> point){
 
 
 
-        if (multipleSwitchCheck == true) // eAR
-            for (int i = 0; i < objectCount; i++) {
-                // File file;
-                //file = new File(getExternalFilesDir(null), "/decimated" + renderArray[i].fileName + seekBar.getProgress() / 100f + ".sfb");
-
-                float ratio = updateratio[i];
-
-               /// if ((ratio ) != ratioArray[i] && (ratio==0.2f||  ratio==0.3f  ) ) {
-                if ((ratio ) != ratioArray[i]   ) {
-                    total_tris= total_tris- (ratioArray[i]* o_tris.get(i));// total =total -1*objtris
-                    ratioArray[i] = ratio;
-                    total_tris = total_tris+ (ratioArray[i]* o_tris.get(i));// total = total + 0.8*objtris
-
-                    if(updatednetw[i]==0) // we have that obj in another local cache/ no need to add req
-                      renderArray[i].decimatedModelRequest(ratio , i, true);
-                    else{ // we need to req to the server
-
-                        renderArray[i].decimatedModelRequest(ratio , i, false);
-                        Server_reg_Freq.set(i, Server_reg_Freq.get(i)+1);
-                    }
-
-                    if (ratio  != 1 && ratio !=cacheArray[i] ) {
-                        cacheArray[i] = (ratio); // updates the cache
-
-                    }
-                }
-
-
-
-            }///for
+//        if (multipleSwitchCheck == true) // eAR
+//            for (int i = 0; i < objectCount; i++) {
+//                // File file;
+//                //file = new File(getExternalFilesDir(null), "/decimated" + renderArray[i].fileName + seekBar.getProgress() / 100f + ".sfb");
+//
+//                float ratio = updateratio[i];
+//
+//
+//                if ((ratio ) != ratioArray[i]   ) {
+//                    total_tris= total_tris- (ratioArray[i]* o_tris.get(i));// total =total -1*objtris
+//                    ratioArray[i] = ratio;
+//                    /// where we update total_Tris
+//                    total_tris = total_tris+ (ratioArray[i]* o_tris.get(i));// total = total + 0.8*objtris
+//                    curTrisTime= SystemClock.uptimeMillis();
+//
+//
+//
+//                    if(updatednetw[i]==0) // we have that obj in another local cache/ no need to add req
+//                      renderArray[i].decimatedModelRequest(ratio , i, true);
+//                    else{ // we need to req to the server
+//
+//                        renderArray[i].decimatedModelRequest(ratio , i, false);
+//                        Server_reg_Freq.set(i, Server_reg_Freq.get(i)+1);
+//                    }
+//
+//                    if (ratio  != 1 && ratio !=cacheArray[i] ) {
+//                        cacheArray[i] = (ratio); // updates the cache
+//
+//                    }
+//                }
+//
+//
+//
+//            }///for
 
 
 
@@ -2640,10 +2762,13 @@ public float delta (float a, float b , float c1,float creal,  float d, float gam
                         ((Plane) trackable).isPoseInPolygon(hit.getHitPose())) {
                     Anchor newAnchor = hit.createAnchor();
                     placeObject(fragment, newAnchor, model, renderArrayObj);
+
                     break;
                 }
             }
+
         }
+
 
 
 
@@ -2671,49 +2796,14 @@ public float delta (float a, float b , float c1,float creal,  float d, float gam
                             dialog.show();
                             return null;
                         }));
+
+
     } catch (Exception e) {
         e.printStackTrace();
     }
 
-/*
-        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss:SSS");
-        dateFormat.format(new Date());
-        String current_gpu = null;
-        try {
-            Process process;
-            String[]   InstallBusyBoxCmd = new String[]{
-                    "su","-c", "cat /sys/class/kgsl/kgsl-3d0/gpu_busy_percentage"  };
 
 
-            process = Runtime.getRuntime().exec(InstallBusyBoxCmd);
-            BufferedReader stdInput = new BufferedReader(new
-                    InputStreamReader(process.getInputStream()));
-// Read the output from the command
-            System.out.println("Here is the standard output of the command:\n");
-
-            if ((current_gpu = stdInput.readLine()) != null) {
-                System.out.println(current_gpu);
-            }
-
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-
-        String item2 =  dateFormat.format(new Date()) + " num_of_tris: " + total_tris+ " current_gpu "+ current_gpu +"\n";
-        // + " virtual area " + total_area + " virtual vol " + total_vol + " " + fileName + "\n";
-        try {
-            FileOutputStream os = new FileOutputStream(tris_num, true);
-            os.write(item2.getBytes());
-            os.close();
-            System.out.println(item2);
-
-
-        } catch (IOException e) {
-            Log.e("StatWriting", e.getMessage());
-        }
-
-*/
     }
 
 
@@ -2767,7 +2857,7 @@ public float delta (float a, float b , float c1,float creal,  float d, float gam
         //Nil
         ratioArray[objectCount]=1;
         cacheArray[objectCount]=1;
-        updateratio[objectCount]=1;
+      //  updateratio[objectCount]=1;
         updatednetw[objectCount]=0;
         predicted_distances.put(objectCount, new ArrayList<>());
 
@@ -2782,13 +2872,13 @@ public float delta (float a, float b , float c1,float creal,  float d, float gam
 
         o_tris.add( (Integer) excel_tris.get(indq));
         d1_prev.add(objectCount, 0f);
+        // update total_tris
         total_tris+= o_tris.get(objectCount);
+        curTrisTime= SystemClock.uptimeMillis();
+        //lastQuality.add(1f);// initialize
+        orgTrisAllobj+=o_tris.get(objectCount);
 
-
-
-       // givenUsingTimer_whenSchedulingTaskOnce_thenCorrect();
-
-       // new filewrite(MainActivity.this).givenUsingTimer_whenSchedulingTaskOnce_thenCorrect();
+        //  Camera2BasicFragment .getInstance().update( (double) total_tris);// run linear reg
 
 
 
@@ -2873,8 +2963,25 @@ public float delta (float a, float b , float c1,float creal,  float d, float gam
 
 
 
-
     }
+    public float calculateQuality(int indq, int finalInd , float ratio, float d1 ){
+
+
+        float gamma = excel_gamma.get(indq);
+        float a = excel_alpha.get(indq);
+        float b = excel_betta.get(indq);
+        float c = excel_c.get(indq);
+
+        float curQ = ratio / 100f;
+        float deg_error =
+                (float) (Math.round((float) (Calculate_deg_er(a, b, c, d1, gamma, curQ) * 10000))) / 10000;
+        //Nill added
+        float maxd = max_d.get(indq);
+        float max_nrmd = excel_maxd.get(indq);
+        float cur_degerror=deg_error / max_nrmd;
+        return cur_degerror;
+    }
+
 
 
     private float nextPoint(float x1, float x2, float y1, float y2, float time)
@@ -3186,6 +3293,16 @@ public float delta (float a, float b , float c1,float creal,  float d, float gam
                 0,      // run first occurrence immediatetly
                 1000);
     };
+
+
+
+    float a_t=-8.825245622870156e-06f, b_t=-0.5743863744426319f, c_t= 55.801f;
+
+    float a_re=5.18208816882466E-07f, b_re=0.111009877415992f, c_re=0.00213110940797337f, d_re=0.00118086288001582f;
+
+
+
+
 
 
 
