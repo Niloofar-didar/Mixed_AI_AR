@@ -14,38 +14,25 @@ import java.util.*;
 import java.util.Queue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CompletableFuture;
-import android.app.Activity;
-import android.app.ActivityManager;
-import android.app.Application;
-import android.app.DownloadManager;
-import android.content.ContextWrapper;
-import android.content.Intent;
+
 import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
-import android.support.design.widget.Snackbar;
 import android.util.Log;
 
-import java.lang.ref.WeakReference;
-import java.util.Iterator;
 import java.util.LinkedList;
-import java.util.Queue;
-import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import android.net.Uri;
-import android.opengl.GLES20;
 import android.opengl.Matrix;
 import android.os.Bundle;
 import android.os.CountDownTimer;
-import android.os.Handler;
-import android.os.Looper;
-import android.os.Message;
-import android.support.v7.app.AlertDialog;
-import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.Toolbar;
-import android.util.Log;
+
+import androidx.appcompat.app.AlertDialog;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
+
 import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -53,7 +40,6 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.CompoundButton;
-import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.SeekBar;
 import android.widget.Spinner;
@@ -82,10 +68,6 @@ import java.util.List;
 
 import java.lang.Math;
 import java.io.InputStream;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
-import java.util.stream.IntStream;
 
 import static java.lang.Math.abs;
 
@@ -575,6 +557,15 @@ else{
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        ImageClassifier classifier = null;
+        try {
+            classifier = new ImageClassifierQuantizedMobileNet(this);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        BitmapSource source = new BitmapSource(this, "chair_600.jpg");
+
+        BitmapCollector collector = new BitmapCollector(source, classifier, this);
 
 
 
@@ -1323,7 +1314,21 @@ else{
 
 
 
+        Button startCollectButton = (Button) findViewById(R.id.button_startCollect);
+        startCollectButton.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View view) {
+                collector.startCollect();
+                System.out.println(collector.getRun());
+            }
+        });
 
+        Button startStreamButton = (Button) findViewById(R.id.button_startStream);
+        startStreamButton.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View view) {
+                source.toggleFlow();
+                System.out.println(source.getRun());
+            }
+        });
 
         //Clear all objects button setup
         Button clearButton = (Button) findViewById(R.id.clearButton);

@@ -4,9 +4,10 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.ColorFilter;
 import android.graphics.Paint;
-import android.graphics.drawable.Drawable;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
+import android.graphics.PixelFormat;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 public class PointerDrawable extends android.graphics.drawable.Drawable {
     private final Paint paint = new Paint();
@@ -24,7 +25,7 @@ public class PointerDrawable extends android.graphics.drawable.Drawable {
 
     @Override
     public int getOpacity() {
-        return 0;
+        return PixelFormat.OPAQUE; // was 0? error?
     }
 
     public boolean isEnabled() {

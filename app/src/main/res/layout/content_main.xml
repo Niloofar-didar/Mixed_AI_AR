@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
@@ -228,12 +228,33 @@
         app:layout_constraintTop_toBottomOf="@+id/sceneform_fragment"
         app:layout_constraintVertical_bias="1.0" />
 
-    <android.support.constraint.Guideline
+    <androidx.constraintlayout.widget.Guideline
         android:id="@+id/guideline2"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:orientation="vertical"
         app:layout_constraintGuide_end="411dp" />
 
+    <Button
+        android:id="@+id/button_startStream"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Start Stream"
+        app:layout_constraintBottom_toTopOf="@+id/clearButton"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.222"
+        app:layout_constraintStart_toStartOf="@+id/sceneform_fragment"
+        app:layout_constraintTop_toTopOf="@+id/sceneform_fragment"
+        app:layout_constraintVertical_bias="0.51" />
 
-</android.support.constraint.ConstraintLayout>
+    <Button
+        android:id="@+id/button_startCollect"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Start Collect"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/button_startStream"
+        app:layout_constraintTop_toTopOf="@+id/button_startStream" />
+
+
+</androidx.constraintlayout.widget.ConstraintLayout>
