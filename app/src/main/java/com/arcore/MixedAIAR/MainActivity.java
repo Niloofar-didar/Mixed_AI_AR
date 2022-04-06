@@ -32,6 +32,8 @@ import android.os.CountDownTimer;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
+import androidx.fragment.app.Fragment;
+import androidx.recyclerview.widget.RecyclerView;
 
 import android.view.View;
 import android.view.Menu;
@@ -1329,6 +1331,19 @@ else{
                 System.out.println(source.getRun());
             }
         });
+
+        RecyclerView container = findViewById(R.id.bottom_recycler_View);
+        RelativeLayout arLayout = findViewById(R.id.gallery_layout);
+        Button toggleUi = (Button) findViewById(R.id.button_toggleUi);
+                toggleUi.setOnClickListener(new View.OnClickListener() {
+                    public void onClick(View view) {
+                        if(container.getVisibility()==View.VISIBLE)
+                           container.setVisibility(View.INVISIBLE);
+                        else {
+                            container.setVisibility(View.VISIBLE);
+                        }
+                    }
+                });
 
         //Clear all objects button setup
         Button clearButton = (Button) findViewById(R.id.clearButton);

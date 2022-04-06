@@ -8,6 +8,21 @@
     tools:context=".MainActivity"
     tools:showIn="@layout/activity_main">
 
+    <androidx.recyclerview.widget.RecyclerView
+        android:translationZ="90dp"
+        android:id="@+id/bottom_recycler_View"
+        android:layout_width="match_parent"
+        android:layout_height="320dp"
+        android:layout_alignParentBottom="true"
+        android:background="#513400"
+        android:orientation="horizontal"
+        android:scrollbars="horizontal"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="1.0"
+        tools:layout_editor_absoluteX="0dp"
+        tools:listitem="@layout/ai_settings_card_view_design" />
+
 
 <!--    <fragment-->
 <!--        android:id="@+id/sceneform_fragment"-->
@@ -34,19 +49,6 @@
         app:layout_constraintVertical_chainStyle="spread"
         app:layout_constraintVertical_weight="9" />
 
-
-    <fragment
-        android:id="@+id/container"
-        android:name="com.arcore.MixedAIAR.Camera2BasicFragment"
-        android:layout_width="179dp"
-        android:layout_height="158dp"
-        android:layout_marginEnd="232dp"
-        app:layout_constraintBottom_toTopOf="@id/gallery_layout"
-
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.963"
-        app:layout_constraintVertical_chainStyle="spread" />
 
     <RelativeLayout
         android:id="@+id/gallery_layout"
@@ -255,6 +257,16 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toEndOf="@+id/button_startStream"
         app:layout_constraintTop_toTopOf="@+id/button_startStream" />
+
+    <Button
+        android:id="@+id/button_toggleUi"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Button"
+        app:layout_constraintBottom_toTopOf="@+id/clearButton"
+        app:layout_constraintEnd_toEndOf="@+id/button_startStream"
+        app:layout_constraintTop_toBottomOf="@+id/button_startStream"
+        app:layout_constraintVertical_bias="0.211" />
 
 
 </androidx.constraintlayout.widget.ConstraintLayout>
