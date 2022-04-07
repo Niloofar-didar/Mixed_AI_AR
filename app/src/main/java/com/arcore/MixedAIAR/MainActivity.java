@@ -32,7 +32,7 @@ import android.os.CountDownTimer;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
-import androidx.fragment.app.Fragment;
+import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import android.view.View;
@@ -557,27 +557,30 @@ else{
     }
 
 
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        ImageClassifier classifier = null;
-        try {
-            classifier = new ImageClassifierQuantizedMobileNet(this);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        BitmapSource source = new BitmapSource(this, "chair_600.jpg");
-
-        BitmapCollector collector = new BitmapCollector(source, classifier, this);
-
-
-
-
-//
-//
-//
-
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        RecyclerView recyclerView_aiSettings = findViewById(R.id.recycler_view_aiSettings);
+        ItemsViewModel item = new ItemsViewModel();
+        int numOfAiTasks = 2;
+        List<ItemsViewModel> mList = new ArrayList<ItemsViewModel>();
+        for(int i = 0; i<numOfAiTasks; i++) {
+            mList.add(item);
+        }
+
+        BitmapSource source = new BitmapSource(this, "chair_600.jpg");
+        CustomAdapter adapter = new CustomAdapter(mList, source, this);
+
+        recyclerView_aiSettings.setAdapter(adapter);
+        recyclerView_aiSettings.setLayoutManager(new LinearLayoutManager(this, RecyclerView.HORIZONTAL, false));
+
+
+
+
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         TextView posText1 = (TextView) findViewById(R.id.objnum);
@@ -1317,12 +1320,12 @@ else{
 
 
         Button startCollectButton = (Button) findViewById(R.id.button_startCollect);
-        startCollectButton.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View view) {
-                collector.startCollect();
-                System.out.println(collector.getRun());
-            }
-        });
+//        startCollectButton.setOnClickListener(new View.OnClickListener() {
+//            public void onClick(View view) {
+//                collector.startCollect();
+//                System.out.println(collector.getRun());
+//            }
+//        });
 
         Button startStreamButton = (Button) findViewById(R.id.button_startStream);
         startStreamButton.setOnClickListener(new View.OnClickListener() {
@@ -1332,7 +1335,7 @@ else{
             }
         });
 
-        RecyclerView container = findViewById(R.id.bottom_recycler_View);
+        RecyclerView container = findViewById(R.id.recycler_view_aiSettings);
         RelativeLayout arLayout = findViewById(R.id.gallery_layout);
         Button toggleUi = (Button) findViewById(R.id.button_toggleUi);
                 toggleUi.setOnClickListener(new View.OnClickListener() {

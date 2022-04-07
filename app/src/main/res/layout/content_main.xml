@@ -10,7 +10,7 @@
 
     <androidx.recyclerview.widget.RecyclerView
         android:translationZ="90dp"
-        android:id="@+id/bottom_recycler_View"
+        android:id="@+id/recycler_view_aiSettings"
         android:layout_width="match_parent"
         android:layout_height="320dp"
         android:layout_alignParentBottom="true"
