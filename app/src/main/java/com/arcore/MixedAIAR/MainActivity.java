@@ -1,6 +1,7 @@
 package com.arcore.MixedAIAR;
 
 import java.io.BufferedReader;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
@@ -8,6 +9,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintStream;
 import java.io.PrintWriter;
+import java.nio.ByteBuffer;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.*;
@@ -17,6 +19,9 @@ import java.util.concurrent.CompletableFuture;
 
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.ImageFormat;
+import android.graphics.Rect;
+import android.graphics.YuvImage;
 import android.media.Image;
 import android.os.Handler;
 import android.os.Looper;
@@ -38,6 +43,7 @@ import androidx.appcompat.widget.Toolbar;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import android.util.Size;
 import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -59,6 +65,7 @@ import com.google.ar.core.HitResult;
 import com.google.ar.core.Plane;
 import com.google.ar.core.Trackable;
 import com.google.ar.core.TrackingState;
+import com.google.ar.core.exceptions.NotYetAvailableException;
 import com.google.ar.sceneform.AnchorNode;
 import com.google.ar.sceneform.Node;
 import com.google.ar.sceneform.math.Vector3;
@@ -86,11 +93,7 @@ import static java.lang.Math.abs;
 public class MainActivity extends AppCompatActivity implements AdapterView.OnItemSelectedListener {
 
 
-
-
-
-
-
+    private BitmapUpdaterApi bitmapUpdaterApi = new BitmapUpdaterApi();
 
     private ArFragment fragment;
     private PointerDrawable pointer = new PointerDrawable();
@@ -559,12 +562,13 @@ else{
 
 
         RecyclerView recyclerView_aiSettings = findViewById(R.id.recycler_view_aiSettings);
-        int numOfAiTasks = 4;
+        int numOfAiTasks = 3;
         List<ItemsViewModel> mList = new ArrayList<>();
         for(int i = 0; i<numOfAiTasks; i++) {
             mList.add(new ItemsViewModel());
         }
-        BitmapSource source = new BitmapSource(this, "chair_600.jpg");
+        DynamicBitmapSource source = new DynamicBitmapSource(bitmapUpdaterApi);
+//        BitmapSource source = new BitmapSource(this, "chair_600.jpg");
         CustomAdapter adapter = new CustomAdapter(mList, source, this);
         recyclerView_aiSettings.setAdapter(adapter);
         recyclerView_aiSettings.setLayoutManager(new LinearLayoutManager(this, RecyclerView.HORIZONTAL, false));
@@ -1318,13 +1322,13 @@ else{
 //            }
 //        });
 
-        Button startStreamButton = (Button) findViewById(R.id.button_startStream);
-        startStreamButton.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View view) {
-                source.toggleFlow();
-                System.out.println(source.getRun());
-            }
-        });
+//        Button startStreamButton = (Button) findViewById(R.id.button_startStream);
+//        startStreamButton.setOnClickListener(new View.OnClickListener() {
+//            public void onClick(View view) {
+//                source.toggleFlow();
+//                System.out.println(source.getRun());
+//            }
+//        });
 
         RecyclerView container = findViewById(R.id.recycler_view_aiSettings);
         RelativeLayout arLayout = findViewById(R.id.gallery_layout);
@@ -2001,8 +2005,42 @@ private float computeWidth(ArrayList<Float> point){
         }
     }
 
+    private void frameToBitmap(Frame frame) throws NotYetAvailableException {
+        YuvToRgbConverter converter = new YuvToRgbConverter(this);
+        Image image = frame.acquireCameraImage();
+        Bitmap bmp = Bitmap.createBitmap(image.getWidth(), image.getHeight(), Bitmap.Config.ARGB_8888);
+        converter.yuvToRgb(image, bmp);
+        image.close();
+
+        bitmapUpdaterApi.updateBitmap(bmp);
+        ///////writes images as file to storage for testing
+//        File path = this.getExternalFilesDir(null);
+//        File dir = new File(path, "data");
+//        try {
+//            File file = new File(dir, "image.jpeg");
+//            FileOutputStream fOut = new FileOutputStream(file);
+//            bmp.compress(Bitmap.CompressFormat.JPEG, 85, fOut);
+//            fOut.flush();
+//            fOut.close();
+//        }
+//        catch (Exception e) {
+//            e.printStackTrace();
+////            LOG.i(null, "Save file error!");
+////            return false;
+//        }
+
+//        System.out.println(bmp);
+    }
+
     private boolean updateTracking() {
         Frame frame = fragment.getArSceneView().getArFrame();//OK not being used for now
+        if(frame!=null) {
+            try {
+                frameToBitmap(frame);
+            } catch (NotYetAvailableException e) {
+                e.printStackTrace();
+            }
+        }
         boolean wasTracking = isTracking;
         isTracking = frame != null &&
                 frame.getCamera().getTrackingState() == TrackingState.TRACKING;

@@ -12,7 +12,8 @@ import kotlinx.coroutines.flow.collect
 import java.io.File
 
 class BitmapCollector(
-    private val bitmapSource: BitmapSource?,
+//    private val bitmapSource: BitmapSource?,
+    private val bitmapSource: DynamicBitmapSource?,
     private val classifier: ImageClassifier?,
 //    private val textView: TextView,
     private val activity: Activity

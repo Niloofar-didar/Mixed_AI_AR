@@ -15,7 +15,7 @@ import androidx.recyclerview.widget.RecyclerView
 import java.io.IOException
 
 //lateinit var consumer : BitmapCollector
-class CustomAdapter(private val mList: MutableList<ItemsViewModel>, val streamSource: BitmapSource, val activity: Activity) : RecyclerView.Adapter<CustomAdapter.ViewHolder>() {
+class CustomAdapter(private val mList: MutableList<ItemsViewModel>, val streamSource: DynamicBitmapSource/*BitmapSource*/, val activity: Activity) : RecyclerView.Adapter<CustomAdapter.ViewHolder>() {
      // create new views
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         // inflates the card_view_design view
