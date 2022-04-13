@@ -25,6 +25,19 @@
             android:textStyle="bold"
             tools:text="Ok Buddy" />
 
+        <Button
+            android:id="@+id/button_addAiTask"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:layout_weight="0"
+            android:text="+" />
+        <Button
+            android:id="@+id/button_RemoveAiTask"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:layout_weight="0"
+            android:text="-" />
+
     </LinearLayout>
 
     <LinearLayout

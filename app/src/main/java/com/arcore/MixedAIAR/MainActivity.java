@@ -15,6 +15,9 @@ import java.util.Queue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CompletableFuture;
 
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.media.Image;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
@@ -540,20 +543,9 @@ else{
                                     return null;
                                 }));
 
-
-
-
-
 // update tris and gu log
             }
-
-
-
-
         }
-
-
-
     }
 
 
@@ -564,17 +556,16 @@ else{
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        RecyclerView recyclerView_aiSettings = findViewById(R.id.recycler_view_aiSettings);
-        ItemsViewModel item = new ItemsViewModel();
-        int numOfAiTasks = 2;
-        List<ItemsViewModel> mList = new ArrayList<ItemsViewModel>();
-        for(int i = 0; i<numOfAiTasks; i++) {
-            mList.add(item);
-        }
 
+
+        RecyclerView recyclerView_aiSettings = findViewById(R.id.recycler_view_aiSettings);
+        int numOfAiTasks = 4;
+        List<ItemsViewModel> mList = new ArrayList<>();
+        for(int i = 0; i<numOfAiTasks; i++) {
+            mList.add(new ItemsViewModel());
+        }
         BitmapSource source = new BitmapSource(this, "chair_600.jpg");
         CustomAdapter adapter = new CustomAdapter(mList, source, this);
-
         recyclerView_aiSettings.setAdapter(adapter);
         recyclerView_aiSettings.setLayoutManager(new LinearLayoutManager(this, RecyclerView.HORIZONTAL, false));
 
@@ -3250,7 +3241,5 @@ public float delta (float a, float b , float c1,float creal,  float d, float gam
 
         return true;
     }
-
-
 
 }
