@@ -149,8 +149,9 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
     //float candidate_obj[] = new float[total_obj];
     float tMin[] = new float[obj_count];
 
-    float des_Q= 1- (0.3f); //# this is avg desired Q
-    float des_Thr = 50f;
+    double des_Q= 1- (0.3f); //# this is avg desired Q
+    double des_Thr = 35f;
+    ListMultimap<Double, List<Double>> thParamList = ArrayListMultimap.create();//  a map from tot tris to measured RE
 
 
     ListMultimap<Double, Double> trisMeanThr = ArrayListMultimap.create();//  a map from tot tris to mean throughput
@@ -168,9 +169,11 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
     ListMultimap<Double, List<Double>> reParamList = ArrayListMultimap.create();//  a map from tot tris to measured RE
 
 
-
-    double thSlope=-0.00001136 ;
-    double thIntercept=56.39;
+    int lastConscCounter=0; // counts the number of consecutive change in tris count, if we reach 5 we will change the tris
+    double prevtotTris=0;
+    double  rohT=-0.06 ;
+    double rohD=0.0001;
+    double delta=66.92;
     double thRmse;
 
     //for RE modeling and algorithm
@@ -306,7 +309,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
     private float alpha = 0.7f;
     int max_datapoint=25;
     double reRegRMSE= Double.POSITIVE_INFINITY;
-    double reRegalpha = 7.18208816882466E-07, reRegbetta=0.051009877415992f, reReggamma=-0.0313110940797337f, reRegteta=3.08118086288001582f;
+    double alphaT = 3.44E-4, alphaD=0.165, alphaH=-0.015, zeta=1.378;
     double nextTris=0; // triangles for the next period
 
     private static final int KEEP_ALIVE_TIME = 500;
@@ -729,6 +732,99 @@ else{
         } catch (FileNotFoundException e) {
             System.out.println(e.getMessage());
         }
+
+
+         currentFolder = getExternalFilesDir(null).getAbsolutePath();
+         FILEPATH = currentFolder + File.separator + "Throughput.csv";
+        try (PrintWriter writer = new PrintWriter(new FileOutputStream(FILEPATH, false))) {
+
+            StringBuilder sbb = new StringBuilder();
+            sbb.append("time");
+            sbb.append(',');
+            sbb.append("thr_Real");
+            sbb.append(',');
+            sbb.append("thr_pred");
+            sbb.append(',');
+            sbb.append("trainedThr"); //sbb.append(',');  sbb.append("serv_req");
+            sbb.append('\n');
+            writer.write(sbb.toString());
+            System.out.println("done!");
+
+        } catch (FileNotFoundException e) {
+            System.out.println(e.getMessage());
+        }
+
+
+
+        currentFolder = getExternalFilesDir(null).getAbsolutePath();
+        FILEPATH = currentFolder + File.separator + "RE.csv";
+        try (PrintWriter writer = new PrintWriter(new FileOutputStream(FILEPATH, false))) {
+
+            StringBuilder sbb = new StringBuilder();
+            sbb.append("time");
+            sbb.append(',');
+            sbb.append("re_Real");
+            sbb.append(',');
+            sbb.append("re_pred");
+            sbb.append(',');
+            sbb.append("trainedRe");
+            sbb.append(',');
+            sbb.append("curTris");
+            sbb.append(',');
+            sbb.append("nextTris");
+            sbb.append(',');
+            sbb.append("trainedT");
+            sbb.append(',');
+            sbb.append("pAR");
+            sbb.append(',');
+            sbb.append("pAI");
+            sbb.append('\n');
+            writer.write(sbb.toString());
+            System.out.println("done!");
+
+        } catch (FileNotFoundException e) {
+            System.out.println(e.getMessage());
+        }
+
+
+
+        currentFolder = getExternalFilesDir(null).getAbsolutePath();
+        FILEPATH = currentFolder + File.separator + "NextTrisParameters.csv";
+        try (PrintWriter writer = new PrintWriter(new FileOutputStream(FILEPATH, false))) {
+
+            StringBuilder sbb = new StringBuilder();
+            sbb.append("Time");         sbb.append(',');
+            sbb.append("alphaD");
+            sbb.append(',');
+            sbb.append("alphaH");
+            sbb.append(',');
+            sbb.append("rohD");
+            sbb.append(',');
+            sbb.append("meanDkk");
+            sbb.append(',');
+            sbb.append("zeta");
+            sbb.append(',');
+            sbb.append("delta");
+            sbb.append(',');
+            sbb.append("alphaT");
+            sbb.append(',');
+            sbb.append("rohT");
+            sbb.append(',');
+            sbb.append("nomin");
+            sbb.append(',');
+            sbb.append("denom");
+            sbb.append(',');
+            sbb.append("totTris");
+            sbb.append(',');
+            sbb.append("nextTris");
+            sbb.append('\n');
+            writer.write(sbb.toString());
+            System.out.println("done!");
+
+        } catch (FileNotFoundException e) {
+            System.out.println(e.getMessage());
+        }
+
 
 
         try (PrintWriter writer = new PrintWriter(new FileOutputStream(currentFolder + File.separator + "Response_t.csv", false))) {
@@ -1507,9 +1603,6 @@ else{
 
                         if (objectCount >= 1) { // Nil april 21 -> fixed
 
-
-
-
                             Frame frame = fragment.getArSceneView().getArFrame();//OK
                             current.add(new ArrayList<Float>(Arrays.asList(frame.getCamera().getPose().tx(), frame.getCamera().getPose().ty(), frame.getCamera().getPose().tz())));
                             timeLog.add(timeInSec);
@@ -1535,7 +1628,7 @@ else{
 
                 },
                 0,      // run first occurrence immediately
-                500);
+                1000);
 
         // periodic tris collection
 
@@ -3214,10 +3307,7 @@ public float delta (float a, float b , float c1,float creal,  float d, float gam
 
         String currentFolder = getExternalFilesDir(null).getAbsolutePath();
         String FILEPATH = currentFolder + File.separator + "GPU_Usage.csv";
-
-
         Timer  t = new Timer();
-
         t.scheduleAtFixedRate(
 
                 new TimerTask() {

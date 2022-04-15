@@ -411,7 +411,7 @@ public abstract class ImageClassifier {
                       }
                     },
             0,      // run first occurrence immediatetl
-            (long)(500));
+            (long)(1000));
 
   }
 
