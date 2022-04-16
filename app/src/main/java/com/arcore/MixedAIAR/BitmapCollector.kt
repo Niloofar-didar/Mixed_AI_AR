@@ -54,7 +54,7 @@ class BitmapCollector(
 
         private suspend fun collectStream() {
             directory.mkdirs()
-            val file = File(directory, classifier?.modelName + '_' + classifier?.device + '_' + classifier?.time +".csv")
+            val file = File(directory, classifier?.modelName + '_' + classifier?.device + '_'+ classifier?.time +".csv")
             job = viewModelScope.launch(Dispatchers.Default) {
                     bitmapSource?.bitmapStream?.collect {
     //                    val textToShow = SpannableStringBuilder()

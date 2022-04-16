@@ -554,7 +554,7 @@ else{
         setContentView(R.layout.activity_main);
 
         /* numOfAiTasks defines the amount of AI settings cards that will be available */
-        int numOfAiTasks = 10;
+        int numOfAiTasks = 3;
         // Define the recycler view that holds the AI settings cards
         RecyclerView recyclerView_aiSettings = findViewById(R.id.recycler_view_aiSettings);
         // List of ItemsView stored in the Recycler View
@@ -564,6 +564,13 @@ else{
         for(int i = 0; i<numOfAiTasks; i++) {
             mList.add(new ItemsViewModel());
         }
+        Button startAllCollect = (Button) findViewById(R.id.button_startCollect);
+
+        startAllCollect.setOnClickListener(view -> {
+            for (int i = 0; i < mList.size(); i++) {
+                mList.get(i).getConsumer().startCollect();
+            }
+        });
 
         // coroutine flow source that captures camera frames from updateTracking() function
         DynamicBitmapSource source = new DynamicBitmapSource(bitmapUpdaterApi);
@@ -575,6 +582,38 @@ else{
         recyclerView_aiSettings.setAdapter(adapter);
         recyclerView_aiSettings.setLayoutManager(new LinearLayoutManager(this, RecyclerView.HORIZONTAL, false));
 
+        Switch switchToggleStream = (Switch) findViewById(R.id.switch_streamToggle);
+
+        switchToggleStream.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                if (isChecked) {
+                    // The toggle is enabled
+                    source.startStream();
+                    for (int i = 0; i < mList.size(); i++) {
+                        mList.get(i).getConsumer().startCollect();
+                    }
+                } else {
+                    // The toggle is disabled
+                    source.pauseStream();
+                    for (int i = 0; i < mList.size(); i++) {
+                        mList.get(i).getConsumer().pauseCollect();
+                    }
+                }
+            }
+        });
+//
+//        holder.collectionToggleSwitch.setOnCheckedChangeListener { buttonView, isChecked ->
+//            if (isChecked) {
+//                holder.tempText.text = "ON"
+//                itemsViewModel.consumer?.startCollect()
+//
+//                // The toggle is enabled
+//            } else {
+//                holder.tempText.text = "OFF"
+//                itemsViewModel.consumer?.pauseCollect()
+//                // The toggle is disabled
+//            }
+//        }
 
 
 
@@ -2010,12 +2049,15 @@ private float computeWidth(ArrayList<Float> point){
      * Precondition: Frame object is availble
      * Postcondition: bitmapUpdaterApi bitmap object is updated to bitmap of frame that was passed
      *
+     * TODO: Move this function to background thread.  Only decoding/encoding to bitmap, not high
+     * intensity fxn
      * */
     private void passFrameToBitmapUpdaterApi(Frame frame) throws NotYetAvailableException {
+        Thread newThread = new Thread();
         YuvToRgbConverter converter = new YuvToRgbConverter(this);
         Image image = frame.acquireCameraImage();
         Bitmap bmp = Bitmap.createBitmap(image.getWidth(), image.getHeight(), Bitmap.Config.ARGB_8888);
-        converter.yuvToRgb(image, bmp);
+        converter.yuvToRgb(image, bmp); /** line to be multithreaded*/
         image.close();
 
         bitmapUpdaterApi.updateBitmap(bmp);

@@ -268,5 +268,19 @@
         app:layout_constraintTop_toBottomOf="@+id/button_startStream"
         app:layout_constraintVertical_bias="0.211" />
 
+    <Switch
+        android:id="@+id/switch_streamToggle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:layout_marginEnd="16dp"
+        android:layout_marginBottom="16dp"
+        android:minHeight="48dp"
+        android:text="AI Tasks"
+        app:layout_constraintBottom_toBottomOf="@+id/button_toggleUi"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="1.0"
+        app:layout_constraintStart_toEndOf="@+id/button_toggleUi" />
+
 
 </androidx.constraintlayout.widget.ConstraintLayout>

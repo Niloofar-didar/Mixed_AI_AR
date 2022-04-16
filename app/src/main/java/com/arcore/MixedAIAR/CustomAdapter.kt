@@ -6,17 +6,15 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.*
 import android.widget.AbsListView.CHOICE_MODE_SINGLE
-import android.widget.ArrayAdapter
-import android.widget.ListView
-import android.widget.NumberPicker
-import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import java.io.IOException
 
 //lateinit var consumer : BitmapCollector
 class CustomAdapter(private val mList: MutableList<ItemsViewModel>, val streamSource: DynamicBitmapSource/*BitmapSource*/, val activity: Activity) : RecyclerView.Adapter<CustomAdapter.ViewHolder>() {
      // create new views
+
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         // inflates the card_view_design view
         // that is used to hold list item
@@ -27,10 +25,29 @@ class CustomAdapter(private val mList: MutableList<ItemsViewModel>, val streamSo
 
     }
 
+
+
     // binds the list items to a view
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         val itemsViewModel = mList[position]
         var outputText : SpannableStringBuilder? = null
+
+
+        holder.collectionToggleSwitch.setOnCheckedChangeListener { buttonView, isChecked ->
+            if (isChecked) {
+                holder.tempText.text = "ON"
+                itemsViewModel.consumer?.startCollect()
+
+                // The toggle is enabled
+            } else {
+                holder.tempText.text = "OFF"
+                itemsViewModel.consumer?.pauseCollect()
+                // The toggle is disabled
+            }
+        }
+
+
+
 
         holder.modelListView.choiceMode = CHOICE_MODE_SINGLE
         holder.deviceListView.choiceMode = CHOICE_MODE_SINGLE
@@ -81,7 +98,8 @@ class CustomAdapter(private val mList: MutableList<ItemsViewModel>, val streamSo
         var modelListView: ListView = itemView.findViewById(R.id.model)
         val deviceListView: ListView = itemView.findViewById(R.id.device)
         val numberPicker: NumberPicker= itemView.findViewById(R.id.np)
-        val textView: TextView = itemView.findViewById(R.id.TextView_AiOutput)
+        val collectionToggleSwitch : Switch = itemView.findViewById(R.id.switch_toggleBitmapCollector)
+        val tempText : TextView = itemView.findViewById(R.id.textTest)
     }
 
 
@@ -145,7 +163,7 @@ class CustomAdapter(private val mList: MutableList<ItemsViewModel>, val streamSo
             itemsView.devices[2]-> itemsView.classifier?.useNNAPI()
         }
         itemsView.setCollector(BitmapCollector(streamSource, itemsView.classifier,/* holder.textView,*/ activity))
-        itemsView.consumer?.startCollect()
+//        itemsView.consumer?.startCollect()
     }
 
 
