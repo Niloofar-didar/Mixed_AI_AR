@@ -73,11 +73,7 @@ class BitmapCollector(
 
 
                         classifier.classifyFrame(bitmap, textToShow)
-                        if(textToShow.toString().length<0) {
-                            println("Length: ${textToShow.toString().length}")
-                        }
-    //                    showToast(textToShow)
-                        println(textToShow.toString())
+//                        println(textToShow.toString())
                         file.appendText(textToShow.toString())
 
                         delay(100)

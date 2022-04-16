@@ -554,23 +554,17 @@ else{
         setContentView(R.layout.activity_main);
 
         /* numOfAiTasks defines the amount of AI settings cards that will be available */
-        int numOfAiTasks = 3;
+//        int numOfAiTasks = 3;
         // Define the recycler view that holds the AI settings cards
         RecyclerView recyclerView_aiSettings = findViewById(R.id.recycler_view_aiSettings);
         // List of ItemsView stored in the Recycler View
         // ItemsView objects contain the coroutine flow collectors BitmapCollector
         List<ItemsViewModel> mList = new ArrayList<>();
 
-        for(int i = 0; i<numOfAiTasks; i++) {
+//        for(int i = 0; i<numOfAiTasks; i++) {
             mList.add(new ItemsViewModel());
-        }
-        Button startAllCollect = (Button) findViewById(R.id.button_startCollect);
+//        }
 
-        startAllCollect.setOnClickListener(view -> {
-            for (int i = 0; i < mList.size(); i++) {
-                mList.get(i).getConsumer().startCollect();
-            }
-        });
 
         // coroutine flow source that captures camera frames from updateTracking() function
         DynamicBitmapSource source = new DynamicBitmapSource(bitmapUpdaterApi);
@@ -583,6 +577,48 @@ else{
         recyclerView_aiSettings.setLayoutManager(new LinearLayoutManager(this, RecyclerView.HORIZONTAL, false));
 
         Switch switchToggleStream = (Switch) findViewById(R.id.switch_streamToggle);
+        Button buttonPushAiTask = (Button) findViewById(R.id.button_pushAiTask);
+        Button buttonPopAiTask = (Button) findViewById(R.id.button_popAiTask);
+        TextView textNumOfAiTasks = (TextView) findViewById(R.id.text_numOfAiTasks);
+
+
+        buttonPushAiTask.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View view) {
+                // get num of ai tasks from textView
+                int numAiTasks = Integer.parseInt(textNumOfAiTasks.getText().toString());
+                // check for max limit
+                if (numAiTasks < 9) {
+                    numAiTasks++;
+                    // stop stream
+                    switchToggleStream.setChecked(false);
+                    // update num of AI tasks
+                    textNumOfAiTasks.setText(String.format("%d", numAiTasks));
+                    mList.add(new ItemsViewModel());
+                    adapter.setMList(mList);
+                    recyclerView_aiSettings.setAdapter(adapter);
+                }
+            }
+        });
+
+        buttonPopAiTask.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View view) {
+                // get num of ai tasks from textView
+                int numAiTasks = Integer.parseInt(textNumOfAiTasks.getText().toString());
+                // check for max limit
+                if (numAiTasks > 1) {
+                    numAiTasks--;
+                    // stop stream
+                    switchToggleStream.setChecked(false);
+                    // update num of AI tasks
+                    textNumOfAiTasks.setText(String.format("%d", numAiTasks));
+                    mList.remove(numAiTasks);
+                    adapter.setMList(mList);
+                    recyclerView_aiSettings.setAdapter(adapter);
+                }
+            }
+        });
+
+
 
         switchToggleStream.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
@@ -1355,13 +1391,7 @@ else{
 
 
 
-        Button startCollectButton = (Button) findViewById(R.id.button_startCollect);
-//        startCollectButton.setOnClickListener(new View.OnClickListener() {
-//            public void onClick(View view) {
-//                collector.startCollect();
-//                System.out.println(collector.getRun());
-//            }
-//        });
+
 
 //        Button startStreamButton = (Button) findViewById(R.id.button_startStream);
 //        startStreamButton.setOnClickListener(new View.OnClickListener() {
@@ -2053,7 +2083,7 @@ private float computeWidth(ArrayList<Float> point){
      * intensity fxn
      * */
     private void passFrameToBitmapUpdaterApi(Frame frame) throws NotYetAvailableException {
-        Thread newThread = new Thread();
+//        Thread newThread = new Thread();
         YuvToRgbConverter converter = new YuvToRgbConverter(this);
         Image image = frame.acquireCameraImage();
         Bitmap bmp = Bitmap.createBitmap(image.getWidth(), image.getHeight(), Bitmap.Config.ARGB_8888);

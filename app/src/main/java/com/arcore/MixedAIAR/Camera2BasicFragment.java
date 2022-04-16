@@ -18,8 +18,6 @@ import android.os.Build;
 import androidx.annotation.RequiresApi;
 import android.widget.Button;
 //import android.support.v7.app.AlertDialog;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.widget.Toolbar;
 import android.app.Activity;
 import android.view.View;
 import android.app.Fragment;
@@ -327,7 +325,7 @@ public class Camera2BasicFragment extends Fragment
           }
         });
 
-    np = (NumberPicker) view.findViewById(R.id.np);// gets value for threads num/ num of requests
+    np = (NumberPicker) view.findViewById(R.id.numberPicker_aiThreadCount);// gets value for threads num/ num of requests
       String[] numbers = new String[]{"1", "3", "6"};
      np.setMinValue(1);
     np.setMaxValue(3);
