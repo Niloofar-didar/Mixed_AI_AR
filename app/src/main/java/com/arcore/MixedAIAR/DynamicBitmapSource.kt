@@ -12,7 +12,7 @@ class DynamicBitmapSource(private val bitmapUpdaterApi : BitmapUpdaterApi) {
         while(true) {
             val bitmapStream = bitmapUpdaterApi.latestBitmap
             emit(bitmapStream)
-            delay(250)
+            delay(10)
         }
     }
 }

@@ -4,7 +4,6 @@ import android.app.Activity
 import android.graphics.Bitmap
 import android.text.SpannableString
 import android.text.SpannableStringBuilder
-import android.widget.TextView
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.*
@@ -55,7 +54,7 @@ class BitmapCollector(
 
         private suspend fun collectStream() {
             directory.mkdirs()
-            val file = File(directory, classifier?.modelName + '_' + classifier?.device + ".txt")
+            val file = File(directory, classifier?.modelName + '_' + classifier?.device + '_' + classifier?.time +".csv")
             job = viewModelScope.launch(Dispatchers.Default) {
                     bitmapSource?.bitmapStream?.collect {
     //                    val textToShow = SpannableStringBuilder()
@@ -65,6 +64,14 @@ class BitmapCollector(
                             classifier.imageSizeY,
                             true
                         )
+//                        val file: File = File(directory, bitmap.toString() + ".jpeg")
+//                        val fOut = FileOutputStream(file)
+//                        bitmap.compress(Bitmap.CompressFormat.JPEG, 85, fOut)
+//                        fOut.flush()
+//                        fOut.close()
+
+
+
                         classifier.classifyFrame(bitmap, textToShow)
                         if(textToShow.toString().length<0) {
                             println("Length: ${textToShow.toString().length}")

@@ -1,7 +1,6 @@
 package com.arcore.MixedAIAR;
 
 import java.io.BufferedReader;
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
@@ -9,7 +8,6 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintStream;
 import java.io.PrintWriter;
-import java.nio.ByteBuffer;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.*;
@@ -18,10 +16,6 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CompletableFuture;
 
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.graphics.ImageFormat;
-import android.graphics.Rect;
-import android.graphics.YuvImage;
 import android.media.Image;
 import android.os.Handler;
 import android.os.Looper;
@@ -43,7 +37,6 @@ import androidx.appcompat.widget.Toolbar;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import android.util.Size;
 import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -92,8 +85,9 @@ import static java.lang.Math.abs;
 */
 public class MainActivity extends AppCompatActivity implements AdapterView.OnItemSelectedListener {
 
-
-    private BitmapUpdaterApi bitmapUpdaterApi = new BitmapUpdaterApi();
+    // BitmapUpdaterApi gets bitmap version of ar camera frame each time
+    // on onTracking is called. Needed for DynamicBitmapSource
+    private final BitmapUpdaterApi bitmapUpdaterApi = new BitmapUpdaterApi();
 
     private ArFragment fragment;
     private PointerDrawable pointer = new PointerDrawable();
@@ -559,17 +553,25 @@ else{
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-
-
+        /* numOfAiTasks defines the amount of AI settings cards that will be available */
+        int numOfAiTasks = 10;
+        // Define the recycler view that holds the AI settings cards
         RecyclerView recyclerView_aiSettings = findViewById(R.id.recycler_view_aiSettings);
-        int numOfAiTasks = 3;
+        // List of ItemsView stored in the Recycler View
+        // ItemsView objects contain the coroutine flow collectors BitmapCollector
         List<ItemsViewModel> mList = new ArrayList<>();
+
         for(int i = 0; i<numOfAiTasks; i++) {
             mList.add(new ItemsViewModel());
         }
+
+        // coroutine flow source that captures camera frames from updateTracking() function
         DynamicBitmapSource source = new DynamicBitmapSource(bitmapUpdaterApi);
+        // coroutine flow source that passes static jpeg
 //        BitmapSource source = new BitmapSource(this, "chair_600.jpg");
         CustomAdapter adapter = new CustomAdapter(mList, source, this);
+
+        // set the adapter and layout manager for the recycler view
         recyclerView_aiSettings.setAdapter(adapter);
         recyclerView_aiSettings.setLayoutManager(new LinearLayoutManager(this, RecyclerView.HORIZONTAL, false));
 
@@ -2004,8 +2006,12 @@ private float computeWidth(ArrayList<Float> point){
             }
         }
     }
-
-    private void frameToBitmap(Frame frame) throws NotYetAvailableException {
+    /** passFrameToBitmapUpdaterApi
+     * Precondition: Frame object is availble
+     * Postcondition: bitmapUpdaterApi bitmap object is updated to bitmap of frame that was passed
+     *
+     * */
+    private void passFrameToBitmapUpdaterApi(Frame frame) throws NotYetAvailableException {
         YuvToRgbConverter converter = new YuvToRgbConverter(this);
         Image image = frame.acquireCameraImage();
         Bitmap bmp = Bitmap.createBitmap(image.getWidth(), image.getHeight(), Bitmap.Config.ARGB_8888);
@@ -2017,7 +2023,7 @@ private float computeWidth(ArrayList<Float> point){
 //        File path = this.getExternalFilesDir(null);
 //        File dir = new File(path, "data");
 //        try {
-//            File file = new File(dir, "image.jpeg");
+//            File file = new File(dir, bmp+".jpeg");
 //            FileOutputStream fOut = new FileOutputStream(file);
 //            bmp.compress(Bitmap.CompressFormat.JPEG, 85, fOut);
 //            fOut.flush();
@@ -2036,7 +2042,8 @@ private float computeWidth(ArrayList<Float> point){
         Frame frame = fragment.getArSceneView().getArFrame();//OK not being used for now
         if(frame!=null) {
             try {
-                frameToBitmap(frame);
+                // if frame is available, pass bitmap to bitmapUpdater
+                passFrameToBitmapUpdaterApi(frame);
             } catch (NotYetAvailableException e) {
                 e.printStackTrace();
             }
