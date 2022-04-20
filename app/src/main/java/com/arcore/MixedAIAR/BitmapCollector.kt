@@ -54,7 +54,10 @@ class BitmapCollector(
          */
         private suspend fun collectStream() {
             childDirectory.mkdirs()
-            val file = File(childDirectory, classifier?.modelName + '_' + classifier?.device + '_'+ classifier?.time +".csv")
+            val file = File(childDirectory, classifier?.modelName + '_' +
+                    classifier?.device + '_'+
+                    classifier?.numThreads + "T_"+
+                    classifier?.time +".csv")
             job = viewModelScope.launch(Dispatchers.Default) {
                 bitmapSource?.bitmapStream?.collect {
                     val bitmap = Bitmap.createScaledBitmap(
