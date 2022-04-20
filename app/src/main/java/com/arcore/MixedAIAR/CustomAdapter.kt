@@ -148,7 +148,10 @@ class CustomAdapter(var mList: MutableList<ItemsViewModel>, val streamSource: Dy
         try {
             when(model) {
                 itemsView.models[0]->itemsView.classifier=ImageClassifierFloatMobileNet(activity)
-                itemsView.models[1]->itemsView.classifier=ImageClassifierQuantizedMobileNet(activity)
+                itemsView.models[1]->itemsView.classifier=ImageClassifierQuantizedMobileNetV2_1_0_224(activity)
+                itemsView.models[2]->itemsView.classifier=ImageClassifierQuantizedMobileNet(activity)
+                itemsView.models[3]->itemsView.classifier=ImageClassifier_Inception_V1_Quantized_224(activity)
+                itemsView.models[4]->itemsView.classifier=ImageClassifierQuantizedMobileNetV1_25_0_128(activity)
             }
         } catch (e: IOException) {
             Log.d(
