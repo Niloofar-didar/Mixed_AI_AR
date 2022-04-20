@@ -636,6 +636,20 @@ else{
                 }
             }
         });
+
+
+        RecyclerView aiOptionsContainer = findViewById(R.id.recycler_view_aiSettings);
+        Button toggleUi = (Button) findViewById(R.id.button_toggleUi);
+        toggleUi.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View view) {
+                if(aiOptionsContainer.getVisibility()==View.VISIBLE)
+                    aiOptionsContainer.setVisibility(View.INVISIBLE);
+                else {
+                    aiOptionsContainer.setVisibility(View.VISIBLE);
+                }
+                toggleAiPushPop();
+            }
+        });
         //////////////////////////////////////////////////////////////
 
 
@@ -1390,18 +1404,7 @@ else{
 //            }
 //        });
 
-        RecyclerView container = findViewById(R.id.recycler_view_aiSettings);
-        RelativeLayout arLayout = findViewById(R.id.gallery_layout);
-        Button toggleUi = (Button) findViewById(R.id.button_toggleUi);
-                toggleUi.setOnClickListener(new View.OnClickListener() {
-                    public void onClick(View view) {
-                        if(container.getVisibility()==View.VISIBLE)
-                           container.setVisibility(View.INVISIBLE);
-                        else {
-                            container.setVisibility(View.VISIBLE);
-                        }
-                    }
-                });
+
 
         //Clear all objects button setup
         Button clearButton = (Button) findViewById(R.id.clearButton);
@@ -3342,6 +3345,25 @@ public float delta (float a, float b , float c1,float creal,  float d, float gam
         }
 
         return true;
+    }
+    /**
+     * Hide buttons to change amount of AI tasks
+     * */
+    public void toggleAiPushPop() {
+        Button buttonPushAiTask = (Button) findViewById(R.id.button_pushAiTask);
+        Button buttonPopAiTask = (Button) findViewById(R.id.button_popAiTask);
+        TextView textNumOfAiTasks = (TextView) findViewById(R.id.text_numOfAiTasks);
+
+        if (buttonPushAiTask.getVisibility()==View.VISIBLE) {
+            buttonPushAiTask.setVisibility(View.INVISIBLE);
+            buttonPopAiTask.setVisibility(View.INVISIBLE);
+            textNumOfAiTasks.setVisibility(View.INVISIBLE);
+        }
+        else {
+            buttonPushAiTask.setVisibility(View.VISIBLE);
+            buttonPopAiTask.setVisibility(View.VISIBLE);
+            textNumOfAiTasks.setVisibility(View.VISIBLE);
+        }
     }
 
 }
