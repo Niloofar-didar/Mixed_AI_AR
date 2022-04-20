@@ -553,34 +553,35 @@ else{
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        /* numOfAiTasks defines the amount of AI settings cards that will be available */
-//        int numOfAiTasks = 3;
+
+        ////////////////
+        // manyAI
+        ////////////////
+
         // Define the recycler view that holds the AI settings cards
         RecyclerView recyclerView_aiSettings = findViewById(R.id.recycler_view_aiSettings);
         // List of ItemsView stored in the Recycler View
         // ItemsView objects contain the coroutine flow collectors BitmapCollector
         List<ItemsViewModel> mList = new ArrayList<>();
+        mList.add(new ItemsViewModel());
 
-//        for(int i = 0; i<numOfAiTasks; i++) {
-            mList.add(new ItemsViewModel());
-//        }
-
-
-        // coroutine flow source that captures camera frames from updateTracking() function
+        /**coroutine flow source that captures camera frames from updateTracking() function*/
         DynamicBitmapSource source = new DynamicBitmapSource(bitmapUpdaterApi);
-        // coroutine flow source that passes static jpeg
-//        BitmapSource source = new BitmapSource(this, "chair_600.jpg");
+        /** coroutine flow source that passes static jpeg*/
+        //BitmapSource source = new BitmapSource(this, "chair_600.jpg");
+
         CustomAdapter adapter = new CustomAdapter(mList, source, this);
 
         // set the adapter and layout manager for the recycler view
         recyclerView_aiSettings.setAdapter(adapter);
         recyclerView_aiSettings.setLayoutManager(new LinearLayoutManager(this, RecyclerView.HORIZONTAL, false));
 
+
+        // Set up UI elements
         Switch switchToggleStream = (Switch) findViewById(R.id.switch_streamToggle);
         Button buttonPushAiTask = (Button) findViewById(R.id.button_pushAiTask);
         Button buttonPopAiTask = (Button) findViewById(R.id.button_popAiTask);
         TextView textNumOfAiTasks = (TextView) findViewById(R.id.text_numOfAiTasks);
-
 
         buttonPushAiTask.setOnClickListener(new View.OnClickListener() {
             public void onClick(View view) {
@@ -618,8 +619,6 @@ else{
             }
         });
 
-
-
         switchToggleStream.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                 if (isChecked) {
@@ -637,21 +636,11 @@ else{
                 }
             }
         });
-//
-//        holder.collectionToggleSwitch.setOnCheckedChangeListener { buttonView, isChecked ->
-//            if (isChecked) {
-//                holder.tempText.text = "ON"
-//                itemsViewModel.consumer?.startCollect()
-//
-//                // The toggle is enabled
-//            } else {
-//                holder.tempText.text = "OFF"
-//                itemsViewModel.consumer?.pauseCollect()
-//                // The toggle is disabled
-//            }
-//        }
+        //////////////////////////////////////////////////////////////
 
 
+
+        // AR //
 
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
@@ -2075,15 +2064,11 @@ private float computeWidth(ArrayList<Float> point){
             }
         }
     }
-    /** passFrameToBitmapUpdaterApi
-     * Precondition: Frame object is availble
-     * Postcondition: bitmapUpdaterApi bitmap object is updated to bitmap of frame that was passed
-     *
-     * TODO: Move this function to background thread.  Only decoding/encoding to bitmap, not high
-     * intensity fxn
+    /**
+     * Converts arCore Frame to bitmap, passes to BitmapUpdaterApi
+     * TODO: Move this function to background thread.  Only decoding/encoding to bitmap, not high complexity fxn
      * */
     private void passFrameToBitmapUpdaterApi(Frame frame) throws NotYetAvailableException {
-//        Thread newThread = new Thread();
         YuvToRgbConverter converter = new YuvToRgbConverter(this);
         Image image = frame.acquireCameraImage();
         Bitmap bmp = Bitmap.createBitmap(image.getWidth(), image.getHeight(), Bitmap.Config.ARGB_8888);
@@ -2091,6 +2076,7 @@ private float computeWidth(ArrayList<Float> point){
         image.close();
 
         bitmapUpdaterApi.updateBitmap(bmp);
+
         ///////writes images as file to storage for testing
 //        File path = this.getExternalFilesDir(null);
 //        File dir = new File(path, "data");
@@ -2106,7 +2092,6 @@ private float computeWidth(ArrayList<Float> point){
 ////            LOG.i(null, "Save file error!");
 ////            return false;
 //        }
-
 //        System.out.println(bmp);
     }
 
@@ -2114,7 +2099,7 @@ private float computeWidth(ArrayList<Float> point){
         Frame frame = fragment.getArSceneView().getArFrame();//OK not being used for now
         if(frame!=null) {
             try {
-                // if frame is available, pass bitmap to bitmapUpdater
+                /**AR passes frame to AI*/
                 passFrameToBitmapUpdaterApi(frame);
             } catch (NotYetAvailableException e) {
                 e.printStackTrace();

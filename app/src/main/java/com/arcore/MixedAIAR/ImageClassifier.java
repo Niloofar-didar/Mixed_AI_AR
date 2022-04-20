@@ -211,13 +211,12 @@ public abstract class ImageClassifier {
     device = "NNAPI";
     recreateInterpreter();
   }
-
   public void setNumThreads(int numThreads) {
     tfliteOptions.setNumThreads(numThreads);
     threads = numThreads;
     recreateInterpreter();
   }
-
+  /** return thread count*/
   public int getNumThreads() {
     return threads;
   }

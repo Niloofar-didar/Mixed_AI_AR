@@ -1,5 +1,8 @@
 package com.arcore.MixedAIAR;
 
+/**
+ * Object to hold classifier object for recyclerview content
+ * */
 class ItemsViewModel {
     val models = listOf("MobileNet Float", "MobileNet Quant")
     val devices = listOf("cpu", "gpu", "nnapi")
