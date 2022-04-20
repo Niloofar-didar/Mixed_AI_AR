@@ -2,7 +2,6 @@ package com.arcore.MixedAIAR
 
 import android.app.Activity
 import android.graphics.Bitmap
-import android.text.SpannableString
 import android.text.SpannableStringBuilder
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -10,35 +9,38 @@ import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.collect
 import java.io.File
 
+/**
+ * Collects Bitmaps from a coroutine source (BitmapSource for static JPG or DynamicBitmapSource for
+ * a stream of changing files)
+ */
 class BitmapCollector(
-//    private val bitmapSource: BitmapSource?,
+    /**
+     * If using static jpg, comment out DynamicBitmapSource, uncomment BitmapSource
+     */
+    //private val bitmapSource: BitmapSource?,
     private val bitmapSource: DynamicBitmapSource?,
     private val classifier: ImageClassifier?,
-//    private val textView: TextView,
     private val activity: Activity
     ): ViewModel() {
 
-        val path = activity.getExternalFilesDir(null)
-        val directory = File(path, "data")
-
-
+        private val outputPath = activity.getExternalFilesDir(null)
+        private val childDirectory = File(outputPath, "data")
         var run = false
-        var job : Job? = null
-        var textToShow = SpannableStringBuilder("null")
+        private var job : Job? = null
+        var outputText = SpannableStringBuilder("null")
 
-        fun toggleCollect() {
-            when (run) {
-                true -> pauseCollect()
-                false -> startCollect()
-            }
-        }
-
+        /**
+         * Stops running collector
+         */
         fun pauseCollect() {
             run = false
             job?.cancel()
         }
 
-
+        /**
+         * Starts collection
+         * Precondition: bitmapSource must be emitting a stream to collect
+         */
         fun startCollect() = runBlocking <Unit>{
             run = true
             launch {
@@ -46,51 +48,26 @@ class BitmapCollector(
             }
         }
 
-        private fun collectConcurrently() = runBlocking <Unit> {
-            launch {
-                collectStream()
-            }
-        }
-
+        /**
+         * launches coroutine to collect bitmap from bitmapSource, scales bitmap to
+         * ImageClassifier requirements. Writes output to file.
+         */
         private suspend fun collectStream() {
-            directory.mkdirs()
-            val file = File(directory, classifier?.modelName + '_' + classifier?.device + '_'+ classifier?.time +".csv")
+            childDirectory.mkdirs()
+            val file = File(childDirectory, classifier?.modelName + '_' + classifier?.device + '_'+ classifier?.time +".csv")
             job = viewModelScope.launch(Dispatchers.Default) {
-                    bitmapSource?.bitmapStream?.collect {
-    //                    val textToShow = SpannableStringBuilder()
-                        val bitmap = Bitmap.createScaledBitmap(
-                            it,
-                            classifier!!.imageSizeX,
-                            classifier.imageSizeY,
-                            true
-                        )
-//                        val file: File = File(directory, bitmap.toString() + ".jpeg")
-//                        val fOut = FileOutputStream(file)
-//                        bitmap.compress(Bitmap.CompressFormat.JPEG, 85, fOut)
-//                        fOut.flush()
-//                        fOut.close()
+                bitmapSource?.bitmapStream?.collect {
+                    val bitmap = Bitmap.createScaledBitmap(
+                        it,
+                        classifier!!.imageSizeX,
+                        classifier.imageSizeY,
+                        true
+                    )
 
-
-
-                        classifier.classifyFrame(bitmap, textToShow)
-//                        println(textToShow.toString())
-                        file.appendText(textToShow.toString())
-
-                        delay(100)
-                    }
-
+                    classifier.classifyFrame(bitmap, outputText)
+                    file.appendText(outputText.toString())
+                    delay(100)
                 }
-            }
-
-        private fun showToast(s: String) {
-            val str1 = SpannableString(s)
-            textToShow.append(str1)
-            showToast(textToShow)
-        }
-
-        private fun showToast(builder: SpannableStringBuilder?) {
-            if (activity != null) {
-//                activity.runOnUiThread { textView.setText(builder, TextView.BufferType.SPANNABLE) }
             }
         }
     }

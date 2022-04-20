@@ -88,6 +88,7 @@ public abstract class ImageClassifier {
   private static final int FILTER_STAGES = 3;
   private static final float FILTER_FACTOR = 0.4f;
   private String device;
+  private int threads;
 
   private PriorityQueue<Map.Entry<String, Float>> sortedLabels =
       new PriorityQueue<>(
@@ -151,7 +152,7 @@ public abstract class ImageClassifier {
 //    span.setSpan(new ForegroundColorSpan(android.graphics.Color.LTGRAY), 0, span.length(), 0);
 
   }
-
+  /** Return current time in clock format */
   public String getTime(){
     SimpleDateFormat format=new SimpleDateFormat("HH.mm.ss.SSS", Locale.getDefault());
     return format.format(new Date().getTime());
@@ -186,6 +187,7 @@ public abstract class ImageClassifier {
     }
   }
 
+  /** Run AI model on GPU*/
   public void useGpu() {
     if (gpuDelegate == null) {
       GpuDelegate.Options options = new GpuDelegate.Options();
@@ -197,12 +199,12 @@ public abstract class ImageClassifier {
       recreateInterpreter();
     }
   }
-
+  /** Run AI model on CPU */
   public void useCPU() {
     device = "CPU";
     recreateInterpreter();
   }
-
+  /** Run AI model on NNAPI */
   public void useNNAPI() {
     nnapiDelegate = new NnApiDelegate();
     tfliteOptions.addDelegate(nnapiDelegate);
@@ -212,7 +214,12 @@ public abstract class ImageClassifier {
 
   public void setNumThreads(int numThreads) {
     tfliteOptions.setNumThreads(numThreads);
+    threads = numThreads;
     recreateInterpreter();
+  }
+
+  public int getNumThreads() {
+    return threads;
   }
 
   /** Closes tflite to release resources. */
