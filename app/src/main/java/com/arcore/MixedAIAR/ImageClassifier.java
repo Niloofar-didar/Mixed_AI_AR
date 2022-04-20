@@ -16,14 +16,11 @@ limitations under the License.
 package com.arcore.MixedAIAR;
 
 import android.app.Activity;
-import android.content.Context;
 import android.content.res.AssetFileDescriptor;
 import android.graphics.Bitmap;
 import android.os.SystemClock;
 import android.text.SpannableString;
 import android.text.SpannableStringBuilder;
-import android.text.style.ForegroundColorSpan;
-import android.text.style.RelativeSizeSpan;
 import android.util.Log;
 
 import org.tensorflow.lite.Interpreter;
@@ -31,7 +28,6 @@ import org.tensorflow.lite.gpu.GpuDelegate;
 import org.tensorflow.lite.nnapi.NnApiDelegate;
 
 import java.io.BufferedReader;
-import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -39,10 +35,13 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
+import java.text.SimpleDateFormat;
 import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.PriorityQueue;
 
@@ -126,6 +125,7 @@ public abstract class ImageClassifier {
   void classifyFrame(Bitmap bitmap, SpannableStringBuilder builder) {
 //    directory.mkdirs();
 //    File file = new File(directory, this.getModelPath()+".txt");
+    String timeStamp = getTime();
 
     builder.clear();
     if (tflite == null) {
@@ -142,16 +142,19 @@ public abstract class ImageClassifier {
 
     // Smooth the results across frames.
     applyFilter();
-
-    // Print the results.
-    printTopKLabels(builder);
     long duration = endTime - startTime;
-    SpannableString span = new SpannableString(duration + " ms");
-    span.setSpan(new ForegroundColorSpan(android.graphics.Color.LTGRAY), 0, span.length(), 0);
-//    System.out.println(span.length());
+    SpannableString span = new SpannableString(timeStamp +','+duration + "ms,");
+    // Print the results.
     builder.append(span);
-//    Files.wri
-//    file.
+    printTopKLabels(builder);
+    builder.append('\n');
+//    span.setSpan(new ForegroundColorSpan(android.graphics.Color.LTGRAY), 0, span.length(), 0);
+
+  }
+
+  public String getTime(){
+    SimpleDateFormat format=new SimpleDateFormat("HH.mm.ss.SSS", Locale.getDefault());
+    return format.format(new Date().getTime());
   }
 
   void applyFilter() {
@@ -284,29 +287,8 @@ public abstract class ImageClassifier {
     for (int i = 0; i < size; i++) {
       Map.Entry<String, Float> label = sortedLabels.poll();
       SpannableString span =
-          new SpannableString(String.format("%s: %4.2f\n", label.getKey(), label.getValue()));
-//      System.out.println(span.length());
-      int color;
-      // Make it white when probability larger than threshold.
-      if (label.getValue() > GOOD_PROB_THRESHOLD) {
-        color = android.graphics.Color.WHITE;
-      } else {
-        color = SMALL_COLOR;
-      }
-      // Make first item bigger.
-      if (i == size - 1) {
-        float sizeScale = (i == size - 1) ? 1.25f : 0.8f;
-        sizeScale = 1.0f;
-        span.setSpan(new RelativeSizeSpan(sizeScale), 0, span.length(), 0);
-//            System.out.println(span.length());
-
-//        System.out.println(span);
-      }
-      span.setSpan(new ForegroundColorSpan(color), 0, span.length(), 0);
-//          System.out.println(span.length());
-//      System.out.printf("Start: %d End: %d", 0, span.length());
-
-      builder.insert(0, span);
+          new SpannableString(String.format("%s,%4.2f,", label.getKey(), label.getValue()));
+      builder.append(span);
     }
   }
 

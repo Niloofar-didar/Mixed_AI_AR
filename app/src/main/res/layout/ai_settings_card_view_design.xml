@@ -9,38 +9,6 @@
     app:cardElevation="10dp">
 
     <LinearLayout
-        android:id="@+id/LinearLayoutTextLogo"
-        android:layout_width="match_parent"
-        android:layout_height="100dp"
-        android:layout_above="@+id/bottom_info_view"
-        android:orientation="vertical">
-
-        <TextView
-            android:id="@+id/TextView_AiOutput"
-            android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_weight="30"
-            android:textColor="#FFF"
-            android:textSize="20sp"
-            android:textStyle="bold"
-            tools:text="Ok Buddy" />
-
-        <Button
-            android:id="@+id/button_addAiTask"
-            android:layout_width="50dp"
-            android:layout_height="50dp"
-            android:layout_weight="0"
-            android:text="+" />
-        <Button
-            android:id="@+id/button_RemoveAiTask"
-            android:layout_width="50dp"
-            android:layout_height="50dp"
-            android:layout_weight="0"
-            android:text="-" />
-
-    </LinearLayout>
-
-    <LinearLayout
         android:id="@+id/bottom_info_view"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -63,7 +31,7 @@
                 android:textColor="@android:color/white" />
 
             <NumberPicker
-                android:id="@+id/np"
+                android:id="@+id/numberPicker_aiThreadCount"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginLeft="10dp"
@@ -117,6 +85,22 @@
 
     </LinearLayout>
 
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="99dp">
+
+        <TextView
+            android:id="@+id/textView_aiModelInfo"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="TextView"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.047"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintVertical_bias="0.2" />
+    </androidx.constraintlayout.widget.ConstraintLayout>
 
 
 </androidx.cardview.widget.CardView>

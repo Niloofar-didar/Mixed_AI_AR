@@ -6,17 +6,16 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.*
 import android.widget.AbsListView.CHOICE_MODE_SINGLE
-import android.widget.ArrayAdapter
-import android.widget.ListView
-import android.widget.NumberPicker
-import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import java.io.IOException
 
 //lateinit var consumer : BitmapCollector
-class CustomAdapter(private val mList: MutableList<ItemsViewModel>, val streamSource: BitmapSource, val activity: Activity) : RecyclerView.Adapter<CustomAdapter.ViewHolder>() {
+class CustomAdapter(var mList: MutableList<ItemsViewModel>, val streamSource: DynamicBitmapSource/*BitmapSource*/, val activity: Activity) : RecyclerView.Adapter<CustomAdapter.ViewHolder>() {
      // create new views
+
+
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         // inflates the card_view_design view
         // that is used to hold list item
@@ -27,10 +26,17 @@ class CustomAdapter(private val mList: MutableList<ItemsViewModel>, val streamSo
 
     }
 
+
+
     // binds the list items to a view
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         val itemsViewModel = mList[position]
         var outputText : SpannableStringBuilder? = null
+
+
+
+
+
 
         holder.modelListView.choiceMode = CHOICE_MODE_SINGLE
         holder.deviceListView.choiceMode = CHOICE_MODE_SINGLE
@@ -59,7 +65,8 @@ class CustomAdapter(private val mList: MutableList<ItemsViewModel>, val streamSo
         holder.deviceListView.setItemChecked(0, true)
 
         initializeActiveModel(holder, itemsViewModel)
-        itemsViewModel.consumer = BitmapCollector(streamSource, itemsViewModel.classifier, /*holder.textView,*/ activity)
+        itemsViewModel.consumer = BitmapCollector(streamSource, itemsViewModel.classifier, activity)
+        itemsViewModel.classifier?.useCPU()
 
         holder.numberPicker.setOnValueChangedListener {
                 picker, oldVal, newVal -> updateActiveModel(holder, itemsViewModel) }
@@ -69,6 +76,11 @@ class CustomAdapter(private val mList: MutableList<ItemsViewModel>, val streamSo
         holder.deviceListView.setOnItemClickListener { parent, view, pos, id ->
             updateActiveModel(holder, itemsViewModel)
         }
+        holder.textAiInfo.text = "${itemsViewModel.classifier?.modelName} ${itemsViewModel.classifier?.device}"
+
+
+
+
     }
 
     // return the number of the items in the list
@@ -80,18 +92,18 @@ class CustomAdapter(private val mList: MutableList<ItemsViewModel>, val streamSo
     class ViewHolder(ItemView: View) : RecyclerView.ViewHolder(ItemView) {
         var modelListView: ListView = itemView.findViewById(R.id.model)
         val deviceListView: ListView = itemView.findViewById(R.id.device)
-        val numberPicker: NumberPicker= itemView.findViewById(R.id.np)
-        val textView: TextView = itemView.findViewById(R.id.TextView_AiOutput)
+        val numberPicker: NumberPicker= itemView.findViewById(R.id.numberPicker_aiThreadCount)
+        val textAiInfo : TextView = itemView.findViewById(R.id.textView_aiModelInfo)
     }
 
 
-    fun initializeActiveModel(holder: CustomAdapter.ViewHolder, itemsView: ItemsViewModel) {
+    fun initializeActiveModel(holder: ViewHolder, itemsView: ItemsViewModel) {
         itemsView.currentModel = 0
         itemsView.currentDevice = 0
         itemsView.currentNumThreads = 1
         itemsView.classifier=ImageClassifierFloatMobileNet(activity)
     }
-    fun updateActiveModel(holder: CustomAdapter.ViewHolder, itemsView : ItemsViewModel) {
+    fun updateActiveModel(holder: ViewHolder, itemsView : ItemsViewModel) {
         itemsView.consumer?.pauseCollect()
 
         // Get UI information before delegating to background
@@ -144,8 +156,9 @@ class CustomAdapter(private val mList: MutableList<ItemsViewModel>, val streamSo
             itemsView.devices[1]-> itemsView.classifier?.useGpu()
             itemsView.devices[2]-> itemsView.classifier?.useNNAPI()
         }
-        itemsView.setCollector(BitmapCollector(streamSource, itemsView.classifier,/* holder.textView,*/ activity))
-        itemsView.consumer?.startCollect()
+        holder.textAiInfo.text = "${itemsView.classifier?.modelName} ${itemsView.classifier?.device}"
+        itemsView.setCollector(BitmapCollector(streamSource, itemsView.classifier, activity))
+//        itemsView.consumer?.startCollect()
     }
 
 

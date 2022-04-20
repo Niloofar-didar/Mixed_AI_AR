@@ -16,7 +16,6 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CompletableFuture;
 
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.media.Image;
 import android.os.Handler;
 import android.os.Looper;
@@ -59,6 +58,7 @@ import com.google.ar.core.HitResult;
 import com.google.ar.core.Plane;
 import com.google.ar.core.Trackable;
 import com.google.ar.core.TrackingState;
+import com.google.ar.core.exceptions.NotYetAvailableException;
 import com.google.ar.sceneform.AnchorNode;
 import com.google.ar.sceneform.Node;
 import com.google.ar.sceneform.math.Vector3;
@@ -85,12 +85,9 @@ import static java.lang.Math.abs;
 */
 public class MainActivity extends AppCompatActivity implements AdapterView.OnItemSelectedListener {
 
-
-
-
-
-
-
+    // BitmapUpdaterApi gets bitmap version of ar camera frame each time
+    // on onTracking is called. Needed for DynamicBitmapSource
+    private final BitmapUpdaterApi bitmapUpdaterApi = new BitmapUpdaterApi();
 
     private ArFragment fragment;
     private PointerDrawable pointer = new PointerDrawable();
@@ -556,19 +553,103 @@ else{
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-
-
+        /* numOfAiTasks defines the amount of AI settings cards that will be available */
+//        int numOfAiTasks = 3;
+        // Define the recycler view that holds the AI settings cards
         RecyclerView recyclerView_aiSettings = findViewById(R.id.recycler_view_aiSettings);
-        int numOfAiTasks = 4;
+        // List of ItemsView stored in the Recycler View
+        // ItemsView objects contain the coroutine flow collectors BitmapCollector
         List<ItemsViewModel> mList = new ArrayList<>();
-        for(int i = 0; i<numOfAiTasks; i++) {
+
+//        for(int i = 0; i<numOfAiTasks; i++) {
             mList.add(new ItemsViewModel());
-        }
-        BitmapSource source = new BitmapSource(this, "chair_600.jpg");
+//        }
+
+
+        // coroutine flow source that captures camera frames from updateTracking() function
+        DynamicBitmapSource source = new DynamicBitmapSource(bitmapUpdaterApi);
+        // coroutine flow source that passes static jpeg
+//        BitmapSource source = new BitmapSource(this, "chair_600.jpg");
         CustomAdapter adapter = new CustomAdapter(mList, source, this);
+
+        // set the adapter and layout manager for the recycler view
         recyclerView_aiSettings.setAdapter(adapter);
         recyclerView_aiSettings.setLayoutManager(new LinearLayoutManager(this, RecyclerView.HORIZONTAL, false));
 
+        Switch switchToggleStream = (Switch) findViewById(R.id.switch_streamToggle);
+        Button buttonPushAiTask = (Button) findViewById(R.id.button_pushAiTask);
+        Button buttonPopAiTask = (Button) findViewById(R.id.button_popAiTask);
+        TextView textNumOfAiTasks = (TextView) findViewById(R.id.text_numOfAiTasks);
+
+
+        buttonPushAiTask.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View view) {
+                // get num of ai tasks from textView
+                int numAiTasks = Integer.parseInt(textNumOfAiTasks.getText().toString());
+                // check for max limit
+                if (numAiTasks < 9) {
+                    numAiTasks++;
+                    // stop stream
+                    switchToggleStream.setChecked(false);
+                    // update num of AI tasks
+                    textNumOfAiTasks.setText(String.format("%d", numAiTasks));
+                    mList.add(new ItemsViewModel());
+                    adapter.setMList(mList);
+                    recyclerView_aiSettings.setAdapter(adapter);
+                }
+            }
+        });
+
+        buttonPopAiTask.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View view) {
+                // get num of ai tasks from textView
+                int numAiTasks = Integer.parseInt(textNumOfAiTasks.getText().toString());
+                // check for max limit
+                if (numAiTasks > 1) {
+                    numAiTasks--;
+                    // stop stream
+                    switchToggleStream.setChecked(false);
+                    // update num of AI tasks
+                    textNumOfAiTasks.setText(String.format("%d", numAiTasks));
+                    mList.remove(numAiTasks);
+                    adapter.setMList(mList);
+                    recyclerView_aiSettings.setAdapter(adapter);
+                }
+            }
+        });
+
+
+
+        switchToggleStream.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                if (isChecked) {
+                    // The toggle is enabled
+                    source.startStream();
+                    for (int i = 0; i < mList.size(); i++) {
+                        mList.get(i).getConsumer().startCollect();
+                    }
+                } else {
+                    // The toggle is disabled
+                    source.pauseStream();
+                    for (int i = 0; i < mList.size(); i++) {
+                        mList.get(i).getConsumer().pauseCollect();
+                    }
+                }
+            }
+        });
+//
+//        holder.collectionToggleSwitch.setOnCheckedChangeListener { buttonView, isChecked ->
+//            if (isChecked) {
+//                holder.tempText.text = "ON"
+//                itemsViewModel.consumer?.startCollect()
+//
+//                // The toggle is enabled
+//            } else {
+//                holder.tempText.text = "OFF"
+//                itemsViewModel.consumer?.pauseCollect()
+//                // The toggle is disabled
+//            }
+//        }
 
 
 
@@ -1310,21 +1391,15 @@ else{
 
 
 
-        Button startCollectButton = (Button) findViewById(R.id.button_startCollect);
-//        startCollectButton.setOnClickListener(new View.OnClickListener() {
+
+
+//        Button startStreamButton = (Button) findViewById(R.id.button_startStream);
+//        startStreamButton.setOnClickListener(new View.OnClickListener() {
 //            public void onClick(View view) {
-//                collector.startCollect();
-//                System.out.println(collector.getRun());
+//                source.toggleFlow();
+//                System.out.println(source.getRun());
 //            }
 //        });
-
-        Button startStreamButton = (Button) findViewById(R.id.button_startStream);
-        startStreamButton.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View view) {
-                source.toggleFlow();
-                System.out.println(source.getRun());
-            }
-        });
 
         RecyclerView container = findViewById(R.id.recycler_view_aiSettings);
         RelativeLayout arLayout = findViewById(R.id.gallery_layout);
@@ -2000,9 +2075,51 @@ private float computeWidth(ArrayList<Float> point){
             }
         }
     }
+    /** passFrameToBitmapUpdaterApi
+     * Precondition: Frame object is availble
+     * Postcondition: bitmapUpdaterApi bitmap object is updated to bitmap of frame that was passed
+     *
+     * TODO: Move this function to background thread.  Only decoding/encoding to bitmap, not high
+     * intensity fxn
+     * */
+    private void passFrameToBitmapUpdaterApi(Frame frame) throws NotYetAvailableException {
+//        Thread newThread = new Thread();
+        YuvToRgbConverter converter = new YuvToRgbConverter(this);
+        Image image = frame.acquireCameraImage();
+        Bitmap bmp = Bitmap.createBitmap(image.getWidth(), image.getHeight(), Bitmap.Config.ARGB_8888);
+        converter.yuvToRgb(image, bmp); /** line to be multithreaded*/
+        image.close();
+
+        bitmapUpdaterApi.updateBitmap(bmp);
+        ///////writes images as file to storage for testing
+//        File path = this.getExternalFilesDir(null);
+//        File dir = new File(path, "data");
+//        try {
+//            File file = new File(dir, bmp+".jpeg");
+//            FileOutputStream fOut = new FileOutputStream(file);
+//            bmp.compress(Bitmap.CompressFormat.JPEG, 85, fOut);
+//            fOut.flush();
+//            fOut.close();
+//        }
+//        catch (Exception e) {
+//            e.printStackTrace();
+////            LOG.i(null, "Save file error!");
+////            return false;
+//        }
+
+//        System.out.println(bmp);
+    }
 
     private boolean updateTracking() {
         Frame frame = fragment.getArSceneView().getArFrame();//OK not being used for now
+        if(frame!=null) {
+            try {
+                // if frame is available, pass bitmap to bitmapUpdater
+                passFrameToBitmapUpdaterApi(frame);
+            } catch (NotYetAvailableException e) {
+                e.printStackTrace();
+            }
+        }
         boolean wasTracking = isTracking;
         isTracking = frame != null &&
                 frame.getCamera().getTrackingState() == TrackingState.TRACKING;
