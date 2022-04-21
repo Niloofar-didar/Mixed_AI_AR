@@ -17,7 +17,7 @@ class BitmapCollector(
     /**
      * If using static jpg, comment out DynamicBitmapSource, uncomment BitmapSource
      */
-    //private val bitmapSource: BitmapSource?,
+//    private val bitmapSource: BitmapSource?,
     private val bitmapSource: DynamicBitmapSource?,
     private val classifier: ImageClassifier?,
     private val activity: Activity

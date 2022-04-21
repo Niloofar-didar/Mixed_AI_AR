@@ -568,7 +568,7 @@ else{
         /**coroutine flow source that captures camera frames from updateTracking() function*/
         DynamicBitmapSource source = new DynamicBitmapSource(bitmapUpdaterApi);
         /** coroutine flow source that passes static jpeg*/
-        //BitmapSource source = new BitmapSource(this, "chair_600.jpg");
+//        BitmapSource source = new BitmapSource(this, "chair_600.jpg");
 
         CustomAdapter adapter = new CustomAdapter(mList, source, this);
 

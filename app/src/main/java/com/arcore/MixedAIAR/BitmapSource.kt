@@ -13,10 +13,19 @@ class BitmapSource(override var activity: Activity, override var imgFileName: St
     var run = false
     fun toggleFlow() {
         run = !run
-        startFlow()
+        runStream()
     }
 
-    fun startFlow() {
+    fun startStream() {
+        run = true
+        runStream()
+    }
+
+    fun pauseStream() {
+        run = false
+    }
+
+    fun runStream() {
         bitmapStream = flow {
             while(run) {
                 val bitmap = fetchStream(activity)
