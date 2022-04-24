@@ -17,11 +17,13 @@ import java.io.IOException
  * Holds the BitmapCollector, changes to the ImageClassifier model happen here
  */
 class CustomAdapter(var mList: MutableList<ItemsViewModel>, val streamSource: DynamicBitmapSource/*BitmapSource*/, val activity: Activity) : RecyclerView.Adapter<CustomAdapter.ViewHolder>() {
+
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         // inflates the ai_settings_card_view_design view
         // that is used to hold list item
         val view = LayoutInflater.from(parent.context)
             .inflate(R.layout.ai_settings_card_view_design, parent, false)
+
         return ViewHolder(view)
     }
 
@@ -49,12 +51,12 @@ class CustomAdapter(var mList: MutableList<ItemsViewModel>, val streamSource: Dy
         holder.numberPicker.maxValue = 10
         holder.numberPicker.wrapSelectorWheel = true
         holder.modelListView.setItemChecked(0, true)
-        holder.deviceListView.setItemChecked(0, true)
+        holder.deviceListView.setItemChecked(0, true) // 0 = gpu
 
 
         // set current consumer to device[0] and model[0] from ItemsViewModel
         initializeActiveModel(itemsViewModel)
-        itemsViewModel.classifier?.numThreads = holder.numberPicker.value
+//        itemsViewModel.classifier?.numThreads = holder.numberPicker.value
 
         // update consumer when new options are selected
         holder.numberPicker.setOnValueChangedListener {
@@ -99,7 +101,7 @@ class CustomAdapter(var mList: MutableList<ItemsViewModel>, val streamSource: Dy
         itemsView.currentNumThreads = 1
         itemsView.classifier=ImageClassifierFloatMobileNet(activity)
         itemsView.consumer = BitmapCollector(streamSource, itemsView.classifier, activity)
-        itemsView.classifier?.useCPU()
+        itemsView.classifier?.useGpu()
     }
 
     /**

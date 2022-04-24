@@ -563,12 +563,17 @@ else{
         // List of ItemsView stored in the Recycler View
         // ItemsView objects contain the coroutine flow collectors BitmapCollector
         List<ItemsViewModel> mList = new ArrayList<>();
-        mList.add(new ItemsViewModel());
+
 
         /**coroutine flow source that captures camera frames from updateTracking() function*/
         DynamicBitmapSource source = new DynamicBitmapSource(bitmapUpdaterApi);
         /** coroutine flow source that passes static jpeg*/
 //        BitmapSource source = new BitmapSource(this, "chair_600.jpg");
+
+
+//        for(int i = 0; i<20; i++) {
+        mList.add(new ItemsViewModel());
+//        }
 
         CustomAdapter adapter = new CustomAdapter(mList, source, this);
 
@@ -588,7 +593,7 @@ else{
                 // get num of ai tasks from textView
                 int numAiTasks = Integer.parseInt(textNumOfAiTasks.getText().toString());
                 // check for max limit
-                if (numAiTasks < 9) {
+                if (numAiTasks < 20) {
                     numAiTasks++;
                     // stop stream
                     switchToggleStream.setChecked(false);
@@ -625,6 +630,7 @@ else{
                     // The toggle is enabled
                     source.startStream();
                     for (int i = 0; i < mList.size(); i++) {
+                        Log.d("CHECKCHG", String.valueOf((mList.get(i).getClassifier()==null)));
                         mList.get(i).getConsumer().startCollect();
                     }
                 } else {
@@ -3251,10 +3257,10 @@ public float delta (float a, float b , float c1,float creal,  float d, float gam
                         String current_gpu = null;
                         try {
 
-                            String[] InstallBusyBoxCmd = new String[]{
-                                    "su", "-c", "cat /sys/class/kgsl/kgsl-3d0/gpu_busy_percentage"};
+//                            String[] InstallBusyBoxCmd = new String[]{
+//                                  "su", "-c", "cat /sys/class/kgsl/kgsl-3d0/gpu_busy_percentage"};
 
-                            process2 = Runtime.getRuntime().exec(InstallBusyBoxCmd);
+                            process2 = Runtime.getRuntime().exec("cat /sys/class/kgsl/kgsl-3d0/gpu_busy_percentage");
                             BufferedReader stdInput = new BufferedReader(new
                                     InputStreamReader(process2.getInputStream()));
 // Read the output from the command
