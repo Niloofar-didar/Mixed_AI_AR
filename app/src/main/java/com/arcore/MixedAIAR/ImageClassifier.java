@@ -144,7 +144,7 @@ public abstract class ImageClassifier {
     // Smooth the results across frames.
     applyFilter();
     long duration = endTime - startTime;
-    SpannableString span = new SpannableString(timeStamp +','+duration + "ms,");
+    SpannableString span = new SpannableString(timeStamp +','+duration + ',');
     // Print the results.
     builder.append(span);
     printTopKLabels(builder);
@@ -154,7 +154,7 @@ public abstract class ImageClassifier {
   }
   /** Return current time in clock format */
   public String getTime(){
-    SimpleDateFormat format=new SimpleDateFormat("HH.mm.ss.SSS", Locale.getDefault());
+    SimpleDateFormat format=new SimpleDateFormat("HH.mm.ss.SSSS", Locale.getDefault());
     return format.format(new Date().getTime());
   }
 

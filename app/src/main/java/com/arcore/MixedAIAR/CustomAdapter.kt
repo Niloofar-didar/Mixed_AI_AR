@@ -50,23 +50,24 @@ class CustomAdapter(var mList: MutableList<ItemsViewModel>, val streamSource: Dy
         holder.numberPicker.minValue = 1
         holder.numberPicker.maxValue = 10
         holder.numberPicker.wrapSelectorWheel = true
-        holder.modelListView.setItemChecked(0, true)
-        holder.deviceListView.setItemChecked(0, true) // 0 = gpu
+        holder.numberPicker.value = itemsViewModel.currentNumThreads
+        holder.modelListView.setItemChecked(itemsViewModel.currentModel, true)
+        holder.deviceListView.setItemChecked(itemsViewModel.currentDevice, true) // 0 = gpu
 
 
         // set current consumer to device[0] and model[0] from ItemsViewModel
-        initializeActiveModel(itemsViewModel)
+//        initializeActiveModel(itemsViewModel)
 //        itemsViewModel.classifier?.numThreads = holder.numberPicker.value
 
         // update consumer when new options are selected
         holder.numberPicker.setOnValueChangedListener {
-                picker, oldVal, newVal -> updateActiveModel(holder, itemsViewModel)
+                picker, oldVal, newVal -> updateActiveModel(holder, itemsViewModel, position)
         }
         holder.modelListView.setOnItemClickListener {
-                parent, view, pos, id -> updateActiveModel(holder, itemsViewModel)
+                parent, view, pos, id -> updateActiveModel(holder, itemsViewModel, position)
         }
         holder.deviceListView.setOnItemClickListener {
-                parent, view, pos, id -> updateActiveModel(holder, itemsViewModel)
+                parent, view, pos, id -> updateActiveModel(holder, itemsViewModel, position)
         }
         // display current model info
 //        holder.textAiInfo.text = "${itemsViewModel.classifier?.modelName} ${itemsViewModel.classifier?.device}"
@@ -95,12 +96,12 @@ class CustomAdapter(var mList: MutableList<ItemsViewModel>, val streamSource: Dy
     /**
      * Initializes model to default parameters
      */
-    fun initializeActiveModel(itemsView: ItemsViewModel) {
+    fun initializeActiveModel(itemsView: ItemsViewModel, position: Int) {
         itemsView.currentModel = 0
         itemsView.currentDevice = 0
         itemsView.currentNumThreads = 1
         itemsView.classifier=ImageClassifierFloatMobileNet(activity)
-        itemsView.consumer = BitmapCollector(streamSource, itemsView.classifier, activity)
+        itemsView.consumer = BitmapCollector(streamSource, itemsView.classifier, position, activity)
         itemsView.classifier?.useGpu()
     }
 
@@ -108,7 +109,7 @@ class CustomAdapter(var mList: MutableList<ItemsViewModel>, val streamSource: Dy
      * Updates model to parameters chosen by pressing ai_settings_card_view_design
      * Stops collector, stops bitmap stream
      */
-    fun updateActiveModel(holder: ViewHolder, itemsView : ItemsViewModel) {
+    fun updateActiveModel(holder: ViewHolder, itemsView : ItemsViewModel, position: Int) {
         val switchToggleStream = activity.findViewById<Switch>(R.id.switch_streamToggle)
 
         itemsView.consumer?.pauseCollect()
@@ -155,6 +156,10 @@ class CustomAdapter(var mList: MutableList<ItemsViewModel>, val streamSource: Dy
                 itemsView.models[3]->itemsView.classifier=ImageClassifier_Inception_V1_Quantized_224(activity)
                 itemsView.models[4]->itemsView.classifier=ImageClassifierQuantizedMobileNetV1_25_0_128(activity)
                 itemsView.models[5]->itemsView.classifier=ImageClassifier_mnasnet_05_224(activity)
+                itemsView.models[6]->itemsView.classifier=ImageClassifier_Inception_V4_Quantized_299(activity)
+                itemsView.models[7]->itemsView.classifier=ImageClassifier_Inception_v4_Float_299(activity)
+                itemsView.models[8]->itemsView.classifier=ImageClassifier_MobileNet_V2_Float_224(activity)
+
 
             }
         } catch (e: IOException) {
@@ -176,7 +181,7 @@ class CustomAdapter(var mList: MutableList<ItemsViewModel>, val streamSource: Dy
         holder.textAiInfo.text = "Threads: ${itemsView.classifier?.numThreads}\n" +
                 "Model: ${itemsView.classifier?.modelName}\n" +
                 "Device: ${itemsView.classifier?.device}"
-        itemsView.setCollector(BitmapCollector(streamSource, itemsView.classifier, activity))
+        itemsView.setCollector(BitmapCollector(streamSource, itemsView.classifier, position, activity))
     }
 
 

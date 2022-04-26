@@ -8,6 +8,8 @@ import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.collect
 import java.io.File
+import java.time.Instant
+import java.time.LocalDateTime
 
 /**
  * Collects Bitmaps from a coroutine source (BitmapSource for static JPG or DynamicBitmapSource for
@@ -20,6 +22,7 @@ class BitmapCollector(
 //    private val bitmapSource: BitmapSource?,
     private val bitmapSource: DynamicBitmapSource?,
     private val classifier: ImageClassifier?,
+    var index: Int, // to ensure unique filename.
     private val activity: Activity
     ): ViewModel() {
 
@@ -54,10 +57,14 @@ class BitmapCollector(
          */
         private suspend fun collectStream() {
             childDirectory.mkdirs()
-            val file = File(childDirectory, classifier?.modelName + '_' +
+            val file = File(childDirectory,
+                    index.toString() + '_' +
+                    classifier?.modelName + '_' +
                     classifier?.device + '_'+
                     classifier?.numThreads + "T_"+
-                    classifier?.time +".csv")
+                    classifier?.time +
+                    ".csv")
+            file.appendText("timestamp,response,guess3,acc3,guess2,acc2,guess1,acc1\n")
             job = viewModelScope.launch(Dispatchers.Default) {
                 bitmapSource?.bitmapStream?.collect {
                     val bitmap = Bitmap.createScaledBitmap(
@@ -69,7 +76,7 @@ class BitmapCollector(
 
                     classifier.classifyFrame(bitmap, outputText)
                     file.appendText(outputText.toString())
-                    delay(100)
+                    delay(250)
                 }
             }
         }
