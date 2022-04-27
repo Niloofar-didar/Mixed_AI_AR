@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
@@ -7,6 +7,21 @@
     app:layout_behavior="@string/appbar_scrolling_view_behavior"
     tools:context=".MainActivity"
     tools:showIn="@layout/activity_main">
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:translationZ="90dp"
+        android:id="@+id/recycler_view_aiSettings"
+        android:layout_width="match_parent"
+        android:layout_height="320dp"
+        android:layout_alignParentBottom="true"
+        android:background="#513400"
+        android:orientation="horizontal"
+        android:scrollbars="horizontal"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="1.0"
+        tools:layout_editor_absoluteX="0dp"
+        tools:listitem="@layout/ai_settings_card_view_design" />
 
 
 <!--    <fragment-->
@@ -21,6 +36,7 @@
 <!--        app:layout_constraintVertical_chainStyle="spread"-->
 <!--        app:layout_constraintVertical_weight="9" />-->
 
+
     <fragment
         android:id="@+id/sceneform_fragment"
         android:name="com.arcore.MixedAIAR.WritingArFragment"
@@ -33,20 +49,6 @@
         app:layout_constraintVertical_bias="1.0"
         app:layout_constraintVertical_chainStyle="spread"
         app:layout_constraintVertical_weight="9" />
-
-
-    <fragment
-        android:id="@+id/container"
-        android:name="com.arcore.MixedAIAR.Camera2BasicFragment"
-        android:layout_width="179dp"
-        android:layout_height="158dp"
-        android:layout_marginEnd="232dp"
-        app:layout_constraintBottom_toTopOf="@id/gallery_layout"
-
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.963"
-        app:layout_constraintVertical_chainStyle="spread" />
 
     <RelativeLayout
         android:id="@+id/gallery_layout"
@@ -228,12 +230,72 @@
         app:layout_constraintTop_toBottomOf="@+id/sceneform_fragment"
         app:layout_constraintVertical_bias="1.0" />
 
-    <android.support.constraint.Guideline
+    <androidx.constraintlayout.widget.Guideline
         android:id="@+id/guideline2"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:orientation="vertical"
         app:layout_constraintGuide_end="411dp" />
 
+    <Button
+        android:id="@+id/button_toggleUi"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:text="Toggle AI Vis"
+        app:layout_constraintBottom_toBottomOf="@+id/switch_streamToggle"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintStart_toStartOf="parent" />
 
-</android.support.constraint.ConstraintLayout>
+    <Switch
+        android:id="@+id/switch_streamToggle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:layout_marginEnd="16dp"
+        android:layout_marginBottom="4dp"
+        android:minHeight="48dp"
+        android:text="AI Tasks"
+        app:layout_constraintBottom_toTopOf="@+id/recycler_view_aiSettings"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="1.0"
+        app:layout_constraintStart_toEndOf="@+id/button_toggleUi" />
+
+    <Button
+        android:id="@+id/button_popAiTask"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:layout_marginStart="20dp"
+        android:text="-"
+        app:layout_constraintBottom_toBottomOf="@+id/button_toggleUi"
+        app:layout_constraintStart_toEndOf="@+id/button_toggleUi" />
+
+    <Button
+        android:id="@+id/button_pushAiTask"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:layout_marginStart="16dp"
+        android:text="+"
+        app:layout_constraintBottom_toBottomOf="@+id/button_popAiTask"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.007"
+        app:layout_constraintStart_toEndOf="@+id/text_numOfAiTasks" />
+
+    <TextView
+        android:id="@+id/text_numOfAiTasks"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="16dp"
+        android:layout_marginBottom="12dp"
+        android:background="#000000"
+        android:text="1"
+        android:textColor="#FFFFFF"
+        app:layout_constraintBottom_toBottomOf="@+id/button_popAiTask"
+        app:layout_constraintStart_toEndOf="@+id/button_popAiTask"
+        app:layout_constraintTop_toTopOf="@+id/button_pushAiTask"
+        app:layout_constraintVertical_bias="0.571" />
+
+
+</androidx.constraintlayout.widget.ConstraintLayout>

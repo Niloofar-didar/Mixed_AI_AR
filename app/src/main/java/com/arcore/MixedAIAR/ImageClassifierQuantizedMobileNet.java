@@ -16,21 +16,9 @@ limitations under the License.
 package com.arcore.MixedAIAR;
 
 import android.app.Activity;
+
 import java.io.IOException;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.File;
-import java.lang.Math;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.PrintStream;
-import java.io.PrintWriter;
-import java.io.InputStream;
-import java.util.stream.IntStream;
 /**
  * This classifier works with the quantized MobileNet model.
  */
@@ -47,10 +35,17 @@ public class ImageClassifierQuantizedMobileNet extends ImageClassifier {
    *
    * @param activity
    */
-  //ImageClassifierQuantizedMobileNet(Activity activity) throws IOException {
   ImageClassifierQuantizedMobileNet(Activity activity) throws IOException {
     super(activity);
     labelProbArray = new byte[1][getNumLabels()];
+  }
+
+  @Override
+  protected String getModelName() {
+    // you can download this file from
+    // see build.gradle for where to obtain this file. It should be auto
+    // downloaded into assets.
+    return "mobilenet_v1_1.0_224_quant";
   }
 
   @Override
@@ -58,10 +53,7 @@ public class ImageClassifierQuantizedMobileNet extends ImageClassifier {
     // you can download this file from
     // see build.gradle for where to obtain this file. It should be auto
     // downloaded into assets.
-    //nill did
     return "mobilenet_v1_1.0_224_quant.tflite";
-    //mobilenet_v1_1.0_224_quantized_1_metadata_1
-
   }
 
   @Override

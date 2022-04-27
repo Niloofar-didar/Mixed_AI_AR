@@ -15,88 +15,38 @@ limitations under the License.
 
 package com.arcore.MixedAIAR;
 import android.os.Build;
-import android.support.annotation.RequiresApi;
+import androidx.annotation.RequiresApi;
 import android.widget.Button;
-import android.widget.CompoundButton;
 //import android.support.v7.app.AlertDialog;
-import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.Toolbar;
 import android.app.Activity;
 import android.view.View;
-import android.view.Menu;
-import android.view.MenuItem;
-import android.app.AlertDialog;
-import android.app.Dialog;
-import android.app.DialogFragment;
 import android.app.Fragment;
-import android.content.Context;
-import android.content.DialogInterface;
-import android.content.pm.PackageInfo;
-import android.content.pm.PackageManager;
-import android.content.res.Configuration;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.graphics.ImageFormat;
-import android.graphics.Matrix;
-import android.graphics.Point;
-import android.graphics.RectF;
-import android.graphics.SurfaceTexture;
-import android.hardware.camera2.CameraAccessException;
-import android.hardware.camera2.CameraCaptureSession;
-import android.hardware.camera2.CameraCharacteristics;
-import android.hardware.camera2.CameraDevice;
-import android.hardware.camera2.CameraManager;
-import android.hardware.camera2.CaptureRequest;
-import android.hardware.camera2.CaptureResult;
-import android.hardware.camera2.TotalCaptureResult;
-import android.hardware.camera2.params.StreamConfigurationMap;
-import android.media.ImageReader;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.HandlerThread;
-import android.os.Process;
-import android.support.annotation.NonNull;
+
+import androidx.annotation.NonNull;
 import android.text.SpannableString;
 import android.text.SpannableStringBuilder;
 import android.util.Log;
 import android.util.Size;
 import android.view.LayoutInflater;
-import android.view.Surface;
-import android.view.TextureView;
-import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
-import android.widget.Button;
-import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.NumberPicker;
 import android.widget.TextView;
 import android.widget.Toast;
-import android.support.v13.app.FragmentCompat;
+import androidx.legacy.app.FragmentCompat;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Timer;
-import java.util.TimerTask;
-import java.util.concurrent.Semaphore;
-import java.util.concurrent.TimeUnit;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import android.os.CountDownTimer;
-import java.util.concurrent.TimeUnit;
-
-import org.tensorflow.lite.support.image.TensorImage;
-import org.tensorflow.lite.support.label.Category;
 
 /** Basic fragments for the Camera. */
 public class Camera2BasicFragment extends Fragment
@@ -120,7 +70,6 @@ public class Camera2BasicFragment extends Fragment
     private boolean checkedPermissions = false;
     private TextView textView;
     private NumberPicker np;
-    public ImageClassifier classifier;
     private ListView deviceView;
     private ListView modelView;
     //File time_gpu=new File(getActivity().getExternalFilesDir(null), "time_gpu.txt");;
@@ -251,6 +200,10 @@ public class Camera2BasicFragment extends Fragment
             LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
 
 
+        Timer t = new Timer();
+        final int[] count = {0}; // should be before here
+
+
         return inflater.inflate(R.layout.fragment_camera2_basic, container, false);
 
 
@@ -258,6 +211,7 @@ public class Camera2BasicFragment extends Fragment
 
 //!!!! to get the throughut model parameters, you need to call getInstance.slope or intercept, since this
     //$$$ this fun is called for the static Instance of Camera2basicFragment
+
 
 
 
@@ -320,24 +274,6 @@ public class Camera2BasicFragment extends Fragment
         //Nil changed
 
         System.out.println("change"); // this is to stop active classifier
-        if (getInstance().classifier != null)// to stop while thread loop of classifier -> it first comes here, then goes above
-        {
-            getInstance().classifier.breakC = true;
-            try {
-                Thread.sleep(5000);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-        }
-
-        if (getInstance().classifier != null && getInstance().classifier.breakC == true) { // to stop classifier after stopping the threads
-
-
-            getInstance().classifier.close();
-            getInstance().classifier = null;
-
-        }
-
 
         final int modelIndex = modelView.getCheckedItemPosition();
         // Gpu=1
@@ -385,48 +321,6 @@ public class Camera2BasicFragment extends Fragment
 
                     Log.i(TAG, "Changing model to " + model + ", device " + device);
 
-                    // Try to load model.
-                    try {
-                        if (model.equals(mobilenetV1Quant)) {
-                            getInstance().classifier = new ImageClassifierQuantizedMobileNet(getActivity());
-
-                        } else if (model.equals(mobilenetV1Float)) {
-                            getInstance().classifier = new ImageClassifierFloatMobileNet(getActivity());
-                        } else {
-                            //showToast("Failed to load model");
-                        }
-                    } catch (IOException e) {
-                        Log.d(TAG, "Failed to load", e);
-                        getInstance().classifier = null;
-                    }
-
-                    // Customize the interpreter to the type of device we want to use.
-                    if (getInstance().classifier == null) {
-                        return;
-                    }
-
-                    if (getInstance().classifier != null) {
-                        if (modelIndex == 0)
-                            model = "quant";// to store in a file
-                        else
-                            model = "float";
-                        getInstance().classifier.setModel(model);// to store inf to a file
-                    }
-
-                    getInstance().classifier.requests = finalNumThreads; // this is to request more more than one operations at a time
-                    getInstance().classifier.setNumThreads(1); // this refers to the num of threads in the original app, to do one operation in parallell
-
-                    if (device.equals(cpu)) {
-                    } else if (device.equals(gpu)) {
-                        getInstance().classifier.useGpu();
-
-                    } else if (device.equals(nnApi)) {
-                        getInstance().classifier.useNNAPI();
-                    }
-
-                    getInstance().classifier.classifyFrame2();
-
-
                 });
     }
 
@@ -459,22 +353,6 @@ public class Camera2BasicFragment extends Fragment
           public void onClick(View view) {
 
             System.out.println("stop"); // this is to stop active classifier
-              if (getInstance().classifier != null)// to stop while thread loop of classifier -> it first comes here, then goes above
-              {
-                  getInstance().classifier.breakC = true;
-                  try {
-                      Thread.sleep(1000);
-                  } catch (InterruptedException e) {
-                      e.printStackTrace();
-                  }
-              }
-
-              if ( getInstance().classifier != null && getInstance().classifier.breakC==true){ // to stop classifier after stopping the threads
-
-               // getInstance(). rTime=classifier.rTime;
-                  getInstance().classifier.close();
-                  getInstance().classifier = null;
-              }
           }
 
       });
@@ -521,7 +399,7 @@ public class Camera2BasicFragment extends Fragment
           }
         });
 
-    np = (NumberPicker) view.findViewById(R.id.np);// gets value for threads num/ num of requests
+    np = (NumberPicker) view.findViewById(R.id.numberPicker_aiThreadCount);// gets value for threads num/ num of requests
       String[] numbers = new String[]{"1", "3", "6"};
      np.setMinValue(1);
     np.setMaxValue(3);
@@ -564,9 +442,6 @@ public class Camera2BasicFragment extends Fragment
 
   @Override
   public void onDestroy() {
-    if (getInstance().classifier != null) {
-      getInstance().classifier.close();
-    }
     super.onDestroy();
   }
 
@@ -632,29 +507,6 @@ public class Camera2BasicFragment extends Fragment
 //        }
 //    };
 
-  /** Classifies a frame from the preview stream. */
-//  private void classifyFrame() throws InterruptedException {
-//
-//    //Nil comment out this to not read from the camera frame, instead we read from a jpg file
-//    if (classifier == null || getActivity() == null) {// || cameraDevice == null) {
-//
-//      return;
-//    }
-//
-//
-//    SpannableStringBuilder textToShow = new SpannableStringBuilder();
-//
-//    //nil
-//    File root = Environment.getExternalStorageDirectory();
-//
-//      Bitmap  bitmap = BitmapFactory.decodeFile( root+ "/mouse.jpg");
-//     // classifier.classifyFrame2(bitmap);
-//   // classifier.classifyFrame(bitmap, textToShow);
-//
-//    bitmap.recycle();
-//    //nill commented/uncommented
-//    //showToast(textToShow);
-//
-//  }
+
 
 }
