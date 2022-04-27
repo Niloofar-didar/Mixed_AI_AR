@@ -25,7 +25,6 @@ import android.os.Looper;
 import android.os.Message;
 
 import android.os.SystemClock;
-import android.support.design.widget.Snackbar;
 import android.util.Log;
 
 import java.util.LinkedList;
@@ -78,7 +77,6 @@ import java.util.ArrayList;
 import java.util.List;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ListMultimap;
-import com.google.common.collect.Multimap;
 
 import java.lang.Math;
 import java.io.InputStream;
@@ -1680,8 +1678,8 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
 
 
                        // long curTime= SystemClock.uptimeMillis();
-                        if( Camera2BasicFragment.getInstance().classifier!=null) // in the begining we collect data for zero tris
-                            new dataCol(MainActivity.this).run(); // this is to collect mean thr, total_tris. average dis
+//                        if( Camera2BasicFragment.getInstance().classifier!=null) // in the begining we collect data for zero tris
+//                            new dataCol(MainActivity.this).run(); // this is to collect mean thr, total_tris. average dis
 
 
 /* since we periodically run the model for thr/RE -> even if there is a wrong point before adding tris count and the model calculates wrong num, it will be adjusted based on new

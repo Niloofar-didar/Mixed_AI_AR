@@ -40,8 +40,8 @@ public class dataCol implements Runnable {
         double meanDk = 0; // mean current dis
         double meanDkk = 0; // mean of d in the next period-> you need to cal the average of predicted d for all the objects
 
-        meanThr = Camera2BasicFragment.getInstance().getThr();
-        meanThr= (double)Math.round((double)meanThr * 100) / 100;
+//        meanThr = MainActivity.getInstance().getThr();
+//        meanThr= (double)Math.round((double)meanThr * 100) / 100;
         totTris = mInstance.total_tris/1000;
         for (int i = 0; i < mInstance.objectCount; i++) {
             meanDk += (double) mInstance.renderArray[i].return_distance();
@@ -69,7 +69,7 @@ public class dataCol implements Runnable {
 
            }
 
-            mInstance.trisMeanThr.put(totTris, meanThr);
+//            mInstance.trisMeanThr.put(totTris, meanThr);
             mInstance.thParamList.put(totTris, Arrays.asList(totTris, meanDk, 1.0));
             int startTris=mInstance.totTrisList.indexOf(totTris);
             if(mInstance.totTrisList.size()!=0 && ind!=-1)
@@ -94,7 +94,7 @@ public class dataCol implements Runnable {
                 double mape = 0.0; // mean of absolute error
                 double fit = mInstance.rohT * totTris + mInstance.rohD * meanDk + mInstance.delta;
                 //double fit = mInstance.thSlope * totTris + mInstance.thIntercept;;
-                mape = Math.abs((meanThr - fit)/meanThr);
+//                mape = Math.abs((meanThr - fit)/meanThr);
 
                 ind=-1;
                 if ( mInstance.trisMeanThr.get(totTris).size() == 10)
@@ -114,7 +114,7 @@ public class dataCol implements Runnable {
                     else
                         mInstance.totTrisList.add(totTris);
 
-                    mInstance.trisMeanThr.put(totTris, meanThr);
+//                    mInstance.trisMeanThr.put(totTris, meanThr);
                     mInstance.thParamList.put(totTris, Arrays.asList(totTris, meanDk, 1.0));
                     mInstance.trisMeanDisk.put(totTris, meanDk); //removes from the head (older data) -> to then add to the tail
                     mInstance.trisMeanDiskk.put(totTris, meanDkk);
@@ -173,7 +173,7 @@ public class dataCol implements Runnable {
 
 
                 predThr= (double)Math.round((double)predThr * 100) / 100;
-                writeThr(meanThr, predThr, trainedThr);// for the urrent period
+//                writeThr(meanThr, predThr, trainedThr);// for the urrent period
 
 //@@@@@@@@@nill added temporarary 29 march
 
@@ -188,9 +188,9 @@ public class dataCol implements Runnable {
              double avgq = calculateMeanQuality();
 
             double PRoAR =(double) Math.round((double)(avgq / mInstance.des_Q) * 100) / 100;
-            double PRoAI = (double) Math.round((double)(  meanThr / mInstance.des_Thr) * 100) / 100;
-            double reMsrd = PRoAR / PRoAI;
-            reMsrd= (double)Math.round((double)reMsrd * 100) / 100;
+//            double PRoAI = (double) Math.round((double)(  meanThr / mInstance.des_Thr) * 100) / 100;
+//            double reMsrd = PRoAR / PRoAI;
+//            reMsrd= (double)Math.round((double)reMsrd * 100) / 100;
 
            // double predThr=  mInstance.thSlope * totTris + mInstance.thIntercept;
             double predThr=  mInstance.rohT * totTris + mInstance.rohD * meanDk + mInstance.delta;
@@ -202,7 +202,7 @@ public class dataCol implements Runnable {
             {
 
                 cleanOutArraysRE(totTris,meanDk, mInstance);// check to remove extra value in the RE parameters list
-                mInstance.trisRe.put(totTris, reMsrd);
+//                mInstance.trisRe.put(totTris, reMsrd);
                 mInstance.reParamList.put(totTris, Arrays.asList(totTris, meanDk, predThr, 1.0));
             }
 
@@ -212,12 +212,12 @@ public class dataCol implements Runnable {
 
                 double mape = 0.0;      //  sum of square error
                 double fit = mInstance.alphaT * totTris + mInstance.alphaD * meanDk + mInstance.alphaH * predThr + mInstance.zeta;// for current period
-                mape = Math.abs((reMsrd - fit)/reMsrd);
+//                mape = Math.abs((reMsrd - fit)/reMsrd);
 
                 if (mape >= 0.10 && variousTris>=2 ) {// we ignore tris=0 them we need points with at least two diff tris in order to generate the line
 
                     cleanOutArraysRE(totTris,meanDk, mInstance);
-                    mInstance.trisRe.put(totTris, reMsrd); // april 8
+//                    mInstance.trisRe.put(totTris, reMsrd); // april 8
                     mInstance.reParamList.put(totTris, Arrays.asList(totTris, meanDk, predThr, 1.0));
 
                     ListMultimap<Double, List<Double>> copyreParamList= ArrayListMultimap.create(mInstance.reParamList);// take a copy to then fill it for training up to capacity of 10
@@ -273,47 +273,47 @@ public class dataCol implements Runnable {
                   //  if (variousTris>=3 && Math.abs(deltaRe) >= 0.2 && (PRoAR < 0.7 || PRoAI < 0.7))// test and see what is the re range
                 double nextTris=totTris;
 
-                if (variousTris>=3 && (reMsrd > 1.2 || (reMsrd <0.8 && avgq!=1)) )// if re is not balances (or pAR is not close to PAI, we will change the next tris count
+//                if (variousTris>=3 && (reMsrd > 1.2 || (reMsrd <0.8 && avgq!=1)) )// if re is not balances (or pAR is not close to PAI, we will change the next tris count
                   // the last cond (reMsrd <0.8 && avgq!=1) says that if the AI is working better than AR and AI has not in original quality so that we can increase tot tris
                     mInstance.lastConscCounter++;
 
-                else
-                    mInstance.lastConscCounter=0;
-// now we calculate next period tris here :)
-                   if(mInstance.lastConscCounter>=5 && mInstance.prevtotTris==totTris) // the second condition is to skip change in nexttris for the first loop while we just had a change in tot tris
-                     {
-
-                        double nomin = 1 -((mInstance.alphaD + (mInstance.alphaH* mInstance.rohD))* meanDkk)
-                                - (mInstance.zeta + (mInstance.alphaH* mInstance.delta));
-                        double denom = mInstance.alphaT + (mInstance.rohT * mInstance.alphaH); //α + ργ
-                         nextTris=  ( nomin/denom);
-
-                         nextTris= (double)Math.round((double)nextTris * 1000) / 1000;
-
-                         writeNextTris( mInstance.alphaD,mInstance.alphaH,mInstance.rohD, meanDkk,mInstance.zeta, mInstance.delta,
-                                 mInstance.alphaT,mInstance.rohT, nomin, denom,totTris,nextTris );// writes to the file
-
-                           trainedTris=true;
-
-
-/// this id for test
-
-
-                       //  double rePlus= mInstance.reRegalpha * nextTris + mInstance.reRegbetta * meanDkk + mInstance.reReggamma * thrPlus + mInstance.reRegteta;
-
-/// this id for test
-
-
-                        /* temporarily inactive to not to run algo-> just wanna check nexttris values
-                        if (nextTris <= mInstance.orgTrisAllobj && nextTris > minTrisThreshold && Math.abs(totTris-nextTris)>5000) { // update next tris and call algorithm if and only if the new tris is between a correct range
-                            mInstance.nextTris = nextTris;// update nexttris
-                            // call main algorithm to distribute triangles
-                            mInstance.odraAlg((float) nextTris);
-
-                        } */
-                    }//if
-
-                writeRE(reMsrd, predRE, trainedRE,totTris, nextTris,trainedTris, PRoAR, PRoAI);// writes to the file
+//                else
+//                    mInstance.lastConscCounter=0;
+//// now we calculate next period tris here :)
+//                   if(mInstance.lastConscCounter>=5 && mInstance.prevtotTris==totTris) // the second condition is to skip change in nexttris for the first loop while we just had a change in tot tris
+//                     {
+//
+//                        double nomin = 1 -((mInstance.alphaD + (mInstance.alphaH* mInstance.rohD))* meanDkk)
+//                                - (mInstance.zeta + (mInstance.alphaH* mInstance.delta));
+//                        double denom = mInstance.alphaT + (mInstance.rohT * mInstance.alphaH); //α + ργ
+//                         nextTris=  ( nomin/denom);
+//
+//                         nextTris= (double)Math.round((double)nextTris * 1000) / 1000;
+//
+//                         writeNextTris( mInstance.alphaD,mInstance.alphaH,mInstance.rohD, meanDkk,mInstance.zeta, mInstance.delta,
+//                                 mInstance.alphaT,mInstance.rohT, nomin, denom,totTris,nextTris );// writes to the file
+//
+//                           trainedTris=true;
+//
+//
+///// this id for test
+//
+//
+//                       //  double rePlus= mInstance.reRegalpha * nextTris + mInstance.reRegbetta * meanDkk + mInstance.reReggamma * thrPlus + mInstance.reRegteta;
+//
+///// this id for test
+//
+//
+//                        /* temporarily inactive to not to run algo-> just wanna check nexttris values
+//                        if (nextTris <= mInstance.orgTrisAllobj && nextTris > minTrisThreshold && Math.abs(totTris-nextTris)>5000) { // update next tris and call algorithm if and only if the new tris is between a correct range
+//                            mInstance.nextTris = nextTris;// update nexttris
+//                            // call main algorithm to distribute triangles
+//                            mInstance.odraAlg((float) nextTris);
+//
+//                        } */
+//                    }//if
+//
+//                writeRE(reMsrd, predRE, trainedRE,totTris, nextTris,trainedTris, PRoAR, PRoAI);// writes to the file
 
 
             }            //  RE modeling and next tris

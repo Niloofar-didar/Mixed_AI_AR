@@ -18,6 +18,7 @@ package com.arcore.MixedAIAR;
 import android.app.Activity;
 import android.content.res.AssetFileDescriptor;
 import android.graphics.Bitmap;
+import android.os.Environment;
 import android.os.SystemClock;
 import android.text.SpannableString;
 import android.text.SpannableStringBuilder;
@@ -87,7 +88,6 @@ import android.content.Intent;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
-import android.support.design.widget.Snackbar;
 import android.util.Log;
 
 import java.lang.ref.WeakReference;
@@ -106,9 +106,7 @@ import android.os.CountDownTimer;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
-import android.support.v7.app.AlertDialog;
-import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.Toolbar;
+//import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.View;
 import android.view.Menu;
@@ -287,7 +285,7 @@ public abstract class ImageClassifier {
 
 
   SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss:SSS");
-  String path2=Environment.getExternalStorageDirectory()+"/Android/data/com.arcore.MixedAIAR/files";
+  String path2= Environment.getExternalStorageDirectory()+"/Android/data/com.arcore.MixedAIAR/files";
   int count=0;
 
 
@@ -444,7 +442,7 @@ public abstract class ImageClassifier {
 //                 if (++count1 == maxTries) {
 //                   System.out.println( "Three times trial Thread Exception Caught ID " + finalI +": " + e2.getMessage());
 
-                }
+//                }
 //               }
 //             }
 //           }

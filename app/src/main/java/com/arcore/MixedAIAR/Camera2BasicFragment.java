@@ -182,16 +182,16 @@ public class Camera2BasicFragment extends Fragment
     }
 
 
-    double getThr( ){
-
-        double lastMeanRtime = getInstance().classifier.periodicMeanRtime;
-
-       lastMeanThr= (double) (Math.round( 1000*100/ lastMeanRtime  )/100);
-       periodicThr.add(lastMeanThr); // this contains the list of periodic throughout that corresponds to triangle change
-       return  lastMeanThr;
-
-
-        }
+//    double getThr( ){
+//
+//        double lastMeanRtime = getInstance().classifier.periodicMeanRtime;
+//
+//       lastMeanThr= (double) (Math.round( 1000*100/ lastMeanRtime  )/100);
+//       periodicThr.add(lastMeanThr); // this contains the list of periodic throughout that corresponds to triangle change
+//       return  lastMeanThr;
+//
+//
+//        }
     /**
      * Layout the preview and buttons.
      */
@@ -215,58 +215,58 @@ public class Camera2BasicFragment extends Fragment
 
 
 
-    void update(double totTris){ // this is called whenever we have a change in triangle count
-
-        // here is when we have changed the total triangle count on the screen
-
-        if(getInstance().classifier!=null) {
-
-
-
-            double lastMeanRtime = getInstance().classifier.periodicMeanRtime;
-
-            if (lastMeanRtime != 0) {
-
-                periodicTris.add(totTris);
-
-                getThr();// gets data of throughput every 500ms
-
-                int size = Math.min(periodicThr.size(), periodicTris.size());// up to the size of both
-
-                if (size >= 2) {
-
-                    double[] tris = periodicTris.stream()
-                            .mapToDouble(Double::doubleValue)
-                            .toArray();
-                    double[] x = Arrays.copyOfRange(tris, 0, size);
-
-                    double[] throughput = periodicThr.stream()
-                            .mapToDouble(Double::doubleValue)
-                            .toArray();
-
-                    double[] y = Arrays.copyOfRange(throughput, 0, size);
-// checks error of the model after new added model
-                    double sse = 0.0;      //  sum of square error
-                    for (int i = 0; i < size; i++) {
-                        double fit = slope * x[i] + intercept;
-                        sse += (fit - y[i]) * (fit - y[i]);// sum of square error
-
-                    }
-
-                    double rmse_new= Math.sqrt(sse/size);
-                    double inaccuracy= (rmse_new-rmse)/rmse;
-                    if( inaccuracy>=0.2)
-                    { // runs model training
-                    LinearRegression lRegression = new LinearRegression(x, y);
-
-                    slope = lRegression.slope;
-                    intercept = lRegression.intercept;
-                    rmse = lRegression.getRmse();}
-                }
-                //MainActivity.getInstance().preiodicTotTris.clear();// clear in the end after running the model
-            }
-        }
-    }
+//    void update(double totTris){ // this is called whenever we have a change in triangle count
+//
+//        // here is when we have changed the total triangle count on the screen
+//
+//        if(getInstance().classifier!=null) {
+//
+//
+//
+//            double lastMeanRtime = getInstance().classifier.periodicMeanRtime;
+//
+//            if (lastMeanRtime != 0) {
+//
+//                periodicTris.add(totTris);
+//
+//                getThr();// gets data of throughput every 500ms
+//
+//                int size = Math.min(periodicThr.size(), periodicTris.size());// up to the size of both
+//
+//                if (size >= 2) {
+//
+//                    double[] tris = periodicTris.stream()
+//                            .mapToDouble(Double::doubleValue)
+//                            .toArray();
+//                    double[] x = Arrays.copyOfRange(tris, 0, size);
+//
+//                    double[] throughput = periodicThr.stream()
+//                            .mapToDouble(Double::doubleValue)
+//                            .toArray();
+//
+//                    double[] y = Arrays.copyOfRange(throughput, 0, size);
+//// checks error of the model after new added model
+//                    double sse = 0.0;      //  sum of square error
+//                    for (int i = 0; i < size; i++) {
+//                        double fit = slope * x[i] + intercept;
+//                        sse += (fit - y[i]) * (fit - y[i]);// sum of square error
+//
+//                    }
+//
+//                    double rmse_new= Math.sqrt(sse/size);
+//                    double inaccuracy= (rmse_new-rmse)/rmse;
+//                    if( inaccuracy>=0.2)
+//                    { // runs model training
+//                    LinearRegression lRegression = new LinearRegression(x, y);
+//
+//                    slope = lRegression.slope;
+//                    intercept = lRegression.intercept;
+//                    rmse = lRegression.getRmse();}
+//                }
+//                //MainActivity.getInstance().preiodicTotTris.clear();// clear in the end after running the model
+//            }
+//        }
+//    }
 
     // nill -> manually changed the options in the menu fr device and models
     private void updateActiveModel() {
