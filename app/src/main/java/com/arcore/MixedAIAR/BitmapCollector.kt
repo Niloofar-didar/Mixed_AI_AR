@@ -24,62 +24,62 @@ class BitmapCollector(
     private val classifier: ImageClassifier?,
     var index: Int, // to ensure unique filename.
     private val activity: Activity
-    ): ViewModel() {
+): ViewModel() {
 
-        private val outputPath = activity.getExternalFilesDir(null)
-        private val childDirectory = File(outputPath, "data")
-        var run = false
-        private var job : Job? = null
-        var outputText = SpannableStringBuilder("null")
+    private val outputPath = activity.getExternalFilesDir(null)
+    private val childDirectory = File(outputPath, "data")
+    var run = false
+    private var job : Job? = null
+    var outputText = SpannableStringBuilder("null")
 
-        /**
-         * Stops running collector
-         */
-        fun pauseCollect() {
-            run = false
-            job?.cancel()
+    /**
+     * Stops running collector
+     */
+    fun pauseCollect() {
+        run = false
+        job?.cancel()
+    }
+
+    /**
+     * Starts collection
+     * Precondition: bitmapSource must be emitting a stream to collect
+     */
+    fun startCollect() = runBlocking <Unit>{
+        run = true
+        launch {
+            collectStream()
         }
+    }
 
-        /**
-         * Starts collection
-         * Precondition: bitmapSource must be emitting a stream to collect
-         */
-        fun startCollect() = runBlocking <Unit>{
-            run = true
-            launch {
-                collectStream()
-            }
-        }
-
-        /**
-         * launches coroutine to collect bitmap from bitmapSource, scales bitmap to
-         * ImageClassifier requirements. Writes output to file.
-         */
-        private suspend fun collectStream() {
-            childDirectory.mkdirs()
-            val file = File(childDirectory,
-                    index.toString() + '_' +
+    /**
+     * launches coroutine to collect bitmap from bitmapSource, scales bitmap to
+     * ImageClassifier requirements. Writes output to file.
+     */
+    private suspend fun collectStream() {
+        childDirectory.mkdirs()
+        val file = File(childDirectory,
+            index.toString() + '_' +
                     classifier?.modelName + '_' +
                     classifier?.device + '_'+
                     classifier?.numThreads + "T_"+
                     classifier?.time +
                     ".csv")
-            file.appendText("timestamp,response,guess3,acc3,guess2,acc2,guess1,acc1\n")
-            job = viewModelScope.launch(Dispatchers.Default) {
-                bitmapSource?.bitmapStream?.collect {
-                    val bitmap = Bitmap.createScaledBitmap(
-                        it,
-                        classifier!!.imageSizeX,
-                        classifier.imageSizeY,
-                        true
-                    )
+        file.appendText("timestamp,response,guess3,acc3,guess2,acc2,guess1,acc1\n")
+        job = viewModelScope.launch(Dispatchers.Default) {
+            bitmapSource?.bitmapStream?.collect {
+                val bitmap = Bitmap.createScaledBitmap(
+                    it,
+                    classifier!!.imageSizeX,
+                    classifier.imageSizeY,
+                    true
+                )
 
-                    classifier.classifyFrame(bitmap, outputText)
-                    file.appendText(outputText.toString())
-                    delay(250)
-                }
+                classifier.classifyFrame(bitmap, outputText)
+                file.appendText(outputText.toString())
+//                    delay(50)
             }
         }
     }
+}
 
 

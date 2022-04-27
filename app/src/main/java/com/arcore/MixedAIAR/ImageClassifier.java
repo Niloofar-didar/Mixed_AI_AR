@@ -91,14 +91,14 @@ public abstract class ImageClassifier {
   private int threads;
 
   private PriorityQueue<Map.Entry<String, Float>> sortedLabels =
-      new PriorityQueue<>(
-          RESULTS_TO_SHOW,
-          new Comparator<Map.Entry<String, Float>>() {
-            @Override
-            public int compare(Map.Entry<String, Float> o1, Map.Entry<String, Float> o2) {
-              return (o1.getValue()).compareTo(o2.getValue());
-            }
-          });
+          new PriorityQueue<>(
+                  RESULTS_TO_SHOW,
+                  new Comparator<Map.Entry<String, Float>>() {
+                    @Override
+                    public int compare(Map.Entry<String, Float> o1, Map.Entry<String, Float> o2) {
+                      return (o1.getValue()).compareTo(o2.getValue());
+                    }
+                  });
 
   /** holds a gpu delegate */
   GpuDelegate gpuDelegate = null;
@@ -111,12 +111,12 @@ public abstract class ImageClassifier {
     tflite = new Interpreter(tfliteModel, tfliteOptions);
     labelList = loadLabelList(activity);
     imgData =
-        ByteBuffer.allocateDirect(
-            DIM_BATCH_SIZE
-                * getImageSizeX()
-                * getImageSizeY()
-                * DIM_PIXEL_SIZE
-                * getNumBytesPerChannel());
+            ByteBuffer.allocateDirect(
+                    DIM_BATCH_SIZE
+                            * getImageSizeX()
+                            * getImageSizeY()
+                            * DIM_PIXEL_SIZE
+                            * getNumBytesPerChannel());
     imgData.order(ByteOrder.nativeOrder());
     filterLabelProbArray = new float[FILTER_STAGES][getNumLabels()];
 //    Log.d(TAG, "Created a Tensorflow Lite Image Classifier.");
@@ -164,13 +164,13 @@ public abstract class ImageClassifier {
     // Low pass filter `labelProbArray` into the first stage of the filter.
     for (int j = 0; j < numLabels; ++j) {
       filterLabelProbArray[0][j] +=
-          FILTER_FACTOR * (getProbability(j) - filterLabelProbArray[0][j]);
+              FILTER_FACTOR * (getProbability(j) - filterLabelProbArray[0][j]);
     }
     // Low pass filter each stage into the next.
     for (int i = 1; i < FILTER_STAGES; ++i) {
       for (int j = 0; j < numLabels; ++j) {
         filterLabelProbArray[i][j] +=
-            FILTER_FACTOR * (filterLabelProbArray[i - 1][j] - filterLabelProbArray[i][j]);
+                FILTER_FACTOR * (filterLabelProbArray[i - 1][j] - filterLabelProbArray[i][j]);
       }
     }
 
@@ -240,7 +240,7 @@ public abstract class ImageClassifier {
   private List<String> loadLabelList(Activity activity) throws IOException {
     List<String> labelList = new ArrayList<String>();
     BufferedReader reader =
-        new BufferedReader(new InputStreamReader(activity.getAssets().open(getLabelPath())));
+            new BufferedReader(new InputStreamReader(activity.getAssets().open(getLabelPath())));
     String line;
     while ((line = reader.readLine()) != null) {
       labelList.add(line);
@@ -283,7 +283,7 @@ public abstract class ImageClassifier {
   private void printTopKLabels(SpannableStringBuilder builder) {
     for (int i = 0; i < getNumLabels(); ++i) {
       sortedLabels.add(
-          new AbstractMap.SimpleEntry<>(labelList.get(i), getNormalizedProbability(i)));
+              new AbstractMap.SimpleEntry<>(labelList.get(i), getNormalizedProbability(i)));
       if (sortedLabels.size() > RESULTS_TO_SHOW) {
         sortedLabels.poll();
       }
@@ -293,7 +293,7 @@ public abstract class ImageClassifier {
     for (int i = 0; i < size; i++) {
       Map.Entry<String, Float> label = sortedLabels.poll();
       SpannableString span =
-          new SpannableString(String.format("%s,%4.2f,", label.getKey(), label.getValue()));
+              new SpannableString(String.format("%s,%4.2f,", label.getKey(), label.getValue()));
       builder.append(span);
     }
   }

@@ -24,6 +24,10 @@ class CustomAdapter(var mList: MutableList<ItemsViewModel>, val streamSource: Dy
         val view = LayoutInflater.from(parent.context)
             .inflate(R.layout.ai_settings_card_view_design, parent, false)
 
+//        for (i in 0 until mList.size) {
+//            initializeActiveModel(mList[i], i)
+//        }
+
         return ViewHolder(view)
     }
 
@@ -101,8 +105,9 @@ class CustomAdapter(var mList: MutableList<ItemsViewModel>, val streamSource: Dy
         itemsView.currentDevice = 0
         itemsView.currentNumThreads = 1
         itemsView.classifier=ImageClassifierFloatMobileNet(activity)
+        itemsView.classifier?.numThreads = 1
         itemsView.consumer = BitmapCollector(streamSource, itemsView.classifier, position, activity)
-        itemsView.classifier?.useGpu()
+        itemsView.classifier?.useCPU()
     }
 
     /**
