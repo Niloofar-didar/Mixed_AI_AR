@@ -65,8 +65,8 @@ public class Camera2BasicFragment extends Fragment
     String model = "quant";
     private static final int PERMISSIONS_REQUEST_CODE = 1;
 
-    private final Object lock = new Object();
-    public boolean runClassifier = false;
+    //private final Object lock = new Object();
+    //public boolean runClassifier = false;
     private boolean checkedPermissions = false;
     private TextView textView;
     private NumberPicker np;
@@ -74,8 +74,12 @@ public class Camera2BasicFragment extends Fragment
     private ListView modelView;
     //File time_gpu=new File(getActivity().getExternalFilesDir(null), "time_gpu.txt");;
     boolean breakC = false;
-    //List<Thread> inf_thread = new ArrayList<>();
 
+// parameters of throughput model
+    double slope=-0.00001136 ;
+    double intercept=56.39;
+    double rmse;
+    //List<Thread> inf_thread = new ArrayList<>();
     /**
      * Max preview width that is guaranteed by Camera2 API
      */
@@ -85,7 +89,11 @@ public class Camera2BasicFragment extends Fragment
      * Max preview height that is guaranteed by Camera2 API
      */
     private static final int MAX_PREVIEW_HEIGHT = 1080;
-    public List<Double> rTime;
+    public List<Double> periodicThr= new ArrayList<>();// periodic response time-> changes based on change in triangle and clears based on classifier renewal
+    double lastMeanThr;
+    public List<Double> periodicTris= new ArrayList<>();// periodic total triangle -> changes based on change in triangle and clears based on classifier renewal
+
+    //@@ just holds the value for Instance, not current class-> to access it always use getInstance.rTime
 
 
     // Model parameter constants.
@@ -137,25 +145,33 @@ public class Camera2BasicFragment extends Fragment
     /**
      * Shows a {@link Toast} on the UI thread for the classification results.
      */
-    private void showToast(String s) {
-        SpannableStringBuilder builder = new SpannableStringBuilder();
-        SpannableString str1 = new SpannableString(s);
-        builder.append(str1);
-        showToast(builder);
+
+    void gatherNewTris(float tris){
+
+
+
     }
 
-    private void showToast(SpannableStringBuilder builder) {
-        final Activity activity = getActivity();
-        if (activity != null) {
-            activity.runOnUiThread(
-                    new Runnable() {
-                        @Override
-                        public void run() {
-                            textView.setText(builder, TextView.BufferType.SPANNABLE);
-                        }
-                    });
-        }
-    }
+
+//    private void showToast(String s) {
+//        SpannableStringBuilder builder = new SpannableStringBuilder();
+//        SpannableString str1 = new SpannableString(s);
+//        builder.append(str1);
+//        showToast(builder);
+//    }
+
+//    private void showToast(SpannableStringBuilder builder) {
+//        final Activity activity = getActivity();
+//        if (activity != null) {
+//            activity.runOnUiThread(
+//                    new Runnable() {
+//                        @Override
+//                        public void run() {
+//                            textView.setText(builder, TextView.BufferType.SPANNABLE);
+//                        }
+//                    });
+//        }
+//    }
 
     public static Camera2BasicFragment Instance
             = new Camera2BasicFragment();
@@ -166,11 +182,16 @@ public class Camera2BasicFragment extends Fragment
     }
 
 
-//  public static Camera2BasicFragment newInstance() {
-//
-//    return new Camera2BasicFragment();
-//  }
+    double getThr( ){
 
+        double lastMeanRtime = getInstance().classifier.periodicMeanRtime;
+
+       lastMeanThr= (double) (Math.round( 1000*100/ lastMeanRtime  )/100);
+       periodicThr.add(lastMeanThr); // this contains the list of periodic throughout that corresponds to triangle change
+       return  lastMeanThr;
+
+
+        }
     /**
      * Layout the preview and buttons.
      */
@@ -178,11 +199,73 @@ public class Camera2BasicFragment extends Fragment
     public View onCreateView(
             LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
 
+
         Timer t = new Timer();
         final int[] count = {0}; // should be before here
 
+
         return inflater.inflate(R.layout.fragment_camera2_basic, container, false);
 
+
+    }
+
+//!!!! to get the throughut model parameters, you need to call getInstance.slope or intercept, since this
+    //$$$ this fun is called for the static Instance of Camera2basicFragment
+
+
+
+
+    void update(double totTris){ // this is called whenever we have a change in triangle count
+
+        // here is when we have changed the total triangle count on the screen
+
+        if(getInstance().classifier!=null) {
+
+
+
+            double lastMeanRtime = getInstance().classifier.periodicMeanRtime;
+
+            if (lastMeanRtime != 0) {
+
+                periodicTris.add(totTris);
+
+                getThr();// gets data of throughput every 500ms
+
+                int size = Math.min(periodicThr.size(), periodicTris.size());// up to the size of both
+
+                if (size >= 2) {
+
+                    double[] tris = periodicTris.stream()
+                            .mapToDouble(Double::doubleValue)
+                            .toArray();
+                    double[] x = Arrays.copyOfRange(tris, 0, size);
+
+                    double[] throughput = periodicThr.stream()
+                            .mapToDouble(Double::doubleValue)
+                            .toArray();
+
+                    double[] y = Arrays.copyOfRange(throughput, 0, size);
+// checks error of the model after new added model
+                    double sse = 0.0;      //  sum of square error
+                    for (int i = 0; i < size; i++) {
+                        double fit = slope * x[i] + intercept;
+                        sse += (fit - y[i]) * (fit - y[i]);// sum of square error
+
+                    }
+
+                    double rmse_new= Math.sqrt(sse/size);
+                    double inaccuracy= (rmse_new-rmse)/rmse;
+                    if( inaccuracy>=0.2)
+                    { // runs model training
+                    LinearRegression lRegression = new LinearRegression(x, y);
+
+                    slope = lRegression.slope;
+                    intercept = lRegression.intercept;
+                    rmse = lRegression.getRmse();}
+                }
+                //MainActivity.getInstance().preiodicTotTris.clear();// clear in the end after running the model
+            }
+        }
     }
 
     // nill -> manually changed the options in the menu fr device and models
@@ -191,7 +274,6 @@ public class Camera2BasicFragment extends Fragment
         //Nil changed
 
         System.out.println("change"); // this is to stop active classifier
-
 
         final int modelIndex = modelView.getCheckedItemPosition();
         // Gpu=1
@@ -216,11 +298,15 @@ public class Camera2BasicFragment extends Fragment
         backgroundHandler.post(
                 () -> {
 
-//                    if (modelIndex == currentModel
-//                            && deviceIndex == currentDevice
-//                            && finalNumThreads == currentNumThreads) {
-//                        return;
-//                    }
+                    if (modelIndex != currentModel
+                            || deviceIndex != currentDevice
+                            || finalNumThreads != currentNumThreads
+                    ) {
+                        int k=0;
+                        //@@@@@ check this out
+                       // periodicThr.clear();
+                        //periodicTris.clear();
+                    }
 
 
                     currentModel = modelIndex;
@@ -235,19 +321,8 @@ public class Camera2BasicFragment extends Fragment
 
                     Log.i(TAG, "Changing model to " + model + ", device " + device);
 
-                    // Try to load model.
-
-                    // Customize the interpreter to the type of device we want to use.
-
-
-
                 });
     }
-
-
-
-
-
 
 
 
@@ -278,7 +353,6 @@ public class Camera2BasicFragment extends Fragment
           public void onClick(View view) {
 
             System.out.println("stop"); // this is to stop active classifier
-
           }
 
       });
@@ -368,7 +442,6 @@ public class Camera2BasicFragment extends Fragment
 
   @Override
   public void onDestroy() {
-
     super.onDestroy();
   }
 
@@ -388,9 +461,9 @@ public class Camera2BasicFragment extends Fragment
     backgroundThread.start();
     backgroundHandler = new Handler(backgroundThread.getLooper());
     // Start the classification train & load an initial model.
-    synchronized (lock) {
-      runClassifier = true;
-    }
+//    synchronized (lock) {
+//      runClassifier = true;
+//    }
   //  backgroundHandler.post(periodicClassify);
    // updateActiveModel();
   }
@@ -402,9 +475,9 @@ public class Camera2BasicFragment extends Fragment
       backgroundThread.join();
       backgroundThread = null;
       backgroundHandler = null;
-      synchronized (lock) {
-        runClassifier = false;
-      }
+//      synchronized (lock) {
+//        runClassifier = false;
+//      }
     } catch (InterruptedException e) {
       Log.e(TAG, "Interrupted when stopping background thread", e);
     }
@@ -412,48 +485,28 @@ public class Camera2BasicFragment extends Fragment
 
   //nill added multi tasking
   /** Takes photos and classify them periodically. */
-  private Runnable periodicClassify =
+//  private Runnable periodicClassify =
+//
+//
+//            new Runnable() {
+//        @Override
+//        public void run() {
+//
+//            synchronized (lock) {
+//                if (runClassifier) {
+//
+////                    try {
+////                      //  classifyFrame();
+////                    } catch (InterruptedException e) {
+////                        e.printStackTrace();
+////                    }
+//                }
+//            }
+//            backgroundHandler.post(periodicClassify);
+//
+//        }
+//    };
 
 
-            new Runnable() {
-        @Override
-        public void run() {
-
-            synchronized (lock) {
-                if (runClassifier) {
-
-//                    try {
-//                      //  classifyFrame();
-//                    } catch (InterruptedException e) {
-//                        e.printStackTrace();
-//                    }
-                }
-            }
-            backgroundHandler.post(periodicClassify);
-
-        }
-    };
-
-  /** Classifies a frame from the preview stream. */
-  private void classifyFrame() throws InterruptedException {
-
-    //Nil comment out this to not read from the camera frame, instead we read from a jpg file
-
-
-
-    SpannableStringBuilder textToShow = new SpannableStringBuilder();
-
-    //nil
-    File root = Environment.getExternalStorageDirectory();
-
-      Bitmap  bitmap = BitmapFactory.decodeFile( root+ "/mouse.jpg");
-     // classifier.classifyFrame2(bitmap);
-   // classifier.classifyFrame(bitmap, textToShow);
-
-    bitmap.recycle();
-    //nill commented/uncommented
-    showToast(textToShow);
-
-  }
 
 }

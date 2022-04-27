@@ -45,6 +45,116 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.PriorityQueue;
 
+import org.tensorflow.lite.Interpreter;
+import org.tensorflow.lite.gpu.GpuDelegate;
+import org.tensorflow.lite.nnapi.NnApiDelegate;
+import java.io.IOException;
+
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.File;
+import java.lang.Math;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.PrintStream;
+import java.io.PrintWriter;
+import java.io.InputStream;
+import java.util.stream.IntStream;
+import java.util.concurrent.TimeUnit;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.PrintStream;
+import java.io.PrintWriter;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.*;
+import java.util.Queue;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.CompletableFuture;
+import android.app.Activity;
+import android.app.ActivityManager;
+import android.app.Application;
+import android.app.DownloadManager;
+import android.content.ContextWrapper;
+import android.content.Intent;
+import android.os.Handler;
+import android.os.Looper;
+import android.os.Message;
+import android.support.design.widget.Snackbar;
+import android.util.Log;
+
+import java.lang.ref.WeakReference;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.Queue;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
+import android.net.Uri;
+import android.opengl.GLES20;
+import android.opengl.Matrix;
+import android.os.Bundle;
+import android.os.CountDownTimer;
+import android.os.Handler;
+import android.os.Looper;
+import android.os.Message;
+import android.support.v7.app.AlertDialog;
+import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.Toolbar;
+import android.util.Log;
+import android.view.View;
+import android.view.Menu;
+import android.view.MenuItem;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
+import android.widget.Button;
+import android.widget.CompoundButton;
+import android.widget.ImageView;
+import android.widget.RelativeLayout;
+import android.widget.SeekBar;
+import android.widget.Spinner;
+import android.widget.Switch;
+import android.widget.TextView;
+import android.widget.Toast;
+
+import com.google.ar.core.Anchor;
+import com.google.ar.core.Camera;
+import com.google.ar.core.Frame;
+import com.google.ar.core.HitResult;
+import com.google.ar.core.Plane;
+import com.google.ar.core.Trackable;
+import com.google.ar.core.TrackingState;
+import com.google.ar.sceneform.AnchorNode;
+import com.google.ar.sceneform.Node;
+import com.google.ar.sceneform.math.Vector3;
+import com.google.ar.sceneform.rendering.ModelRenderable;
+import com.google.ar.sceneform.rendering.Renderable;
+import com.google.ar.sceneform.ux.ArFragment;
+import com.google.ar.sceneform.ux.TransformableNode;
+
+import java.text.DecimalFormat;
+import java.util.ArrayList;
+import java.util.List;
+
+import java.lang.Math;
+import java.io.InputStream;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
+import java.util.stream.IntStream;
+
+import static java.lang.Math.abs;
+import static java.lang.Math.round;
+
+
 /**
  * Classifies images with Tensorflow Lite.
  */
@@ -79,6 +189,16 @@ public abstract class ImageClassifier {
   /** Labels corresponding to the output of the vision model. */
   private List<String> labelList;
 
+  List<Double> throughput= new ArrayList<>();
+  List<Double> rTime= new ArrayList<>();// holds data of all response time collected but it is refreshed every 500 ms
+  double periodicMeanRtime;// holds responsetime every 500ms
+  List<String> periodicCur= new ArrayList<>();// holds current time every 500ms
+  List<String> curTime= new ArrayList<>();// holds  data of current time of datacollection
+  List<String> labels= new ArrayList<>();
+  List<Integer> countL= new ArrayList<>();
+  List<String> periodicLabels= new ArrayList<>();
+  List<Integer> periodicCountL= new ArrayList<>();
+
   /** A ByteBuffer to hold image data, to be feed into Tensorflow Lite as inputs. */
   protected ByteBuffer imgData = null;
 
@@ -89,6 +209,45 @@ public abstract class ImageClassifier {
   private static final float FILTER_FACTOR = 0.4f;
   private String device;
   private int threads;
+
+
+
+  public void colTimeData() {
+
+    Timer t = new Timer();
+    // // gets the time data every 500ms
+    t.scheduleAtFixedRate(
+            new
+
+                    TimerTask() {
+                      public void run () {
+
+                          if( !rTime.isEmpty()  )
+                          {
+                            int sum=0;
+                            int size=rTime.size();
+                            int count=0;
+                            for (int i=size-1; i>=  size - 20 && i>=0 ; i--)// gets data of last 20ms
+                            {
+                              sum += (rTime.get(i));
+                              count++;
+                            }
+                            periodicMeanRtime=sum/(count);// average of response time for last 20ms at every 500 ms period
+
+                            //rTime.clear();
+//                            periodicCur.add(curTime.get(0));
+//                            curTime.clear();
+//                            periodicLabels.add(labels.get(0));
+//                            labels.clear();
+//                            periodicCountL.add(countL.get(0));
+//                            countL.clear();
+                          }
+                      }
+                    },
+            0,      // run first occurrence immediatetl
+            (long)(1000));
+
+  }
 
   private PriorityQueue<Map.Entry<String, Float>> sortedLabels =
           new PriorityQueue<>(
@@ -107,6 +266,8 @@ public abstract class ImageClassifier {
 
   /** Initializes an {@code ImageClassifier}. */
   ImageClassifier(Activity activity) throws IOException {
+
+    colTimeData();
     tfliteModel = loadModelFile(activity);
     tflite = new Interpreter(tfliteModel, tfliteOptions);
     labelList = loadLabelList(activity);
@@ -123,11 +284,191 @@ public abstract class ImageClassifier {
   }
 
   /** Classifies a frame from the preview stream. */
-  void classifyFrame(Bitmap bitmap, SpannableStringBuilder builder) {
+
+
+  SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss:SSS");
+  String path2=Environment.getExternalStorageDirectory()+"/Android/data/com.arcore.MixedAIAR/files";
+  int count=0;
+
+
+
+
+
+//   void classifyFrame2()  {// no access to UI thread
+//     if (tflite == null) {
+//       Log.e(TAG, "Image classifier has not been initialized; Skipped.");
+
+//     }
+
+//     File root = Environment.getExternalStorageDirectory();
+//     String path= root+ "/chair.jpg";
+//     Bitmap  bitmap = BitmapFactory.decodeFile(path);
+//     convertBitmapToByteBuffer(bitmap);
+//     bitmap.recycle();
+
+
+//     List<Thread> inf_thread = new ArrayList<>();
+//     final boolean[] onetWrite = {false};
+
+//     float desired= 16.6f;
+//     for(int i = 0; i< requests; i++) {//
+//       //if(breakC)
+//       // break;
+//       int finalI = i;
+//       inf_thread.add(i, new Thread() {//
+//         @Override
+//         public void run() {//
+
+//           double duration=0;
+//           try{
+//             //for(int i = 0; i< num; i++){
+//             while(true){
+//               if(breakC) {
+
+//                 if(!onetWrite[0]) // to write data one time -> not by all the threads!!!
+//                 { try (PrintWriter writer = new PrintWriter(new FileOutputStream(path2 + "/Response_t.csv", true))) {
+//                   onetWrite[0] =true;
+//                   int i = 0;
+//                   while (i < curTime.size() && i< rTime.size() && i< labels.size() && i< countL.size()) {
+
+//                     StringBuilder sbb = new StringBuilder();
+//                     sbb.append(curTime.get(i));
+//                     sbb.append(',');
+//                     sbb.append(labels.get(i));
+//                     sbb.append(',');
+//                     sbb.append(rTime.get(i));
+//                     sbb.append(',');
+//                     sbb.append(requests);
+//                     sbb.append(',');
+//                     sbb.append(model);
+//                     sbb.append(',');
+//                     sbb.append(countL.get(i));
+//                     sbb.append('\n');
+//                     writer.write(sbb.toString());
+//                     i++;
+//                   }
+
+//                 } catch (FileNotFoundException e) {
+//                   System.out.println(e.getMessage());
+//                 }
+
+
+//                 }
+//                 break;
+//               }
+
+
+//               if(duration<desired && duration != 0){
+//                 // waite for elapse time (16.6 - last_response_time//otherwise, start the inference immidiately.
+//                 long delay =(long) (desired - (float)last_response_time);
+//                 Thread.sleep(delay);
+//               }
+
+//               curTime.add(dateFormat.format(new Date()));
+
+//               double startTime = SystemClock.uptimeMillis();
+//               runInference();
+//               double endTime = SystemClock.uptimeMillis();
+//               rTime.add( (endTime - startTime));
+//               duration = endTime - startTime;
+//               countL.add(count);
+//               labels.add(deviceUsed());
+//               count++;
+
+//               Log.d(TAG, "Thread ID" + Integer.toString(finalI)+ " "+ count + "#iteration  inference time: " + Double.toString(duration) );
+
+//             }
+//           }
+//           catch (Exception e)
+//           {
+//             System.out.println( "Thread Exception Caught ID " + finalI +": " + e.getMessage());
+//             int count1 = 0;
+//             int maxTries = 3;
+//             while(true) {
+//               if(breakC) {
+//                 if(!onetWrite[0]) // to write data one time -> not by all the threads!!!
+//                 {
+//                   onetWrite[0] =true;
+//                   try (PrintWriter writer = new PrintWriter(new FileOutputStream(path2 + "/Response_t.csv", true))) {
+
+//                   int i = 0;
+//                     while (i < curTime.size() && i< rTime.size() && i< labels.size() && i< countL.size()) {
+
+//                       StringBuilder sbb = new StringBuilder();
+//                       sbb.append(curTime.get(i));
+//                       sbb.append(',');
+//                       sbb.append(labels.get(i));
+//                       sbb.append(',');
+//                       sbb.append(rTime.get(i));
+//                       sbb.append(',');
+//                       sbb.append(requests);
+//                       sbb.append(',');
+//                       sbb.append(model);
+//                       sbb.append(',');
+//                       sbb.append(countL.get(i));
+//                       sbb.append('\n');
+//                       writer.write(sbb.toString());
+//                       i++;
+//                     }
+
+//                 } catch (FileNotFoundException e2) {
+//                   System.out.println(e2.getMessage());
+//                 }
+
+
+//                 }
+
+//                 break;
+//               }
+
+//               try {
+//                 // long duration=0;
+
+//                 if(duration<desired && duration != 0){
+//                   // waite for elapse time (16.6 - last_response_time//otherwise, start the inference immidiately.
+//                   long delay =(long) (desired - (float)last_response_time);
+//                   Thread.sleep(delay);
+//                 }
+
+//                 double startTime = SystemClock.uptimeMillis();
+//                 runInference();
+//                 double endTime = SystemClock.uptimeMillis();
+//                 rTime.add( (endTime - startTime));
+//                 duration = endTime - startTime;
+//                 countL.add(count);
+//                 labels.add(deviceUsed());
+//                 count++;
+
+//                 Log.d(TAG, "Thread ID" + Integer.toString(finalI)+ " "+ count + "#iteration  inference time: " + Double.toString(duration) );
+//               } catch (Exception e2) {
+//                 if (++count1 == maxTries) {
+//                   System.out.println( "Three times trial Thread Exception Caught ID " + finalI +": " + e2.getMessage());
+
+                }
+//               }
+//             }
+//           }
+//         }////nil added all the lines with // after the code
+//       });//
+//       if(inf_thread.get(i)!=null)
+//         inf_thread.get(i).start();//
+//     }
+
+//   }
+
+
+
+double getThr( double dur){
+
+  return Math.round( 1000*100/ dur  )/100;
+
+}
+
+
+void classifyFrame(Bitmap bitmap, SpannableStringBuilder builder) {
 //    directory.mkdirs();
 //    File file = new File(directory, this.getModelPath()+".txt");
     String timeStamp = getTime();
-
     builder.clear();
     if (tflite == null) {
       Log.e(TAG, "Image classifier has not been initialized; Skipped.");
@@ -139,7 +480,6 @@ public abstract class ImageClassifier {
     runInference();
     long endTime = SystemClock.uptimeMillis();
 
-//    Log.d(TAG, "Timecost to run model inference: " + Long.toString(endTime - startTime));
 
     // Smooth the results across frames.
     applyFilter();
@@ -149,7 +489,6 @@ public abstract class ImageClassifier {
     builder.append(span);
     printTopKLabels(builder);
     builder.append('\n');
-//    span.setSpan(new ForegroundColorSpan(android.graphics.Color.LTGRAY), 0, span.length(), 0);
 
   }
   /** Return current time in clock format */
@@ -157,6 +496,7 @@ public abstract class ImageClassifier {
     SimpleDateFormat format=new SimpleDateFormat("HH.mm.ss.SSSS", Locale.getDefault());
     return format.format(new Date().getTime());
   }
+
 
   void applyFilter() {
     int numLabels = getNumLabels();
