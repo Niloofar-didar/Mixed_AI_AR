@@ -1,6 +1,10 @@
 
 # Created by https://www.gitignore.io/api/git,java,linux,macos,android,windows,gitbook,intellij+all,androidstudio,visualstudiocode
 
+### large .tflite models ###
+inception_v4.tflite
+
+
 ### Android ###
 # Built application files
 *.apk
