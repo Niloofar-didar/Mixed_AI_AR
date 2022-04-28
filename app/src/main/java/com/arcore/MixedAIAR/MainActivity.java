@@ -715,6 +715,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
                         source.startStream();
                         for (int i = 0; i < mList.size(); i++) {
 //                        Log.d("CHECKCHG", String.valueOf((mList.get(i).getClassifier()==null)));
+                            mList.get(i).getConsumer().setEnd(System.nanoTime()/1000000);
                             mList.get(i).getConsumer().startCollect();
                         }
                     } else {
@@ -1771,10 +1772,13 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         BitmapCollector tempCollector;
         for(int i=0; i<mList.size(); i++) {
             tempCollector = mList.get(i).getConsumer();
-            meanResponseTimes[i]=tempCollector.getTotalResponseTime()/tempCollector.getNumOfTimesExecuted();
-            mList.get(i).getConsumer().setNumOfTimesExecuted(0);
-            mList.get(i).getConsumer().setTotalResponseTime(0);
-            mList.get(i).getConsumer().setEnd(System.nanoTime()/1000000);
+            int total = tempCollector.getNumOfTimesExecuted();
+            if(total != 0) {
+                meanResponseTimes[i]=tempCollector.getTotalResponseTime()/tempCollector.getNumOfTimesExecuted();
+                mList.get(i).getConsumer().setNumOfTimesExecuted(0);
+                mList.get(i).getConsumer().setTotalResponseTime(0);
+                mList.get(i).getConsumer().setEnd(System.nanoTime()/1000000);
+            }
         }
 //        Log.d("rt", String.valueOf(meanResponseTimes[0]));
         double avg = Arrays.stream(meanResponseTimes).average().orElse(Double.NaN);
