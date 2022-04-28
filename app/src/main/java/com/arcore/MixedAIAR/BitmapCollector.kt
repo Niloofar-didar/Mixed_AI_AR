@@ -43,11 +43,20 @@ class BitmapCollector(
     var outputText = SpannableStringBuilder("null")
 
     /**
+     * Resets response time collection data so changing model does not give erroneous first result
+     */
+    fun resetRtData() {
+        totalResponseTime = 0
+        numOfTimesExecuted = 0
+    }
+
+    /**
      * Stops running collector
      */
     fun pauseCollect() {
         run = false
         job?.cancel()
+        resetRtData()
     }
 
     /**
