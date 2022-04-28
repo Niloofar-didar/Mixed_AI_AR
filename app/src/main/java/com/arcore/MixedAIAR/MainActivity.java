@@ -702,11 +702,26 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         switchToggleStream.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                 if (isChecked) {
-                    // The toggle is enabled
-                    source.startStream();
+                    Boolean noNullClassifiers = true;
                     for (int i = 0; i < mList.size(); i++) {
+                        if (mList.get(i).getClassifier()==null) {
+                            noNullClassifiers = false;
+                        }
+                    }
+
+                    // The toggle is enabled
+
+                    if(noNullClassifiers) {
+                        source.startStream();
+                        for (int i = 0; i < mList.size(); i++) {
 //                        Log.d("CHECKCHG", String.valueOf((mList.get(i).getClassifier()==null)));
-                        mList.get(i).getConsumer().startCollect();
+                            mList.get(i).getConsumer().startCollect();
+                        }
+                    } else {
+                        Toast toast = Toast.makeText(MainActivity.this,
+                                "Set all AI models & Devices before continuing", Toast.LENGTH_LONG);
+                        toast.show();
+                        switchToggleStream.setChecked(false);
                     }
                 } else {
                     // The toggle is disabled
@@ -1681,7 +1696,8 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
 
 
                        // long curTime= SystemClock.uptimeMillis();
-                        if( mList.get(0).getClassifier()!=null && switchToggleStream.isChecked()) // in the begining we collect data for zero tris
+
+                        if(switchToggleStream.isChecked()) // in the begining we collect data for zero tris
                             new dataCol(MainActivity.this).run(); // this is to collect mean thr, total_tris. average dis
 
 
