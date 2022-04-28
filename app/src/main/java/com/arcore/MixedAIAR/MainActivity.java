@@ -95,6 +95,9 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
     // BitmapUpdaterApi gets bitmap version of ar camera frame each time
     // on onTracking is called. Needed for DynamicBitmapSource
     private final BitmapUpdaterApi bitmapUpdaterApi = new BitmapUpdaterApi();
+    static List<ItemsViewModel> mList = new ArrayList<>();
+
+
 
 
     private ArFragment fragment;
@@ -635,7 +638,6 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         RecyclerView recyclerView_aiSettings = findViewById(R.id.recycler_view_aiSettings);
         // List of ItemsView stored in the Recycler View
         // ItemsView objects contain the coroutine flow collectors BitmapCollector
-        List<ItemsViewModel> mList = new ArrayList<>();
 
 
         /**coroutine flow source that captures camera frames from updateTracking() function*/
@@ -703,7 +705,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
                     // The toggle is enabled
                     source.startStream();
                     for (int i = 0; i < mList.size(); i++) {
-                        Log.d("CHECKCHG", String.valueOf((mList.get(i).getClassifier()==null)));
+//                        Log.d("CHECKCHG", String.valueOf((mList.get(i).getClassifier()==null)));
                         mList.get(i).getConsumer().startCollect();
                     }
                 } else {
@@ -721,6 +723,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         Button toggleUi = (Button) findViewById(R.id.button_toggleUi);
         toggleUi.setOnClickListener(new View.OnClickListener() {
             public void onClick(View view) {
+//                getThroughput();
                 if(aiOptionsContainer.getVisibility()==View.VISIBLE)
                     aiOptionsContainer.setVisibility(View.INVISIBLE);
                 else {
@@ -1678,8 +1681,8 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
 
 
                        // long curTime= SystemClock.uptimeMillis();
-//                        if( Camera2BasicFragment.getInstance().classifier!=null) // in the begining we collect data for zero tris
-//                            new dataCol(MainActivity.this).run(); // this is to collect mean thr, total_tris. average dis
+                        if( mList.get(0).getClassifier()!=null && switchToggleStream.isChecked()) // in the begining we collect data for zero tris
+                            new dataCol(MainActivity.this).run(); // this is to collect mean thr, total_tris. average dis
 
 
 /* since we periodically run the model for thr/RE -> even if there is a wrong point before adding tris count and the model calculates wrong num, it will be adjusted based on new
@@ -1745,6 +1748,23 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
 
 
    }
+
+    static double getThroughput(){
+        Log.d("size", String.valueOf(mList.size()));
+        long[] meanResponseTimes = new long[mList.size()];
+        BitmapCollector tempCollector;
+        for(int i=0; i<mList.size(); i++) {
+            tempCollector = mList.get(i).getConsumer();
+            meanResponseTimes[i]=tempCollector.getTotalResponseTime()/tempCollector.getNumOfTimesExecuted();
+            mList.get(i).getConsumer().setNumOfTimesExecuted(0);
+            mList.get(i).getConsumer().setTotalResponseTime(0);
+            mList.get(i).getConsumer().setEnd(System.nanoTime()/1000000);
+        }
+//        Log.d("rt", String.valueOf(meanResponseTimes[0]));
+        double avg = Arrays.stream(meanResponseTimes).average().orElse(Double.NaN);
+//        Log.d("Throughput", "rt: " +String.valueOf(avg) +" thrpt: " +String.valueOf((1/avg)*1000));
+        return (1/avg)*1000;
+    }
 
 
 

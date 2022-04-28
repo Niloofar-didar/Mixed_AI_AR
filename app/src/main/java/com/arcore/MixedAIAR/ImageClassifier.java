@@ -461,11 +461,13 @@ double getThr( double dur){
   return Math.round( 1000*100/ dur  )/100;
 
 }
+void classifyFrame(Bitmap bitmap) {
+  convertBitmapToByteBuffer(bitmap);
+  runInference();
 
+}
 
 void classifyFrame(Bitmap bitmap, SpannableStringBuilder builder) {
-//    directory.mkdirs();
-//    File file = new File(directory, this.getModelPath()+".txt");
     String timeStamp = getTime();
     builder.clear();
     if (tflite == null) {
@@ -478,7 +480,7 @@ void classifyFrame(Bitmap bitmap, SpannableStringBuilder builder) {
     runInference();
     long endTime = SystemClock.uptimeMillis();
 
-
+    long nano = System.nanoTime();
     // Smooth the results across frames.
     applyFilter();
     long duration = endTime - startTime;
