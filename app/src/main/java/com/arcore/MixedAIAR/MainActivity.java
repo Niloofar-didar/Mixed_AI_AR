@@ -735,15 +735,15 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         });
 
 
-        RecyclerView aiOptionsContainer = findViewById(R.id.recycler_view_aiSettings);
+//        RecyclerView aiOptionsContainer = findViewById(R.id.recycler_view_aiSettings);
         Button toggleUi = (Button) findViewById(R.id.button_toggleUi);
         toggleUi.setOnClickListener(new View.OnClickListener() {
             public void onClick(View view) {
 //                getThroughput();
-                if(aiOptionsContainer.getVisibility()==View.VISIBLE)
-                    aiOptionsContainer.setVisibility(View.INVISIBLE);
+                if(recyclerView_aiSettings.getVisibility()==View.VISIBLE)
+                    recyclerView_aiSettings.setVisibility(View.INVISIBLE);
                 else {
-                    aiOptionsContainer.setVisibility(View.VISIBLE);
+                    recyclerView_aiSettings.setVisibility(View.VISIBLE);
                 }
                 toggleAiPushPop();
             }
@@ -1681,7 +1681,9 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
             fragment.onUpdate(frameTime);
             onUpdate();
 
-            //Nill did-> I don't need upadate rtracking called in on update
+            //Nill did-> I don't need upadate rtracking called in on update*
+            // *Joe: We need updateTracking() called in onUpdate now to pass the frame to the
+            // bitmapUpdaterApi
 
         });
 

@@ -45,7 +45,7 @@ class BitmapCollector(
     /**
      * Resets response time collection data so changing model does not give erroneous first result
      */
-    fun resetRtData() {
+    private fun resetRtData() {
         totalResponseTime = 0
         numOfTimesExecuted = 0
     }
