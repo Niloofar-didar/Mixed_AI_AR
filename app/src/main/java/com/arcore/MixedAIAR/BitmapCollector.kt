@@ -65,7 +65,7 @@ class BitmapCollector(
                     classifier?.time +
                     ".csv")
         file.appendText("timestamp,response,guess3,acc3,guess2,acc2,guess1,acc1\n")
-        job = viewModelScope.launch(Dispatchers.Default) {
+        job = viewModelScope.launch(Dispatchers.IO) {
             bitmapSource?.bitmapStream?.collect {
                 val bitmap = Bitmap.createScaledBitmap(
                     it,
