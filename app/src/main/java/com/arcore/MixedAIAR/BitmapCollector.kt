@@ -86,7 +86,7 @@ class BitmapCollector(
 //        file.appendText("timestamp,response,guess3,acc3,guess2,acc2,guess1,acc1\n")
         file.appendText("overhead,classification Time,response time ")
 //        end = System.nanoTime()/1000000
-        job = viewModelScope.launch(Dispatchers.Default) {
+        job = viewModelScope.launch(Dispatchers.IO) {
             bitmapSource?.bitmapStream?.collect {
 
                 val bitmap = Bitmap.createScaledBitmap(
