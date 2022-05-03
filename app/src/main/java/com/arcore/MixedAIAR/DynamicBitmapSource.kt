@@ -18,10 +18,8 @@ class DynamicBitmapSource(private val bitmapUpdaterApi : BitmapUpdaterApi) {
         bitmapStream = flow {
             while (run) {
                 // get latest bitmap from BitmapUpdaterApi
-                val bitmapStream = bitmapUpdaterApi.latestBitmap
-                emit(bitmapStream)
-                // Delay to check for new bitmap
-//                delay(20) // 16.666 ms per frame
+//                val bitmapStream = bitmapUpdaterApi.latestBitmap
+                emit(bitmapUpdaterApi.latestBitmap)
             }
         }.flowOn(Dispatchers.Default)
     }

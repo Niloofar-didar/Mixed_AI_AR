@@ -14,6 +14,7 @@ import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 
 public class dataCol implements Runnable {
 
@@ -27,8 +28,25 @@ public class dataCol implements Runnable {
 
     }
 
+    public void writeOutput(double throughput) {
+        SimpleDateFormat format=new SimpleDateFormat("HH.mm.ss.SSSS", Locale.getDefault());
+        String currentFolder = mInstance.getExternalFilesDir(null).getAbsolutePath();
+        String FILEPATH = currentFolder + File.separator + "data/" + "throughput_.csv";
+
+        try (PrintWriter writer = new PrintWriter(new FileOutputStream(FILEPATH, true))) {
+            StringBuilder sb = new StringBuilder();
+            sb.append(throughput);
+            sb.append('\n');
+            writer.write(sb.toString());
+            System.out.println("done!");
+        } catch (FileNotFoundException e) {
+            System.out.println(e.getMessage());
+        }
+    }
+
     @Override
     public void run() {
+
 
 
         boolean trainedTris=false;
@@ -40,8 +58,10 @@ public class dataCol implements Runnable {
         double meanDk = 0; // mean current dis
         double meanDkk = 0; // mean of d in the next period-> you need to cal the average of predicted d for all the objects
 
-        meanThr = MainActivity.getInstance().getThroughput();
+        meanThr = MainActivity.getThroughput();
+
         Log.d("Throughput", String.valueOf(meanThr));
+        writeOutput(meanThr);
         meanThr= (double)Math.round((double)meanThr * 100) / 100;
         totTris = mInstance.total_tris/1000;
         for (int i = 0; i < mInstance.objectCount; i++) {

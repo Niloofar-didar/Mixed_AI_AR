@@ -16,7 +16,7 @@ import java.io.IOException
  *
  * Holds the BitmapCollector, changes to the ImageClassifier model happen here
  */
-class CustomAdapter(var mList: MutableList<ItemsViewModel>, val streamSource: DynamicBitmapSource/*BitmapSource*/, val activity: Activity) : RecyclerView.Adapter<CustomAdapter.ViewHolder>() {
+class AiRecyclerviewAdapter(var mList: MutableList<AiItemsViewModel>, val streamSource: DynamicBitmapSource/*BitmapSource*/, val activity: Activity) : RecyclerView.Adapter<AiRecyclerviewAdapter.ViewHolder>() {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         // inflates the ai_settings_card_view_design view
@@ -24,15 +24,11 @@ class CustomAdapter(var mList: MutableList<ItemsViewModel>, val streamSource: Dy
         val view = LayoutInflater.from(parent.context)
             .inflate(R.layout.ai_settings_card_view_design, parent, false)
 
-//        for (i in 0 until mList.size) {
-//            initializeActiveModel(mList[i], i)
-//        }
-
         return ViewHolder(view)
     }
 
-    // binds the list items to a view
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
+        // binds the list items to a view
         val itemsViewModel = mList[position]
         holder.modelListView.choiceMode = CHOICE_MODE_SINGLE
         holder.deviceListView.choiceMode = CHOICE_MODE_SINGLE
@@ -100,13 +96,13 @@ class CustomAdapter(var mList: MutableList<ItemsViewModel>, val streamSource: Dy
     /**
      * Initializes model to default parameters
      */
-    fun initializeActiveModel(itemsView: ItemsViewModel, position: Int) {
+    fun initializeActiveModel(itemsView: AiItemsViewModel, position: Int) {
         itemsView.currentModel = 0
         itemsView.currentDevice = 0
         itemsView.currentNumThreads = 1
         itemsView.classifier=ImageClassifierFloatMobileNet(activity)
         itemsView.classifier?.numThreads = 1
-        itemsView.consumer = BitmapCollector(streamSource, itemsView.classifier, position, activity)
+        itemsView.collector = BitmapCollector(streamSource, itemsView.classifier, position, activity)
         itemsView.classifier?.useCPU()
     }
 
@@ -114,10 +110,10 @@ class CustomAdapter(var mList: MutableList<ItemsViewModel>, val streamSource: Dy
      * Updates model to parameters chosen by pressing ai_settings_card_view_design
      * Stops collector, stops bitmap stream
      */
-    fun updateActiveModel(holder: ViewHolder, itemsView : ItemsViewModel, position: Int) {
+    fun updateActiveModel(holder: ViewHolder, itemsView : AiItemsViewModel, position: Int) {
         val switchToggleStream = activity.findViewById<Switch>(R.id.switch_streamToggle)
 
-        itemsView.consumer?.pauseCollect()
+        itemsView.collector?.pauseCollect()
         switchToggleStream.isChecked = false
 
 
@@ -148,9 +144,9 @@ class CustomAdapter(var mList: MutableList<ItemsViewModel>, val streamSource: Dy
         val device: String = itemsView.devices[itemsView.currentDevice]
         val threads = itemsView.currentNumThreads
 
-        Log.i("Custom Adapter",
-            "Changing model to $model device $device"
-        )
+//        Log.i("Custom Adapter",
+//            "Changing model to $model device $device"
+//        )
 
         // Try to load model.
         try {
@@ -186,7 +182,7 @@ class CustomAdapter(var mList: MutableList<ItemsViewModel>, val streamSource: Dy
         holder.textAiInfo.text = "Threads: ${itemsView.classifier?.numThreads}\n" +
                 "Model: ${itemsView.classifier?.modelName}\n" +
                 "Device: ${itemsView.classifier?.device}"
-        itemsView.setCollector(BitmapCollector(streamSource, itemsView.classifier, position, activity))
+        itemsView.collector = BitmapCollector(streamSource, itemsView.classifier, position, activity)
     }
 
 

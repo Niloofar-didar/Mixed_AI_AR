@@ -95,10 +95,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
     // BitmapUpdaterApi gets bitmap version of ar camera frame each time
     // on onTracking is called. Needed for DynamicBitmapSource
     private final BitmapUpdaterApi bitmapUpdaterApi = new BitmapUpdaterApi();
-    static List<ItemsViewModel> mList = new ArrayList<>();
-
-
-
+    static List<AiItemsViewModel> mList = new ArrayList<>();
 
     private ArFragment fragment;
     private PointerDrawable pointer = new PointerDrawable();
@@ -629,31 +626,24 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-
         ////////////////
         // manyAI
         ////////////////
-
-        // Define the recycler view that holds the AI settings cards
-        RecyclerView recyclerView_aiSettings = findViewById(R.id.recycler_view_aiSettings);
-        // List of ItemsView stored in the Recycler View
-        // ItemsView objects contain the coroutine flow collectors BitmapCollector
-
 
         /**coroutine flow source that captures camera frames from updateTracking() function*/
         DynamicBitmapSource source = new DynamicBitmapSource(bitmapUpdaterApi);
         /** coroutine flow source that passes static jpeg*/
 //        BitmapSource source = new BitmapSource(this, "chair_600.jpg");
 
-
 //        for(int i = 0; i<20; i++) {
-        mList.add(new ItemsViewModel());
+        mList.add(new AiItemsViewModel());
 //        }
-
-        CustomAdapter adapter = new CustomAdapter(mList, source, this);
+        // Define the recycler view that holds the AI settings cards
+        RecyclerView recyclerView_aiSettings = findViewById(R.id.recycler_view_aiSettings);
+        AiRecyclerviewAdapter adapter = new AiRecyclerviewAdapter(mList, source, this);
 
         // set the adapter and layout manager for the recycler view
-        recyclerView_aiSettings.setAdapter(adapter);
+        recyclerView_aiSettings.setAdapter(new AiRecyclerviewAdapter(mList, source, this));
         recyclerView_aiSettings.setLayoutManager(new LinearLayoutManager(this, RecyclerView.HORIZONTAL, false));
 
 
@@ -674,7 +664,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
                     switchToggleStream.setChecked(false);
                     // update num of AI tasks
                     textNumOfAiTasks.setText(String.format("%d", numAiTasks));
-                    mList.add(new ItemsViewModel());
+                    mList.add(new AiItemsViewModel());
                     adapter.setMList(mList);
                     recyclerView_aiSettings.setAdapter(adapter);
                 }
@@ -715,8 +705,8 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
                         source.startStream();
                         for (int i = 0; i < mList.size(); i++) {
 //                        Log.d("CHECKCHG", String.valueOf((mList.get(i).getClassifier()==null)));
-                            mList.get(i).getConsumer().setEnd(System.nanoTime()/1000000);
-                            mList.get(i).getConsumer().startCollect();
+//                            mList.get(i).getCollector().setEnd(System.nanoTime()/1000000);
+                            mList.get(i).getCollector().startCollect();
                         }
                     } else {
                         Toast toast = Toast.makeText(MainActivity.this,
@@ -728,7 +718,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
                     // The toggle is disabled
                     source.pauseStream();
                     for (int i = 0; i < mList.size(); i++) {
-                        mList.get(i).getConsumer().pauseCollect();
+                        mList.get(i).getCollector().pauseCollect();
                     }
                 }
             }
@@ -1701,8 +1691,9 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
                        // long curTime= SystemClock.uptimeMillis();
 
                         if(switchToggleStream.isChecked()) // in the begining we collect data for zero tris
+                        {
                             new dataCol(MainActivity.this).run(); // this is to collect mean thr, total_tris. average dis
-
+                        }
 
 /* since we periodically run the model for thr/RE -> even if there is a wrong point before adding tris count and the model calculates wrong num, it will be adjusted based on new
 // corrected data
@@ -1773,13 +1764,13 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         long[] meanResponseTimes = new long[mList.size()];
         BitmapCollector tempCollector;
         for(int i=0; i<mList.size(); i++) {
-            tempCollector = mList.get(i).getConsumer();
+            tempCollector = mList.get(i).getCollector();
             int total = tempCollector.getNumOfTimesExecuted();
             if(total != 0) {
                 meanResponseTimes[i]=tempCollector.getTotalResponseTime()/tempCollector.getNumOfTimesExecuted();
-                mList.get(i).getConsumer().setNumOfTimesExecuted(0);
-                mList.get(i).getConsumer().setTotalResponseTime(0);
-                mList.get(i).getConsumer().setEnd(System.nanoTime()/1000000);
+                mList.get(i).getCollector().setNumOfTimesExecuted(0);
+                mList.get(i).getCollector().setTotalResponseTime(0);
+                mList.get(i).getCollector().setEnd(System.nanoTime()/1000000);
             }
         }
 //        Log.d("rt", String.valueOf(meanResponseTimes[0]));
@@ -2349,7 +2340,8 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         converter.yuvToRgb(image, bmp); /** line to be multithreaded*/
         image.close();
 
-        bitmapUpdaterApi.updateBitmap(bmp);
+//        bitmapUpdaterApi.updateBitmap(bmp);
+        bitmapUpdaterApi.setLatestBitmap(bmp);
 
         ///////writes images as file to storage for testing
 //        File path = this.getExternalFilesDir(null);
