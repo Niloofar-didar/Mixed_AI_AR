@@ -29,9 +29,10 @@ public class dataCol implements Runnable {
     }
 
     public void writeOutput(double throughput) {
+        int size = MainActivity.mList.size();
         SimpleDateFormat format=new SimpleDateFormat("HH.mm.ss.SSSS", Locale.getDefault());
         String currentFolder = mInstance.getExternalFilesDir(null).getAbsolutePath();
-        String FILEPATH = currentFolder + File.separator + "data/" + "throughput_.csv";
+        String FILEPATH = currentFolder + File.separator + "data/" +size+"_"+"throughput.csv";
 
         try (PrintWriter writer = new PrintWriter(new FileOutputStream(FILEPATH, true))) {
             StringBuilder sb = new StringBuilder();

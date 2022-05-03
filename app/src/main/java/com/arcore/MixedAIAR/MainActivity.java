@@ -3485,6 +3485,14 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
                     //        TimerTask task = new TimerTask() {
                     public void run() {
                         //    if(objectCount>=0) { // remove- ni april 21 temperory
+
+//                        Double meanThr;
+//                        if(mList.get(0).getClassifier()!=null) {
+//                            meanThr = getThroughput();
+//                        }
+//                        else {
+//                            meanThr = 0.0;
+//                        }
                         Float mean_gpu = 0f;
                         float dist = 0;
                         if (renderArray[1] != null)
@@ -3535,6 +3543,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
                             //sb.append(','); sb.append(sreqs);
                             sb.append(',');  sb.append(filname);
                             sb.append(objectCount);
+//                            sb.append(","+meanThr);
                             sb.append('\n');
 
 

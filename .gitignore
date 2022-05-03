@@ -3,6 +3,8 @@
 
 ### large .tflite models ###
 inception_v4.tflite
+inception_v3.tflite
+
 
 
 ### Android ###

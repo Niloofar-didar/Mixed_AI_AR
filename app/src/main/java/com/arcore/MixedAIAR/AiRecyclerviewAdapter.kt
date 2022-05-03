@@ -97,10 +97,10 @@ class AiRecyclerviewAdapter(var mList: MutableList<AiItemsViewModel>, val stream
      * Initializes model to default parameters
      */
     fun initializeActiveModel(itemsView: AiItemsViewModel, position: Int) {
-        itemsView.currentModel = 0
+        itemsView.currentModel = 9
         itemsView.currentDevice = 0
         itemsView.currentNumThreads = 1
-        itemsView.classifier=ImageClassifierFloatMobileNet(activity)
+        itemsView.classifier=ImageClassifier_MobileNet_V2_Float_224(activity)
         itemsView.classifier?.numThreads = 1
         itemsView.collector = BitmapCollector(streamSource, itemsView.classifier, position, activity)
         itemsView.classifier?.useCPU()
@@ -157,10 +157,11 @@ class AiRecyclerviewAdapter(var mList: MutableList<AiItemsViewModel>, val stream
                 itemsView.models[3]->itemsView.classifier=ImageClassifier_Inception_V1_Quantized_224(activity)
                 itemsView.models[4]->itemsView.classifier=ImageClassifierQuantizedMobileNetV1_25_0_128(activity)
                 itemsView.models[5]->itemsView.classifier=ImageClassifier_mnasnet_05_224(activity)
-                itemsView.models[6]->itemsView.classifier=ImageClassifier_Inception_V4_Quantized_299(activity)
-                itemsView.models[7]->itemsView.classifier=ImageClassifier_Inception_v4_Float_299(activity)
-                itemsView.models[8]->itemsView.classifier=ImageClassifier_MobileNet_V2_Float_224(activity)
-
+                itemsView.models[6]->itemsView.classifier=ImageClassifier_Inception_v3_Float_299(activity)
+                itemsView.models[7]->itemsView.classifier=ImageClassifier_Inception_V4_Quantized_299(activity)
+                itemsView.models[8]->itemsView.classifier=ImageClassifier_Inception_v4_Float_299(activity)
+                itemsView.models[9]->itemsView.classifier=ImageClassifier_MobileNet_V2_Float_224(activity)
+                itemsView.models[10]->itemsView.classifier=ImageClassifier_Inception_V3_Quantized_299(activity)
 
             }
         } catch (e: IOException) {

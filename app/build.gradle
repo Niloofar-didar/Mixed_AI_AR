@@ -110,9 +110,11 @@ def targetFolder = "src/main/assets"
 def modelFloatDownloadUrl = "https://storage.googleapis.com/download.tensorflow.org/models/mobilenet_v1_2018_02_22/mobilenet_v1_1.0_224.tgz"
 def modelQuantDownloadUrl = "https://storage.googleapis.com/download.tensorflow.org/models/mobilenet_v1_2018_08_02/mobilenet_v1_1.0_224_quant.tgz"
 def model_inception_v4_float_url = "https://storage.googleapis.com/download.tensorflow.org/models/tflite/model_zoo/upload_20180427/inception_v4_2018_04_27.tgz"
+def model_inception_v3_float_url = "https://storage.googleapis.com/download.tensorflow.org/models/tflite/model_zoo/upload_20180427/inception_v3_2018_04_27.tgz"
 def localCacheFloat = "build/intermediates/mobilenet_v1_1.0_224.tgz"
 def localCacheQuant = "build/intermediates/mmobilenet_v1_1.0_224_quant.tgz"
 def localCacheInceptionV4Float = "build/intermediates/inception_v4_2018_04_27.tgz"
+def localCacheInceptionV3Float = "build/intermediates/inception_v3_2018_04_27.tgz"
 
 
 task downloadModelFloat(type: DownloadUrlTask) {
@@ -138,6 +140,14 @@ task downloadInceptionV4Float(type: DownloadUrlTask) {
     target = file("${localCacheInceptionV4Float}")
 }
 
+task downloadInceptionV3Float(type: DownloadUrlTask) {
+    doFirst {
+        println "Downloading ${model_inception_v3_float_url}"
+    }
+    sourceUrl = "${model_inception_v3_float_url}"
+    target = file("${localCacheInceptionV3Float}")
+}
+
 task unzipModelFloat(type: Copy, dependsOn: 'downloadModelFloat') {
     doFirst {
         println "Unzipping ${localCacheFloat}"
@@ -161,7 +171,15 @@ task unzipModelInceptionV4Float(type: Copy, dependsOn: 'downloadInceptionV4Float
     into "${targetFolder}"
 }
 
-task cleanUnusedFiles(type: Delete, dependsOn: ['unzipModelFloat', 'unzipModelQuant', 'unzipModelInceptionV4Float']) {
+task unzipModelInceptionV3Float(type: Copy, dependsOn: 'downloadInceptionV3Float') {
+    doFirst {
+        println "Unzipping ${localCacheInceptionV3Float}"
+    }
+    from tarTree("${localCacheInceptionV3Float}")
+    into "${targetFolder}"
+}
+
+task cleanUnusedFiles(type: Delete, dependsOn: ['unzipModelFloat', 'unzipModelQuant', 'unzipModelInceptionV4Float', 'unzipModelInceptionV3Float']) {
     delete fileTree("${targetFolder}").matching {
         include "*.pb"
         include "*.ckpt.*"
@@ -176,6 +194,7 @@ task cleanUnusedFiles(type: Delete, dependsOn: ['unzipModelFloat', 'unzipModelQu
 preBuild.dependsOn unzipModelFloat
 preBuild.dependsOn unzipModelQuant
 preBuild.dependsOn unzipModelInceptionV4Float
+preBuild.dependsOn unzipModelInceptionV3Float
 preBuild.dependsOn cleanUnusedFiles
 repositories {
     mavenCentral()

@@ -23,9 +23,9 @@ import java.io.IOException;
 public class ImageClassifier_Inception_v4_Float_299 extends ImageClassifier {
 
   /** The mobile net requires additional normalization of the used input. */
-  private static final float IMAGE_MEAN = 127.5f;
+  private static final float IMAGE_MEAN = 0;//127.5f;
 
-  private static final float IMAGE_STD = 127.5f;
+  private static final float IMAGE_STD = 255;//127.5f;
 
   /**
    * An array to hold inference results, to be feed into Tensorflow Lite as outputs. This isn't part
