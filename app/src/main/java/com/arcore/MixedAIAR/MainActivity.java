@@ -1618,6 +1618,7 @@ else{
 
 
 // starting the second loop : note that sensitivity calculation is just to detect the candidate object for decimation/maintaining triangle count-> it is apart from actual decimation ratio calculation
+   /*
     void odraAlg(float tUP) {
 
         candidate_obj = new HashMap<>();
@@ -1739,17 +1740,13 @@ else{
                 e.printStackTrace();
             }
 
-
-
-
-
                 total_tris = total_tris + (ratioArray[i] *  renderArray[i].orig_tris);// total = total + 0.8*objtris
                 j = track_obj[i][j];
 
         }
 
 
-    }
+    }*/
 
 
     private static Map<Integer, Float> sortByValue(Map<Integer, Float> unsortMap, final boolean order)

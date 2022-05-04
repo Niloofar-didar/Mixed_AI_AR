@@ -347,7 +347,7 @@ public class dataCol implements Runnable {
                              trainedTris = true;
 
                              // call main algorithm to distribute triangles
-                           mInstance.odraAlg((float) nextTris);
+                          odraAlg((float) nextTris);
                             algNxtTris= mInstance.total_tris;
                             // algNxtTris= (double)Math.round((double)algNxtTris * 1000) / 1000;
 
@@ -647,12 +647,20 @@ mInstance.prevtotTris=totTris;
 
             mInstance.total_tris = mInstance.total_tris - (mInstance.ratioArray[i] * mInstance.o_tris.get(i));// total =total -1*objtris
             mInstance.ratioArray[i] = coarse_Ratios[j];
-            mInstance.renderArray[i].decimatedModelRequest(mInstance.ratioArray[i], i, mInstance.referenceObjectSwitchCheck);
-            // update total_tris
+
+            mInstance.runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    mInstance.renderArray[i].decimatedModelRequest(mInstance.ratioArray[i], i, false);
+                }
+            });
+            //Thread.sleep(3);
+
             mInstance.total_tris = mInstance.total_tris + (mInstance.ratioArray[i] *  mInstance.renderArray[i].orig_tris);// total = total + 0.8*objtris
             j = track_obj[i][j];
 
         }
+
 
 
     }
