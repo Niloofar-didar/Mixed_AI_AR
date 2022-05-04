@@ -128,7 +128,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
      float cacheArray[] = new float[obj_count];
   //   float updateratio[] = new float[obj_count];
     float updatednetw[] = new float[obj_count];
-    int maxtime=4; // 20 means calculates data for next 10 sec ->>>should be even num
+    int maxtime=6; // 20 means calculates data for next 10 sec ->>>should be even num
     // if 5, goes up to 2.5 s. if 10, goes up to 5s
 
     //for RE modeling and algorithm
@@ -150,7 +150,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
     float tMin[] = new float[obj_count];
 
     double des_Q= 1- (0.3f); //# this is avg desired Q
-    double des_Thr = 35f;
+    double des_Thr = 25f;
     ListMultimap<Double, List<Double>> thParamList = ArrayListMultimap.create();//  a map from tot tris to measured RE
 
 
@@ -184,7 +184,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
     private Integer[] objcount = new Integer[]{1, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120, 130, 140, 160, 170, 180, 190, 200, 220, 240, 260, 300, 340, 380, 430, 500};
     //private float[] distance_log = new float[]{2.24f,2.0f, 2.24f, 2.83f, 3.61f, 4.47f, 5.39f, 6.32f, 7.28f, 8.25f, 9.22f, 10.2f, 11.18f, 12.17f, 13.15f };
     private String currentModel = null;
-    private boolean referenceObjectSwitchCheck = false;
+     boolean referenceObjectSwitchCheck = false;
     private boolean multipleSwitchCheck = false;
     private boolean askedbefore = false;
      int nextID = 0;
@@ -309,7 +309,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
     private float alpha = 0.7f;
     int max_datapoint=25;
     double reRegRMSE= Double.POSITIVE_INFINITY;
-    double alphaT = 3.44E-4, alphaD=0.165, alphaH=-0.015, zeta=1.378;
+    double alphaT = 5.14E-7, alphaD=0.19, alphaH=1.34E-5, zeta=0.29;
     double nextTris=0; // triangles for the next period
 
     private static final int KEEP_ALIVE_TIME = 500;
@@ -526,9 +526,10 @@ else{
                // public void run(){
 
                     percReduction = percentageReduction;
-                    ModelRequestManager.getInstance().add(new ModelRequest(cacheArray[id], fileName, percentageReduction, getApplicationContext(), MainActivity.this, id),redraw_direct );
+           //
+            //      commented on May 2 2022   ModelRequestManager.getInstance().add(new ModelRequest(cacheArray[id], fileName, percentageReduction, getApplicationContext(), MainActivity.this, id),redraw_direct );
 //April 21 Nill , istead of calling mdelreq, sinc we have already downloaded objs from screen, we can call directly redraw
-       //     renderArray[id].redraw(id);
+            renderArray[id].redraw(id);
 
 
               //  }//
@@ -536,8 +537,7 @@ else{
 
            // } );
 
-       //     decimate_thread.get(decimate_count).start();
-        //    decimate_count++;
+
 
 
             //Nil
@@ -579,15 +579,6 @@ else{
         public void redraw(int j) {
 
 
-        //  renderArray[j].detach_obj(); // Nill added april 21
-
-        //    Handler handler = new Handler();
-//            handler.postDelayed(new Runnable() {
-//                public void run() {
-//                    // Actions to do after 10 seconds
-//                }
-//            }, 500);
-
 
             Log.d("ServerCommunication", "Redraw waiting is done");
 //Nil april 21
@@ -599,11 +590,11 @@ else{
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
-            Uri objUri =Uri.fromFile(new File(getExternalFilesDir(null), "/decimated" + fileName + percReduction + ".sfb"));
+            Uri objUri =Uri.fromFile(new File(getExternalFilesDir(null), "/decimated" + renderArray[j].fileName + ratioArray[j] + ".sfb"));
 
 
-            if (percReduction==1)// for the times when perc_reduc is 1, we show the original object
-                objUri=  Uri.parse("models/"+fileName+".sfb" );
+            if (  ratioArray[j]==1)// for the times when perc_reduc is 1, we show the original object
+                objUri=  Uri.parse("models/"+renderArray[j].fileName+".sfb" );
 
                 if (fragment.getContext()!=null){
                 CompletableFuture<Void> renderableFuture =
@@ -773,7 +764,9 @@ else{
             sbb.append(',');
             sbb.append("nextTris");
             sbb.append(',');
-            sbb.append("trainedT");
+            sbb.append("Algorithm Cal Tris");
+            sbb.append(',');
+            sbb.append("Recalculated Tris");
             sbb.append(',');
             sbb.append("pAR");
             sbb.append(',');
@@ -1300,10 +1293,11 @@ else{
 
                                     if (under_Perc == false) {
                                         total_tris = total_tris - (ratioArray[i] * o_tris.get(i));// total =total -1*objtris
+                                        ratioArray[i] = ratio[0] / 100f;
                                         renderArray[i].decimatedModelRequest(ratio[0] / 100f, i, false);
                                         posText.setText("Request for " + renderArray[i].fileName + " " + ratio[0] / 100f);
 
-                                        ratioArray[i] = ratio[0] / 100f;
+
                                         // update total_tris
                                         total_tris = total_tris + (ratioArray[i] * o_tris.get(i));// total = total + 0.8*objtris
 
@@ -1313,10 +1307,10 @@ else{
                                     } else {
 
                                         total_tris = total_tris - (ratioArray[i] * o_tris.get(i));// total =total -1*objtris
-
+                                        ratioArray[i] = ratio[0] / 1000f;
                                         renderArray[i].decimatedModelRequest(ratio[0] / 1000f, i, false);
                                         posText.setText("Request for " + renderArray[i].fileName + " " + ratio[0] / 100f);
-                                        ratioArray[i] = ratio[0] / 1000f;
+
                                         // update total_tris
                                         total_tris = total_tris + (ratioArray[i] * o_tris.get(i));// total = total + 0.8*objtris
 
@@ -1507,9 +1501,10 @@ else{
                             if (under_Perc == false) {
                                 total_tris = total_tris - (ratioArray[i] * o_tris.get(i));// total =total -1*objtris
                                 decRatio=seekBar.getProgress() / 100f;
+                                ratioArray[i] = seekBar.getProgress() / 100f;
                                 renderArray[i].decimatedModelRequest(decRatio, i, referenceObjectSwitchCheck);
 
-                                ratioArray[i] = seekBar.getProgress() / 100f;
+
                                 // update total_tris
                                 total_tris = total_tris + (ratioArray[i] * o_tris.get(i));// total = total + 0.8*objtris
                                 curTrisTime= SystemClock.uptimeMillis();
@@ -1517,8 +1512,9 @@ else{
                             } else {
                                 total_tris = total_tris - (ratioArray[i] * o_tris.get(i));// total =total -1*objtris
                                 decRatio=seekBar.getProgress() / 1000f;
-                                renderArray[i].decimatedModelRequest(decRatio, i, referenceObjectSwitchCheck);
                                 ratioArray[i] = seekBar.getProgress() / 1000f;
+                                renderArray[i].decimatedModelRequest(decRatio, i, referenceObjectSwitchCheck);
+
                                 // update total_tris
                                 total_tris = total_tris + (ratioArray[i] * o_tris.get(i));// total = total + 0.8*objtris
 
@@ -1570,12 +1566,14 @@ else{
 
         //prediction REQ
         Timer t = new Timer();
-        final int[] count = {0}; // should be before here
+
         t.scheduleAtFixedRate(
                 new TimerTask() {
+
                     public void run() {
 
 //@@@@@@@@@@@ This is to collect total triangle data every 500 ms @@@@@@@@@@@
+                        //long time1= System.nanoTime()/1000000;
 
 
                        // long curTime= SystemClock.uptimeMillis();
@@ -1584,68 +1582,38 @@ else{
 
 
 /* since we periodically run the model for thr/RE -> even if there is a wrong point before adding tris count and the model calculates wrong num, it will be adjusted based on new
-// corrected data
-
-                        if ( curTrisTime!=0 && curTime - (curTrisTime+2000)>=0 && curTime - (curTrisTime+2000)<500 )// because this timer runs every 500ms, we want to get regression model
-                            //running at least after 2s that the triangle count changes, to make sure that the new object is on the screen and the change for throughput is applied
-                            //without this condition, we'll have the triangle count change and regression model applied before adding the object to the screen
-                       {
-
-                           new dataCol(MainActivity.this).run(); // after 2s that we put obj on the screen-> this is to collect mean thr, total_tris. average dis
 
                          //  Camera2BasicFragment.getInstance().update((double) total_tris);// run linear reg for thrughput
                          //  calculate_RE();// real-time RE calculation -> rE list adds the new point -> then checks if we have at least two points, we
 
                        }*/
-//@@@@@@@@@@@ This is to collect total triangle data every 500 ms  @@@@@@@@@@@
 
-// This is to collect position prediction every 500 ms
 
-                        if (objectCount >= 1) { // Nil april 21 -> fixed
 
-                            Frame frame = fragment.getArSceneView().getArFrame();//OK
-                            current.add(new ArrayList<Float>(Arrays.asList(frame.getCamera().getPose().tx(), frame.getCamera().getPose().ty(), frame.getCamera().getPose().tz())));
-                            timeLog.add(timeInSec);
-                            timeInSec = timeInSec + 0.5f;
-                            float j = 0.5f;
-                            for (int i = 0; i < maxtime; i++) {
-                                prmap.get(i).add(predictNextError2(j, i));
-                                j += 0.5f;
-                            }
-                            if (count[0] % 2 == 0) { // means that we are ignoring 0.5 time data, 0-> next 1s, 2 is for next 2sec , 4 is for row fifth which is 4s in array of next1sec
-
-                                for (int i = 0; i < maxtime / 2; i++) // for next 5 sec
-                                    nextfivesec.set(i, prmap.get(2 * i + 1).get(count[0]));
-
-                                FindMiniCenters(area_percentage);
-                                Findpredicted_distances();
-                            }
-                            count[0]++;
-
-                        }
-
+                       // long time2= System.nanoTime()/1000000;
+                        //Log.d("Algorithm Duration",Long.toString(time2-time1));
                     }
 
                 },
                 0,      // run first occurrence immediately
-                1000);
+                2000);
 
         // periodic tris collection
 
     }
 
-    public void calculate_RE( ){
-
-
-
-
-//??? make sure when to call this, if delata RE <>1 or PAR or PAI is very far from 1 or periodically???
-            odraAlg( (float)nextTris);// calls algorithm
-
-
-
-
-   }
+//    public void calculate_RE( ){
+//
+//
+//
+//
+////??? make sure when to call this, if delata RE <>1 or PAR or PAI is very far from 1 or periodically???
+//            odraAlg( (float)nextTris);// calls algorithm
+//
+//
+//
+//
+//   }
 
 
 
@@ -1754,8 +1722,27 @@ else{
 
                 total_tris = total_tris - (ratioArray[i] * o_tris.get(i));// total =total -1*objtris
                 ratioArray[i] = coarse_Ratios[j];
-                renderArray[i].decimatedModelRequest(ratioArray[i], i, referenceObjectSwitchCheck);
-                // update total_tris
+
+            //
+            //      commented on May 2 2022   ModelRequestManager.getInstance().add(new ModelRequest(cacheArray[id], fileName, percentageReduction, getApplicationContext(), MainActivity.this, id),redraw_direct );
+//April 21 Nill , istead of calling mdelreq, sinc we have already downloaded objs from screen, we can call directly redraw
+
+            try {
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        renderArray[i].decimatedModelRequest(ratioArray[i], i, false);
+                    }
+                });
+                Thread.sleep(300);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+
+
+
+
+
                 total_tris = total_tris + (ratioArray[i] *  renderArray[i].orig_tris);// total = total + 0.8*objtris
                 j = track_obj[i][j];
 
@@ -3308,6 +3295,7 @@ public float delta (float a, float b , float c1,float creal,  float d, float gam
         String currentFolder = getExternalFilesDir(null).getAbsolutePath();
         String FILEPATH = currentFolder + File.separator + "GPU_Usage.csv";
         Timer  t = new Timer();
+        final int[] count = {0}; // should be before here
         t.scheduleAtFixedRate(
 
                 new TimerTask() {
@@ -3375,6 +3363,34 @@ public float delta (float a, float b , float c1,float creal,  float d, float gam
                         } catch (FileNotFoundException e) {
                             System.out.println(e.getMessage());
                         }
+
+
+                        // This is to collect position prediction every 500 ms
+
+                        if (objectCount >= 1) { // Nil april 21 -> fixed
+
+                            Frame frame = fragment.getArSceneView().getArFrame();//OK
+                            current.add(new ArrayList<Float>(Arrays.asList(frame.getCamera().getPose().tx(), frame.getCamera().getPose().ty(), frame.getCamera().getPose().tz())));
+                            timeLog.add(timeInSec);
+                            timeInSec = timeInSec + 0.5f;
+                            float j = 0.5f;
+                            for (int i = 0; i < maxtime; i++) {
+                                prmap.get(i).add(predictNextError2(j, i));
+                                j += 0.5f;
+                            }
+                            // nil cmt april 28 if (count[0] % 2 == 0) { // means that we are ignoring 0.5 time data, 0-> next 1s, 2 is for next 2sec , 4 is for row fifth which is 4s in array of next1sec
+
+                            for (int i = 0; i < maxtime / 2; i++) // for next 5 sec if maxtime = 10
+                                nextfivesec.set(i, prmap.get(2 * i + 1).get(count[0]));
+
+                            FindMiniCenters(area_percentage);
+                            Findpredicted_distances();
+                            // }
+                            count[0]++;
+
+                        }
+
+
 
                     }
 
