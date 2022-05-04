@@ -1,4 +1,5 @@
 apply plugin: 'com.android.application'
+apply plugin: 'kotlin-android'
 
 android {
     compileSdkVersion 28
@@ -10,7 +11,7 @@ android {
         targetSdkVersion 28
         versionCode 1
         versionName "1.0"
-        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+        testInstrumentationRunner 'androidx.test.runner.AndroidJUnitRunner'
     }
     buildTypes {
         release {
@@ -47,41 +48,57 @@ dependencies {
 
     implementation fileTree(dir: 'libs', include: ['*.jar'])
     //implementation 'com.android.support:appcompat-v7:28.0.0'
-    implementation 'com.android.support:appcompat-v7:28.0.0-rc02'
-    implementation 'com.android.support.constraint:constraint-layout:1.1.3'
-    implementation 'com.android.support:design:28.0.0-rc02'
+    implementation 'androidx.appcompat:appcompat:1.0.0'
+    implementation 'androidx.constraintlayout:constraintlayout:1.1.3'
+    implementation 'com.google.android.material:material:1.0.0'
     implementation "com.google.ar.sceneform.ux:sceneform-ux:1.7.0"
     implementation files('libs/Jama-1.0.1.jar')
     testImplementation 'junit:junit:4.12'
-    androidTestImplementation 'com.android.support.test:runner:1.0.2'
-    androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.2'
+    androidTestImplementation 'androidx.test.ext:junit:1.1.1'
+    androidTestImplementation 'androidx.test.espresso:espresso-core:3.1.0'
+    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.3.9'
+
+    def lifecycle_version = "2.5.0-alpha03"
+//    def arch_version = "2.1.0"
+
+    // ViewModel
+    implementation "androidx.lifecycle:lifecycle-viewmodel-ktx:$lifecycle_version"
+    // ViewModel utilities for Compose
+    implementation "androidx.lifecycle:lifecycle-viewmodel-compose:$lifecycle_version"
+    // LiveData
+    implementation "androidx.lifecycle:lifecycle-livedata-ktx:$lifecycle_version"
+    // Lifecycles only (without ViewModel or LiveData)
+    implementation "androidx.lifecycle:lifecycle-runtime-ktx:$lifecycle_version"
+
+    // Saved state module for ViewModel
+    implementation "androidx.lifecycle:lifecycle-viewmodel-savedstate:$lifecycle_version"
 
 
 
-
-   // implementation 'com.android.support.constraint:constraint-layout:2.0.4'
-   //implementation 'com.android.support:design:28.0.0'
+    // implementation 'com.android.support.constraint:constraint-layout:2.0.4'
+    //implementation 'com.android.support:design:28.0.0'
     //implementation "com.google.ar.sceneform.ux:sceneform-ux:1.7.0"
 
 
     implementation 'org.tensorflow:tensorflow-lite-support:0.1.0-rc1'
- //   implementation 'org.tensorflow:tensorflow-lite-metadata:0.1.0-rc1'
+    //   implementation 'org.tensorflow:tensorflow-lite-metadata:0.1.0-rc1'
 
     //implementation "com.google.ar.sceneform.ux:sceneform-ux:1.15.0"
-   // testImplementation 'junit:junit:4.13.2'
+    // testImplementation 'junit:junit:4.13.2'
     //androidTestImplementation 'com.android.support.test:runner:1.0.2'
     //androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.2'
 
 
-  //  implementation fileTree(dir: 'libs', include: ['*.jar'])
-   // implementation 'com.android.support:appcompat-v7:28.0.0'
+    //  implementation fileTree(dir: 'libs', include: ['*.jar'])
+    // implementation 'com.android.support:appcompat-v7:28.0.0'
     //implementation 'com.android.support.constraint:constraint-layout:2.0.4'
-   // implementation 'com.android.support:design:28.0.0'
-   implementation 'com.android.support:support-annotations:28.0.0'
-    implementation 'com.android.support:support-v13:28.0.0'
+    // implementation 'com.android.support:design:28.0.0'
+    implementation 'androidx.annotation:annotation:1.0.0'
+    implementation 'androidx.legacy:legacy-support-v13:1.0.0'
     // Build off of nightly TensorFlow Lite
     implementation 'org.tensorflow:tensorflow-lite:0.0.0-nightly-SNAPSHOT'
     implementation 'org.tensorflow:tensorflow-lite-gpu:0.0.0-nightly-SNAPSHOT'
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
 
 }
 
@@ -92,8 +109,10 @@ apply plugin: 'com.google.ar.sceneform.plugin'
 def targetFolder = "src/main/assets"
 def modelFloatDownloadUrl = "https://storage.googleapis.com/download.tensorflow.org/models/mobilenet_v1_2018_02_22/mobilenet_v1_1.0_224.tgz"
 def modelQuantDownloadUrl = "https://storage.googleapis.com/download.tensorflow.org/models/mobilenet_v1_2018_08_02/mobilenet_v1_1.0_224_quant.tgz"
+def model_inception_v4_float_url = "https://storage.googleapis.com/download.tensorflow.org/models/tflite/model_zoo/upload_20180427/inception_v4_2018_04_27.tgz"
 def localCacheFloat = "build/intermediates/mobilenet_v1_1.0_224.tgz"
 def localCacheQuant = "build/intermediates/mmobilenet_v1_1.0_224_quant.tgz"
+def localCacheInceptionV4Float = "build/intermediates/inception_v4_2018_04_27.tgz"
 
 
 task downloadModelFloat(type: DownloadUrlTask) {
@@ -111,6 +130,13 @@ task downloadModelQuant(type: DownloadUrlTask) {
     sourceUrl = "${modelQuantDownloadUrl}"
     target = file("${localCacheQuant}")
 }
+task downloadInceptionV4Float(type: DownloadUrlTask) {
+    doFirst {
+        println "Downloading ${model_inception_v4_float_url}"
+    }
+    sourceUrl = "${model_inception_v4_float_url}"
+    target = file("${localCacheInceptionV4Float}")
+}
 
 task unzipModelFloat(type: Copy, dependsOn: 'downloadModelFloat') {
     doFirst {
@@ -127,8 +153,15 @@ task unzipModelQuant(type: Copy, dependsOn: 'downloadModelQuant') {
     from tarTree("${localCacheQuant}")
     into "${targetFolder}"
 }
+task unzipModelInceptionV4Float(type: Copy, dependsOn: 'downloadInceptionV4Float') {
+    doFirst {
+        println "Unzipping ${localCacheInceptionV4Float}"
+    }
+    from tarTree("${localCacheInceptionV4Float}")
+    into "${targetFolder}"
+}
 
-task cleanUnusedFiles(type: Delete, dependsOn: ['unzipModelFloat', 'unzipModelQuant']) {
+task cleanUnusedFiles(type: Delete, dependsOn: ['unzipModelFloat', 'unzipModelQuant', 'unzipModelInceptionV4Float']) {
     delete fileTree("${targetFolder}").matching {
         include "*.pb"
         include "*.ckpt.*"
@@ -142,7 +175,11 @@ task cleanUnusedFiles(type: Delete, dependsOn: ['unzipModelFloat', 'unzipModelQu
 // Ensure the model file is downloaded and extracted before every build
 preBuild.dependsOn unzipModelFloat
 preBuild.dependsOn unzipModelQuant
+preBuild.dependsOn unzipModelInceptionV4Float
 preBuild.dependsOn cleanUnusedFiles
+repositories {
+    mavenCentral()
+}
 
 class DownloadUrlTask extends DefaultTask {
     @Input

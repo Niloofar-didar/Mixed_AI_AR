@@ -16,6 +16,7 @@ limitations under the License.
 package com.arcore.MixedAIAR;
 
 import android.app.Activity;
+
 import java.io.IOException;
 
 /** This classifier works with the float MobileNet model. */
@@ -42,6 +43,13 @@ public class ImageClassifierFloatMobileNet extends ImageClassifier {
     labelProbArray = new float[1][getNumLabels()];
   }
 
+  @Override
+  protected String getModelName() {
+    // you can download this file from
+    // see build.gradle for where to obtain this file. It should be auto
+    // downloaded into assets.
+    return "mobilenet_v1_1.0_224";
+  }
   @Override
   protected String getModelPath() {
     // you can download this file from
