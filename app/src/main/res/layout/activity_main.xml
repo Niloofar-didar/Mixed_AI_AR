@@ -48,10 +48,10 @@
 
     </com.google.android.material.appbar.AppBarLayout>
 
-<!--    <include-->
-<!--        android:id="@+id/include"-->
-<!--        layout="@layout/content_main"-->
-<!--        android:layout_height="640dp" />-->
+    <!--    <include-->
+    <!--        android:id="@+id/include"-->
+    <!--        layout="@layout/content_main"-->
+    <!--        android:layout_height="640dp" />-->
 
     <include
         android:id="@+id/include"
@@ -60,12 +60,12 @@
         android:layout_height="match_parent" />
 
     <!--    <include-->
-<!--        android:id="@+id/include"-->
-<!--        layout="@layout/content_main"-->
-<!--        android:layout_width="match_parent"-->
-<!--        android:layout_height="640dp"-->
-<!--        app:layout_anchor="@+id/include"-->
-<!--        app:layout_anchorGravity="center" />-->
+    <!--        android:id="@+id/include"-->
+    <!--        layout="@layout/content_main"-->
+    <!--        android:layout_width="match_parent"-->
+    <!--        android:layout_height="640dp"-->
+    <!--        app:layout_anchor="@+id/include"-->
+    <!--        app:layout_anchorGravity="center" />-->
 
 
 

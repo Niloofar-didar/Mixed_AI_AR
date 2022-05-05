@@ -18,7 +18,6 @@ package com.arcore.MixedAIAR;
 import android.app.Activity;
 import android.content.res.AssetFileDescriptor;
 import android.graphics.Bitmap;
-import android.os.Environment;
 import android.os.SystemClock;
 import android.text.SpannableString;
 import android.text.SpannableStringBuilder;
@@ -45,36 +44,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.PriorityQueue;
-
-import org.tensorflow.lite.Interpreter;
-import org.tensorflow.lite.gpu.GpuDelegate;
-import org.tensorflow.lite.nnapi.NnApiDelegate;
-import java.io.IOException;
-
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.File;
-import java.lang.Math;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.PrintStream;
-import java.io.PrintWriter;
-import java.io.InputStream;
-import java.util.stream.IntStream;
-import java.util.concurrent.TimeUnit;
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.PrintStream;
-import java.io.PrintWriter;
-import java.text.SimpleDateFormat;
-import java.util.Date;
 import java.util.*;
 import java.util.Queue;
 import java.util.concurrent.BlockingQueue;
@@ -187,15 +156,8 @@ public abstract class ImageClassifier {
   /** Labels corresponding to the output of the vision model. */
   private List<String> labelList;
 
-  List<Double> throughput= new ArrayList<>();
   List<Double> rTime= new ArrayList<>();// holds data of all response time collected but it is refreshed every 500 ms
   double periodicMeanRtime;// holds responsetime every 500ms
-  List<String> periodicCur= new ArrayList<>();// holds current time every 500ms
-  List<String> curTime= new ArrayList<>();// holds  data of current time of datacollection
-  List<String> labels= new ArrayList<>();
-  List<Integer> countL= new ArrayList<>();
-  List<String> periodicLabels= new ArrayList<>();
-  List<Integer> periodicCountL= new ArrayList<>();
 
   /** A ByteBuffer to hold image data, to be feed into Tensorflow Lite as inputs. */
   protected ByteBuffer imgData = null;
@@ -281,191 +243,15 @@ public abstract class ImageClassifier {
 //    Log.d(TAG, "Created a Tensorflow Lite Image Classifier.");
   }
 
-  /** Classifies a frame from the preview stream. */
-
-
-  SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss:SSS");
-  String path2= Environment.getExternalStorageDirectory()+"/Android/data/com.arcore.MixedAIAR/files";
-  int count=0;
-
-
-
-
-
-//   void classifyFrame2()  {// no access to UI thread
-//     if (tflite == null) {
-//       Log.e(TAG, "Image classifier has not been initialized; Skipped.");
-
-//     }
-
-//     File root = Environment.getExternalStorageDirectory();
-//     String path= root+ "/chair.jpg";
-//     Bitmap  bitmap = BitmapFactory.decodeFile(path);
-//     convertBitmapToByteBuffer(bitmap);
-//     bitmap.recycle();
-
-
-//     List<Thread> inf_thread = new ArrayList<>();
-//     final boolean[] onetWrite = {false};
-
-//     float desired= 16.6f;
-//     for(int i = 0; i< requests; i++) {//
-//       //if(breakC)
-//       // break;
-//       int finalI = i;
-//       inf_thread.add(i, new Thread() {//
-//         @Override
-//         public void run() {//
-
-//           double duration=0;
-//           try{
-//             //for(int i = 0; i< num; i++){
-//             while(true){
-//               if(breakC) {
-
-//                 if(!onetWrite[0]) // to write data one time -> not by all the threads!!!
-//                 { try (PrintWriter writer = new PrintWriter(new FileOutputStream(path2 + "/Response_t.csv", true))) {
-//                   onetWrite[0] =true;
-//                   int i = 0;
-//                   while (i < curTime.size() && i< rTime.size() && i< labels.size() && i< countL.size()) {
-
-//                     StringBuilder sbb = new StringBuilder();
-//                     sbb.append(curTime.get(i));
-//                     sbb.append(',');
-//                     sbb.append(labels.get(i));
-//                     sbb.append(',');
-//                     sbb.append(rTime.get(i));
-//                     sbb.append(',');
-//                     sbb.append(requests);
-//                     sbb.append(',');
-//                     sbb.append(model);
-//                     sbb.append(',');
-//                     sbb.append(countL.get(i));
-//                     sbb.append('\n');
-//                     writer.write(sbb.toString());
-//                     i++;
-//                   }
-
-//                 } catch (FileNotFoundException e) {
-//                   System.out.println(e.getMessage());
-//                 }
-
-
-//                 }
-//                 break;
-//               }
-
-
-//               if(duration<desired && duration != 0){
-//                 // waite for elapse time (16.6 - last_response_time//otherwise, start the inference immidiately.
-//                 long delay =(long) (desired - (float)last_response_time);
-//                 Thread.sleep(delay);
-//               }
-
-//               curTime.add(dateFormat.format(new Date()));
-
-//               double startTime = SystemClock.uptimeMillis();
-//               runInference();
-//               double endTime = SystemClock.uptimeMillis();
-//               rTime.add( (endTime - startTime));
-//               duration = endTime - startTime;
-//               countL.add(count);
-//               labels.add(deviceUsed());
-//               count++;
-
-//               Log.d(TAG, "Thread ID" + Integer.toString(finalI)+ " "+ count + "#iteration  inference time: " + Double.toString(duration) );
-
-//             }
-//           }
-//           catch (Exception e)
-//           {
-//             System.out.println( "Thread Exception Caught ID " + finalI +": " + e.getMessage());
-//             int count1 = 0;
-//             int maxTries = 3;
-//             while(true) {
-//               if(breakC) {
-//                 if(!onetWrite[0]) // to write data one time -> not by all the threads!!!
-//                 {
-//                   onetWrite[0] =true;
-//                   try (PrintWriter writer = new PrintWriter(new FileOutputStream(path2 + "/Response_t.csv", true))) {
-
-//                   int i = 0;
-//                     while (i < curTime.size() && i< rTime.size() && i< labels.size() && i< countL.size()) {
-
-//                       StringBuilder sbb = new StringBuilder();
-//                       sbb.append(curTime.get(i));
-//                       sbb.append(',');
-//                       sbb.append(labels.get(i));
-//                       sbb.append(',');
-//                       sbb.append(rTime.get(i));
-//                       sbb.append(',');
-//                       sbb.append(requests);
-//                       sbb.append(',');
-//                       sbb.append(model);
-//                       sbb.append(',');
-//                       sbb.append(countL.get(i));
-//                       sbb.append('\n');
-//                       writer.write(sbb.toString());
-//                       i++;
-//                     }
-
-//                 } catch (FileNotFoundException e2) {
-//                   System.out.println(e2.getMessage());
-//                 }
-
-
-//                 }
-
-//                 break;
-//               }
-
-//               try {
-//                 // long duration=0;
-
-//                 if(duration<desired && duration != 0){
-//                   // waite for elapse time (16.6 - last_response_time//otherwise, start the inference immidiately.
-//                   long delay =(long) (desired - (float)last_response_time);
-//                   Thread.sleep(delay);
-//                 }
-
-//                 double startTime = SystemClock.uptimeMillis();
-//                 runInference();
-//                 double endTime = SystemClock.uptimeMillis();
-//                 rTime.add( (endTime - startTime));
-//                 duration = endTime - startTime;
-//                 countL.add(count);
-//                 labels.add(deviceUsed());
-//                 count++;
-
-//                 Log.d(TAG, "Thread ID" + Integer.toString(finalI)+ " "+ count + "#iteration  inference time: " + Double.toString(duration) );
-//               } catch (Exception e2) {
-//                 if (++count1 == maxTries) {
-//                   System.out.println( "Three times trial Thread Exception Caught ID " + finalI +": " + e2.getMessage());
-
-//                }
-//               }
-//             }
-//           }
-//         }////nil added all the lines with // after the code
-//       });//
-//       if(inf_thread.get(i)!=null)
-//         inf_thread.get(i).start();//
-//     }
-
-//   }
-
-
-
-double getThr( double dur){
-
-  return Math.round( 1000*100/ dur  )/100;
+  /**Classifies frame, does not produce output*/
+void classifyFrame(Bitmap bitmap) {
+  convertBitmapToByteBuffer(bitmap);
+  runInference();
 
 }
 
-
+/**Classifies frame and produces output of top k results*/
 void classifyFrame(Bitmap bitmap, SpannableStringBuilder builder) {
-//    directory.mkdirs();
-//    File file = new File(directory, this.getModelPath()+".txt");
     String timeStamp = getTime();
     builder.clear();
     if (tflite == null) {
@@ -478,7 +264,7 @@ void classifyFrame(Bitmap bitmap, SpannableStringBuilder builder) {
     runInference();
     long endTime = SystemClock.uptimeMillis();
 
-
+    long nano = System.nanoTime();
     // Smooth the results across frames.
     applyFilter();
     long duration = endTime - startTime;
@@ -542,7 +328,7 @@ void classifyFrame(Bitmap bitmap, SpannableStringBuilder builder) {
     device = "CPU";
     recreateInterpreter();
   }
-  /** Run AI model on NNAPI */
+  /** Run AI model on NPU */
   public void useNNAPI() {
     nnapiDelegate = new NnApiDelegate();
     tfliteOptions.addDelegate(nnapiDelegate);

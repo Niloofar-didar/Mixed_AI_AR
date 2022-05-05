@@ -47,7 +47,7 @@ public class dataCol implements Runnable {
         sensitivity = new float[objC];
         tris_share = new float[objC];
 
-        coarse_Ratios=new float[]{1f,0.8f, 0.6f , 0.4f, 0.2f, 0.05f};
+
         //ArrayList <ArrayList<Float>> F_profit= new ArrayList<>();
         fProfit= new float[objC][coarse_Ratios.length];
         tRemainder= new float[objC][coarse_Ratios.length];
@@ -72,8 +72,8 @@ public class dataCol implements Runnable {
         double meanDk = 0; // mean current dis
         double meanDkk = 0; // mean of d in the next period-> you need to cal the average of predicted d for all the objects
 
-        meanThr = Camera2BasicFragment.getInstance().getThr();
-        meanThr= (double)Math.round((double)meanThr * 100) / 100;
+        meanThr =mInstance.getThroughput();
+        meanThr= (double)Math.round(meanThr * 100) / 100;
         totTris = mInstance.total_tris;
                 ///1000;
         for (int i = 0; i < mInstance.objectCount; i++) {
@@ -221,13 +221,13 @@ public class dataCol implements Runnable {
 
 
             //******************  RE modeling *************
-            double sum = 0;
+           // double sum = 0;
              double avgq = calculateMeanQuality();
 
-            double PRoAR =(double) Math.round((double)(avgq / mInstance.des_Q) * 100) / 100;
-            double PRoAI = (double) Math.round((double)(  meanThr / mInstance.des_Thr) * 100) / 100;
+            double PRoAR =(double) Math.round((avgq / mInstance.des_Q) * 100) / 100;
+            double PRoAI = (double) Math.round((  meanThr / mInstance.des_Thr) * 100) / 100;
             double reMsrd = PRoAR / PRoAI;
-            reMsrd= (double)Math.round((double)reMsrd * 100) / 100;
+            reMsrd= (double)Math.round(reMsrd * 100) / 100;
 
            // double predThr=  mInstance.thSlope * totTris + mInstance.thIntercept;
             double predThr=  mInstance.rohT * totTris + mInstance.rohD * meanDk + mInstance.delta;
@@ -327,7 +327,7 @@ public class dataCol implements Runnable {
                 else
                     mInstance.lastConscCounter=0;
 // now we calculate next period tris here :)
-                if(accmodel ==true && mInstance.lastConscCounter>=5 ) // the second condition is to skip change in nexttris for the first loop while we just had a change in tot tris
+                if(accmodel  && mInstance.lastConscCounter>=5 ) // the second condition is to skip change in nexttris for the first loop while we just had a change in tot tris
                      {
 
                         double nomin = 1 -((mInstance.alphaD + (mInstance.alphaH* mInstance.rohD))* meanDkk)
@@ -368,9 +368,9 @@ mInstance.prevtotTris=totTris;
 }//run
 
 
-   public int cleanOutArraysRE(double totTris, double meanDk, MainActivity mInstance){
+   public void cleanOutArraysRE(double totTris, double meanDk, MainActivity mInstance){
 
-       int index=0;
+       int index;
        if ( mInstance.trisRe.get(totTris).size() == 10)
        { // we keep inf of last 10 points
            double []disArray= mInstance.trisMeanDisk.get(totTris).stream()
@@ -382,7 +382,7 @@ mInstance.prevtotTris=totTris;
            mInstance.reParamList.get(totTris).remove(index);
        }
 
-       return index;
+      // return index;
    }
 
 
@@ -648,12 +648,7 @@ mInstance.prevtotTris=totTris;
             mInstance.total_tris = mInstance.total_tris - (mInstance.ratioArray[i] * mInstance.o_tris.get(i));// total =total -1*objtris
             mInstance.ratioArray[i] = coarse_Ratios[j];
 
-            mInstance.runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    mInstance.renderArray[i].decimatedModelRequest(mInstance.ratioArray[i], i, false);
-                }
-            });
+            mInstance.runOnUiThread(() -> mInstance.renderArray[i].decimatedModelRequest(mInstance.ratioArray[i], i, false));
             //Thread.sleep(3);
 
             mInstance.total_tris = mInstance.total_tris + (mInstance.ratioArray[i] *  mInstance.renderArray[i].orig_tris);// total = total + 0.8*objtris

@@ -17,39 +17,35 @@ import java.util.*;
 import java.util.Queue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CompletableFuture;
-import android.app.Activity;
-import android.app.ActivityManager;
-import android.app.Application;
-import android.app.DownloadManager;
-import android.content.ContextWrapper;
-import android.content.Intent;
+
+import android.graphics.Bitmap;
+import android.media.Image;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
+
 import android.os.SystemClock;
-import android.support.design.widget.Snackbar;
 import android.util.Log;
 
-import java.lang.ref.WeakReference;
-import java.util.Iterator;
 import java.util.LinkedList;
-import java.util.Queue;
-import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import android.net.Uri;
-import android.opengl.GLES20;
 import android.opengl.Matrix;
 import android.os.Bundle;
 import android.os.CountDownTimer;
-import android.os.Handler;
-import android.os.Looper;
-import android.os.Message;
-import android.support.v7.app.AlertDialog;
-import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.Toolbar;
+
+//import android.support.v7.app.AlertDialog;
+//import android.support.v7.app.AppCompatActivity;
+//import android.support.v7.widget.Toolbar;
 import android.util.Log;
+import androidx.appcompat.app.AlertDialog;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+
 import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -57,7 +53,6 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.CompoundButton;
-import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.SeekBar;
 import android.widget.Spinner;
@@ -72,6 +67,7 @@ import com.google.ar.core.HitResult;
 import com.google.ar.core.Plane;
 import com.google.ar.core.Trackable;
 import com.google.ar.core.TrackingState;
+import com.google.ar.core.exceptions.NotYetAvailableException;
 import com.google.ar.sceneform.AnchorNode;
 import com.google.ar.sceneform.Node;
 import com.google.ar.sceneform.math.Vector3;
@@ -85,14 +81,9 @@ import java.util.ArrayList;
 import java.util.List;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ListMultimap;
-import com.google.common.collect.Multimap;
 
 import java.lang.Math;
 import java.io.InputStream;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
-import java.util.stream.IntStream;
 
 import static java.lang.Math.abs;
 
@@ -105,6 +96,10 @@ import static java.lang.Math.abs;
 */
 public class MainActivity extends AppCompatActivity implements AdapterView.OnItemSelectedListener {
 
+    // BitmapUpdaterApi gets bitmap version of ar camera frame each time
+    // on onTracking is called. Needed for DynamicBitmapSource
+    private final BitmapUpdaterApi bitmapUpdaterApi = new BitmapUpdaterApi();
+    static List<AiItemsViewModel> mList = new ArrayList<>();
 
     private ArFragment fragment;
     private PointerDrawable pointer = new PointerDrawable();
@@ -635,6 +630,126 @@ else{
 
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        ////////////////
+        // manyAI
+        ////////////////
+
+        /**coroutine flow source that captures camera frames from updateTracking() function*/
+        DynamicBitmapSource source = new DynamicBitmapSource(bitmapUpdaterApi);
+        /** coroutine flow source that passes static jpeg*/
+//        BitmapSource source = new BitmapSource(this, "chair_600.jpg");
+
+//        for(int i = 0; i<20; i++) {
+        mList.add(new AiItemsViewModel());
+//        }
+        // Define the recycler view that holds the AI settings cards
+        RecyclerView recyclerView_aiSettings = findViewById(R.id.recycler_view_aiSettings);
+        AiRecyclerviewAdapter adapter = new AiRecyclerviewAdapter(mList, source, this);
+
+        // set the adapter and layout manager for the recycler view
+        recyclerView_aiSettings.setAdapter(new AiRecyclerviewAdapter(mList, source, this));
+        recyclerView_aiSettings.setLayoutManager(new LinearLayoutManager(this, RecyclerView.HORIZONTAL, false));
+
+
+        // Set up UI elements
+        Switch switchToggleStream = (Switch) findViewById(R.id.switch_streamToggle);
+        Button buttonPushAiTask = (Button) findViewById(R.id.button_pushAiTask);
+        Button buttonPopAiTask = (Button) findViewById(R.id.button_popAiTask);
+        TextView textNumOfAiTasks = (TextView) findViewById(R.id.text_numOfAiTasks);
+
+        buttonPushAiTask.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View view) {
+                // get num of ai tasks from textView
+                int numAiTasks = Integer.parseInt(textNumOfAiTasks.getText().toString());
+                // check for max limit
+                if (numAiTasks < 20) {
+                    numAiTasks++;
+                    // stop stream
+                    switchToggleStream.setChecked(false);
+                    // update num of AI tasks
+                    textNumOfAiTasks.setText(String.format("%d", numAiTasks));
+                    mList.add(new AiItemsViewModel());
+                    adapter.setMList(mList);
+                    recyclerView_aiSettings.setAdapter(adapter);
+                }
+            }
+        });
+
+        buttonPopAiTask.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View view) {
+                // get num of ai tasks from textView
+                int numAiTasks = Integer.parseInt(textNumOfAiTasks.getText().toString());
+                // check for max limit
+                if (numAiTasks > 1) {
+                    numAiTasks--;
+                    // stop stream
+                    switchToggleStream.setChecked(false);
+                    // update num of AI tasks
+                    textNumOfAiTasks.setText(String.format("%d", numAiTasks));
+                    mList.remove(numAiTasks);
+                    adapter.setMList(mList);
+                    recyclerView_aiSettings.setAdapter(adapter);
+                }
+            }
+        });
+
+        switchToggleStream.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                if (isChecked) {
+                    Boolean noNullClassifiers = true;
+                    for (int i = 0; i < mList.size(); i++) {
+                        if (mList.get(i).getClassifier()==null) {
+                            noNullClassifiers = false;
+                        }
+                    }
+
+                    // The toggle is enabled
+
+                    if(noNullClassifiers) {
+                        source.startStream();
+                        for (int i = 0; i < mList.size(); i++) {
+//                        Log.d("CHECKCHG", String.valueOf((mList.get(i).getClassifier()==null)));
+//                            mList.get(i).getCollector().setEnd(System.nanoTime()/1000000);
+                            mList.get(i).getCollector().startCollect();
+                        }
+                    } else {
+                        Toast toast = Toast.makeText(MainActivity.this,
+                                "Set all AI models & Devices before continuing", Toast.LENGTH_LONG);
+                        toast.show();
+                        switchToggleStream.setChecked(false);
+                    }
+                } else {
+                    // The toggle is disabled
+                    source.pauseStream();
+                    for (int i = 0; i < mList.size(); i++) {
+                        mList.get(i).getCollector().pauseCollect();
+                    }
+                }
+            }
+        });
+
+
+//        RecyclerView aiOptionsContainer = findViewById(R.id.recycler_view_aiSettings);
+        Button toggleUi = (Button) findViewById(R.id.button_toggleUi);
+        toggleUi.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View view) {
+//                getThroughput();
+                if(recyclerView_aiSettings.getVisibility()==View.VISIBLE)
+                    recyclerView_aiSettings.setVisibility(View.INVISIBLE);
+                else {
+                    recyclerView_aiSettings.setVisibility(View.VISIBLE);
+                }
+                toggleAiPushPop();
+            }
+        });
+        //////////////////////////////////////////////////////////////
+
+
+
+        // AR //
+
+
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         TextView posText1 = (TextView) findViewById(R.id.objnum);
@@ -1577,7 +1692,8 @@ else{
 
 
                        // long curTime= SystemClock.uptimeMillis();
-                        if( Camera2BasicFragment.getInstance().classifier!=null) // in the begining we collect data for zero tris
+
+                        if(switchToggleStream.isChecked()) // in the begining we collect data for zero tris
                             new dataCol(MainActivity.this).run(); // this is to collect mean thr, total_tris. average dis
 
 
@@ -1614,6 +1730,26 @@ else{
 //
 //
 //   }
+
+    static double getThroughput(){
+        Log.d("size", String.valueOf(mList.size()));
+        long[] meanResponseTimes = new long[mList.size()];
+        BitmapCollector tempCollector;
+        for(int i=0; i<mList.size(); i++) {
+            tempCollector = mList.get(i).getCollector();
+            int total = tempCollector.getNumOfTimesExecuted();
+            if(total != 0) {
+                meanResponseTimes[i]=tempCollector.getTotalResponseTime()/tempCollector.getNumOfTimesExecuted();
+                mList.get(i).getCollector().setNumOfTimesExecuted(0);
+                mList.get(i).getCollector().setTotalResponseTime(0);
+                mList.get(i).getCollector().setEnd(System.nanoTime()/1000000);
+            }
+        }
+//        Log.d("rt", String.valueOf(meanResponseTimes[0]));
+        double avg = Arrays.stream(meanResponseTimes).average().orElse(Double.NaN);
+//        Log.d("Throughput", "rt: " +String.valueOf(avg) +" thrpt: " +String.valueOf((1/avg)*1000));
+        return (1/avg)*1000;
+    }
 
 
 
@@ -2181,9 +2317,48 @@ private float computeWidth(ArrayList<Float> point){
             }
         }
     }
+    /**
+     * Converts arCore Frame to bitmap, passes to BitmapUpdaterApi
+     * TODO: Move this function to background thread.  Only decoding/encoding to bitmap, not high complexity fxn
+     * */
+    private void passFrameToBitmapUpdaterApi(Frame frame) throws NotYetAvailableException {
+        YuvToRgbConverter converter = new YuvToRgbConverter(this);
+        Image image = frame.acquireCameraImage();
+        Bitmap bmp = Bitmap.createBitmap(image.getWidth(), image.getHeight(), Bitmap.Config.ARGB_8888);
+        converter.yuvToRgb(image, bmp); /** line to be multithreaded*/
+        image.close();
+
+//        bitmapUpdaterApi.updateBitmap(bmp);
+        bitmapUpdaterApi.setLatestBitmap(bmp);
+
+        ///////writes images as file to storage for testing
+//        File path = this.getExternalFilesDir(null);
+//        File dir = new File(path, "data");
+//        try {
+//            File file = new File(dir, bmp+".jpeg");
+//            FileOutputStream fOut = new FileOutputStream(file);
+//            bmp.compress(Bitmap.CompressFormat.JPEG, 85, fOut);
+//            fOut.flush();
+//            fOut.close();
+//        }
+//        catch (Exception e) {
+//            e.printStackTrace();
+////            LOG.i(null, "Save file error!");
+////            return false;
+//        }
+//        System.out.println(bmp);
+    }
 
     private boolean updateTracking() {
         Frame frame = fragment.getArSceneView().getArFrame();//OK not being used for now
+        if(frame!=null) {
+            try {
+                /**AR passes frame to AI*/
+                passFrameToBitmapUpdaterApi(frame);
+            } catch (NotYetAvailableException e) {
+                e.printStackTrace();
+            }
+        }
         boolean wasTracking = isTracking;
         isTracking = frame != null &&
                 frame.getCamera().getTrackingState() == TrackingState.TRACKING;
@@ -3447,7 +3622,24 @@ public float delta (float a, float b , float c1,float creal,  float d, float gam
 
         return true;
     }
+    /**
+     * Hide buttons to change amount of AI tasks
+     * */
+    public void toggleAiPushPop() {
+        Button buttonPushAiTask = (Button) findViewById(R.id.button_pushAiTask);
+        Button buttonPopAiTask = (Button) findViewById(R.id.button_popAiTask);
+        TextView textNumOfAiTasks = (TextView) findViewById(R.id.text_numOfAiTasks);
 
-
+        if (buttonPushAiTask.getVisibility()==View.VISIBLE) {
+            buttonPushAiTask.setVisibility(View.INVISIBLE);
+            buttonPopAiTask.setVisibility(View.INVISIBLE);
+            textNumOfAiTasks.setVisibility(View.INVISIBLE);
+        }
+        else {
+            buttonPushAiTask.setVisibility(View.VISIBLE);
+            buttonPopAiTask.setVisibility(View.VISIBLE);
+            textNumOfAiTasks.setVisibility(View.VISIBLE);
+        }
+    }
 
 }
