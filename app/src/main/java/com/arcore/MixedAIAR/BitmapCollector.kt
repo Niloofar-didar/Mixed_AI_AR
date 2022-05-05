@@ -56,6 +56,7 @@ class BitmapCollector(
     fun pauseCollect() {
         run = false
         job?.cancel()
+//        resetRtData()
     }
 
     /**

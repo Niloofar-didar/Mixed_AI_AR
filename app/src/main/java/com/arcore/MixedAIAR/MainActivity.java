@@ -1712,7 +1712,7 @@ else{
 
                 },
                 0,      // run first occurrence immediately
-                2000);
+                1000);
 
         // periodic tris collection
 

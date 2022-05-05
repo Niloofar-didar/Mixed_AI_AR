@@ -78,7 +78,7 @@ public class dataCol implements Runnable {
                 ///1000;
         for (int i = 0; i < mInstance.objectCount; i++) {
             meanDk += (double) mInstance.renderArray[i].return_distance();
-            meanDkk += mInstance.predicted_distances.get(i).get(1); //  // gets the first time, next 2s-- 3s of every object, ie. d1 of every obj
+            meanDkk += mInstance.predicted_distances.get(i).get(0); //  // gets the first time, next 2s-- 3s of every object, ie. d1 of every obj
         }
 
         meanDk /= mInstance.objectCount;
@@ -295,11 +295,14 @@ public class dataCol implements Runnable {
                             .toArray(double[][]::new);
                     if ( variousTris>=3 ){
                     mLinearRegression regression = new mLinearRegression(reRegParameters, RE);
+                    if( ! Double.isNaN( regression.beta(0)))
+                        {
                     mInstance.alphaT = regression.beta(0);
                     mInstance.alphaD = regression.beta(1);
                    mInstance.alphaH = regression.beta(2);
                     mInstance.zeta = regression.beta(3);
                     trainedRE=true;}
+                    }
 
                 }
 
