@@ -56,6 +56,7 @@ class BitmapCollector(
     fun pauseCollect() {
         run = false
         job?.cancel()
+        Log.d("CANCEL", "Classifier $index cancelled")
 //        resetRtData()
     }
 
@@ -66,6 +67,7 @@ class BitmapCollector(
     fun startCollect() = runBlocking <Unit>{
         run = true
         resetRtData()
+        Log.d("CANCEL", "Starting classifier $index")
         launch {
             collectStream()
         }
@@ -87,30 +89,35 @@ class BitmapCollector(
 //        file.appendText("timestamp,response,guess3,acc3,guess2,acc2,guess1,acc1\n")
 //        file.appendText("overhead,classification Time,response time\n ")
         job = viewModelScope.launch(Dispatchers.IO) {
-            bitmapSource?.bitmapStream?.collect {
+//            if(run) {
 
-                val bitmap = Bitmap.createScaledBitmap(
-                    it,
-                    classifier!!.imageSizeX,
-                    classifier.imageSizeY,
-                    true
-                )
+                bitmapSource?.bitmapStream?.collect {
+                    Log.d("CANCEL", "$index collected $it")
+                    if(it!=null && run) {
+                        val bitmap = Bitmap.createScaledBitmap(
+                            it,
+                            classifier!!.imageSizeX,
+                            classifier.imageSizeY,
+                            true
+                        )
 
-                start = System.nanoTime()/1000000
-                if(end!=0L) {
-                    overhead = start-end
+                        start = System.nanoTime()/1000000
+                        if(end!=0L) {
+                            overhead = start-end
+                        }
+                        classifier.classifyFrame(bitmap)
+                        end = System.nanoTime()/1000000
+                        classificationTime = end-start
+                        responseTime=overhead+classificationTime
+                        numOfTimesExecuted++
+                        totalResponseTime+=responseTime
+                        Log.d("times", "${overhead},${classificationTime},${responseTime}")
+                        outputText.append("${overhead},${classificationTime},${responseTime}\n")
+        //                file.appendText(outputText.toString())
+                    }
                 }
-                classifier.classifyFrame(bitmap)
-                end = System.nanoTime()/1000000
-                classificationTime = end-start
-                responseTime=overhead+classificationTime
-                numOfTimesExecuted++
-                totalResponseTime+=responseTime
-                Log.d("times", "${overhead},${classificationTime},${responseTime}")
-                outputText.append("${overhead},${classificationTime},${responseTime}\n")
-//                file.appendText(outputText.toString())
             }
-        }
+//        }
     }
 
     fun resetRtAndEndTime() {

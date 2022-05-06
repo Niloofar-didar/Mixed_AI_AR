@@ -1,6 +1,7 @@
 package com.arcore.MixedAIAR
 
 import android.graphics.Bitmap
+import android.util.Log
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
@@ -20,16 +21,23 @@ class DynamicBitmapSource(private val bitmapUpdaterApi : BitmapUpdaterApi) {
                 // get latest bitmap from BitmapUpdaterApi
 //                val bitmapStream = bitmapUpdaterApi.latestBitmap
                 emit(bitmapUpdaterApi.latestBitmap)
+
+//                if(!run) {
+//                    return@flow
+//                }
             }
         }.flowOn(Dispatchers.Default)
     }
 
     fun startStream() {
         run = true
+        Log.d("CANCEL", "STARTING STREAM")
         runStream()
     }
 
     fun pauseStream() {
         run = false
+//        bitmapUpdaterApi.latestBitmap=null
+        Log.d("CANCEL", "STOPPING STREAM")
     }
 }
