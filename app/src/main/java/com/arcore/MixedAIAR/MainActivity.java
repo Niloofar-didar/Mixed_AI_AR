@@ -697,6 +697,9 @@ else{
         switchToggleStream.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                 if (isChecked) {
+                    /** Check for null classifiers.
+                     *  This will not let you start the stream if any are found
+                     */
                     Boolean noNullClassifiers = true;
                     for (int i = 0; i < mList.size(); i++) {
                         if (mList.get(i).getClassifier()==null) {
@@ -721,10 +724,15 @@ else{
                     }
                 } else {
                     // The toggle is disabled
-                    source.pauseStream();
+
                     for (int i = 0; i < mList.size(); i++) {
-                        mList.get(i).getCollector().pauseCollect();
+//                        if (mList.get(i).getCollector() != null) {
+                            mList.get(i).getCollector().pauseCollect();
+
+//                        }
                     }
+                    source.pauseStream();
+
                 }
             }
         });
