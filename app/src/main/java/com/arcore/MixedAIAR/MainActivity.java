@@ -1747,10 +1747,11 @@ else{
             tempCollector = mList.get(i).getCollector();
             int total = tempCollector.getNumOfTimesExecuted();
             if(total != 0) {
-                meanResponseTimes[i]=tempCollector.getTotalResponseTime()/tempCollector.getNumOfTimesExecuted();
-                mList.get(i).getCollector().setNumOfTimesExecuted(0);
-                mList.get(i).getCollector().setTotalResponseTime(0);
-                mList.get(i).getCollector().setEnd(System.nanoTime()/1000000);
+                meanResponseTimes[i]=tempCollector.getThroughput();//getTotalResponseTime()/tempCollector.getNumOfTimesExecuted();
+                tempCollector.resetRtData();
+//                mList.get(i).getCollector().setNumOfTimesExecuted(0);
+//                mList.get(i).getCollector().setTotalResponseTime(0);
+//                mList.get(i).getCollector().setEnd(System.nanoTime()/1000000);
             }
         }
 //        Log.d("rt", String.valueOf(meanResponseTimes[0]));

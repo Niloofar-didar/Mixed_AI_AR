@@ -112,13 +112,14 @@ class AiRecyclerviewAdapter(var mList: MutableList<AiItemsViewModel>, val stream
      * Updates model to parameters chosen by pressing ai_settings_card_view_design
      * Stops collector, stops bitmap stream
      */
-    fun updateActiveModel(holder: ViewHolder, itemsView : AiItemsViewModel, position: Int) {
+    private fun updateActiveModel(holder: ViewHolder, itemsView : AiItemsViewModel, position: Int) {
         val switchToggleStream = activity.findViewById<Switch>(R.id.switch_streamToggle)
 
 //        if(itemsView.collector?.run == true) {
 //            itemsView.collector?.pauseCollect()
         if (switchToggleStream.isChecked) {
-            switchToggleStream.isChecked = false
+//            switchToggleStream.isChecked = false
+            itemsView.collector?.pauseCollect()
             sleep(50)
         }
 //        }
@@ -190,6 +191,9 @@ class AiRecyclerviewAdapter(var mList: MutableList<AiItemsViewModel>, val stream
                 "Model: ${itemsView.classifier?.modelName}\n" +
                 "Device: ${itemsView.classifier?.device}"
         itemsView.collector = BitmapCollector(streamSource, itemsView.classifier, position, activity)
+        if (switchToggleStream.isChecked) {
+            itemsView.collector!!.startCollect()
+        }
     }
 
 

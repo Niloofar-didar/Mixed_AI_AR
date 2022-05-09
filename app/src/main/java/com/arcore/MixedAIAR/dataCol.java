@@ -17,6 +17,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -58,6 +59,22 @@ public class dataCol implements Runnable {
 
     }
 
+    public void writeOutput(double throughput) {
+        SimpleDateFormat format=new SimpleDateFormat("HH.mm.ss.SSSS", Locale.getDefault());
+        String currentFolder = mInstance.getExternalFilesDir(null).getAbsolutePath();
+        String FILEPATH = currentFolder + File.separator + "data/" + MainActivity.mList.size()+"_throughput.csv";
+
+        try (PrintWriter writer = new PrintWriter(new FileOutputStream(FILEPATH, true))) {
+            StringBuilder sb = new StringBuilder();
+            sb.append(throughput);
+            sb.append('\n');
+            writer.write(sb.toString());
+            System.out.println("done!");
+        } catch (FileNotFoundException e) {
+            System.out.println(e.getMessage());
+        }
+    }
+
     @Override
     public void run() {
 
@@ -73,6 +90,7 @@ public class dataCol implements Runnable {
         double meanDkk = 0; // mean of d in the next period-> you need to cal the average of predicted d for all the objects
 
         meanThr =mInstance.getThroughput();
+        writeOutput(meanThr);
         meanThr= (double)Math.round(meanThr * 100) / 100;
         totTris = mInstance.total_tris;
                 ///1000;
