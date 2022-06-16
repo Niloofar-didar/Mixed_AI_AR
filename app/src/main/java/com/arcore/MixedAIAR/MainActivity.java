@@ -39,7 +39,6 @@ import android.os.CountDownTimer;
 //import android.support.v7.app.AlertDialog;
 //import android.support.v7.app.AppCompatActivity;
 //import android.support.v7.widget.Toolbar;
-import android.util.Log;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
@@ -191,7 +190,8 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
     float bgpu=44.82908722f;
     float bwidth= 600;
 
-
+    private String[] scenarioList = null;
+    private String currentScenario = null;
 
     List<String> mLines = new ArrayList<>();
     //  List<String> time_tris = new ArrayList<>();
@@ -1048,6 +1048,16 @@ else{
             Log.e("AssetReading", e.getMessage());
         }
 
+        // set up scenario list
+        try {
+            scenarioList = getAssets().list("scenarios");
+            for (int i = 0; i < scenarioList.length; ++i) {
+                scenarioList[i] = scenarioList[i].substring(0, scenarioList[i].length() - 4);
+            }
+        } catch (IOException e) {
+            Log.e("ScenarioReading", e.getMessage());
+        }
+
         //setup the model drop down menu
         Spinner modelSpinner = (Spinner) findViewById(R.id.modelSelect);
         modelSpinner.setOnItemSelectedListener(this);
@@ -1099,6 +1109,12 @@ else{
 
         policy = policySpinner.getSelectedItem().toString();
 
+        Spinner scenarioSpinner = (Spinner) findViewById(R.id.scenario);
+        scenarioSpinner.setOnItemSelectedListener(this);
+        ArrayAdapter<String> scenarioSelectAdapter = new ArrayAdapter<String>(MainActivity.this,
+                android.R.layout.simple_list_item_1, scenarioList);
+        scenarioSelectAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        scenarioSpinner.setAdapter(scenarioSelectAdapter);
 
         //decimate all obj at the same time
         Switch referenceObjectSwitch = (Switch) findViewById(R.id.refSwitch);
@@ -1355,7 +1371,7 @@ else{
                     float original_tris=excel_tris.get(excelname.indexOf(currentModel));
                     renderArray[objectCount] = new decimatedRenderable(modelSpinner.getSelectedItem().toString(),original_tris);
                     addObject(Uri.parse("models/" + currentModel + ".sfb"), renderArray[objectCount]);
-                   
+
 
 //nill temporary oct 24
 //                    renderArray[objectCount] = new decimatedRenderable(modelSpinner.getSelectedItem().toString());
@@ -1569,6 +1585,149 @@ else{
                 current_thread.clear();
                 decimate_thread.clear();
                 renderArray = new baseRenderable[obj_count];
+            }
+        });
+
+        Button autoPlacementButton = (Button) findViewById(R.id.autoPlacement);
+        autoPlacementButton.setOnClickListener(view -> new Thread(() -> {
+            try {
+                InputStream inputStream = getResources().getAssets().open("scenarios" + File.separator + currentScenario + ".csv");
+                InputStreamReader inputStreamReader = new InputStreamReader(inputStream);
+//                        String curFolder = getExternalFilesDir(null).getAbsolutePath();
+//                        String filepath = curFolder + File.separator + "scenarios" + File.separator + "scenario1.csv";
+//                        InputStreamReader inputStreamReader = new InputStreamReader(new BufferedInputStream(new FileInputStream(filepath)));
+
+                BufferedReader br = new BufferedReader(inputStreamReader);
+                br.readLine();  // column names
+
+                AiItemsViewModel testView = new AiItemsViewModel();
+                List<String> aiModels = testView.getModels();
+                List<String> devices = testView.getDevices();
+
+                runOnUiThread(() -> {
+                    final int[] i = {0};
+                    countDownTimer = new CountDownTimer(Long.MAX_VALUE, 1000) {
+                        @Override
+                        public void onTick(long millisUntilFinished) {
+                            i[0] = (i[0] + 1) % 10;
+                            if (i[0] != 0) {
+                                runOnUiThread(() -> Toast.makeText(MainActivity.this, "" + i[0], Toast.LENGTH_SHORT).show());
+                                return;
+                            }
+
+                            // tick per 10 seconds, reading new line each time
+                            try {
+                                String line = br.readLine();
+                                if (line == null) {
+                                    countDownTimer.cancel();
+                                    runOnUiThread(() -> Toast.makeText(MainActivity.this, "Finished loading preset placements", Toast.LENGTH_LONG).show());
+                                    return;
+                                }
+
+                                String[] cols = line.split(",");
+                                currentModel = cols[0];
+                                float xOffset = Float.parseFloat(cols[1]);
+                                float yOffset = Float.parseFloat(cols[2]);
+                                int tasks = Integer.parseInt(cols[3]);
+                                int threads = Integer.parseInt(cols[4]);
+                                String aiModel = cols[5];
+                                String device = cols[6];
+
+                                int numAiTasks = Integer.parseInt(textNumOfAiTasks.getText().toString());
+                                // check for max limit
+
+                                if (numAiTasks < tasks) {
+                                    while (numAiTasks < tasks) {
+                                        numAiTasks++;
+                                        // stop stream
+                                        switchToggleStream.setChecked(false);
+                                        // update num of AI tasks
+                                        textNumOfAiTasks.setText(String.format("%d", numAiTasks));
+                                        mList.add(new AiItemsViewModel());
+                                        adapter.setMList(mList);
+                                        recyclerView_aiSettings.setAdapter(adapter);
+                                    }
+                                } else {
+                                    while (numAiTasks > tasks) {
+                                        numAiTasks--;
+                                        // stop stream
+                                        switchToggleStream.setChecked(false);
+                                        // update num of AI tasks
+                                        textNumOfAiTasks.setText(String.format("%d", numAiTasks));
+                                        mList.remove(numAiTasks);
+                                        adapter.setMList(mList);
+                                        recyclerView_aiSettings.setAdapter(adapter);
+                                    }
+                                }
+
+                                for (int i = 0; i < mList.size(); ++i) {
+                                    adapter.updateActiveModel(aiModels.indexOf(aiModel), devices.indexOf(device), threads, mList.get(i), i);
+                                    //                                        TextView aiTextInfo = (TextView) findViewById(R.id.textView_aiModelInfo);
+                                    //                                        Toast.makeText(MainActivity.this, String.format("Threads: %d\nModel: %s\nDevice: %s",
+                                    //                                                mList.get(i).getClassifier().getNumThreads(), mList.get(i).getClassifier().getModelName(), mList.get(i).getClassifier().getDevice()), Toast.LENGTH_LONG).show();
+                                }
+
+                                policy = policySpinner.getSelectedItem().toString();
+
+                                modelSpinner.setSelection(modelSelectAdapter.getPosition(currentModel));
+                                float original_tris = excel_tris.get(excelname.indexOf(currentModel));
+                                renderArray[objectCount] = new decimatedRenderable(currentModel, original_tris);
+                                addObject(Uri.parse("models/" + currentModel + ".sfb"), renderArray[objectCount], xOffset, yOffset);
+                                Toast.makeText(MainActivity.this,
+                                        String.format("Model: %s Pos: (%f, %f) Tasks: %d Threads: %d AIModel: %s Device: %s",
+                                                currentModel, xOffset, yOffset, tasks, threads, aiModel, device), Toast.LENGTH_LONG).show();
+
+                            } catch (IOException e) {
+                                e.printStackTrace();
+                            }
+                        }
+
+                        @Override
+                        public void onFinish() {
+                            runOnUiThread(() -> Toast.makeText(MainActivity.this, "Finished placement", Toast.LENGTH_LONG).show());
+                        }
+                    }.start();
+                });
+            } catch (IOException e) {
+                e.printStackTrace();
+                runOnUiThread(() -> Toast.makeText(MainActivity.this, e.toString(), Toast.LENGTH_LONG).show());
+            }
+        }).start());
+
+        Button savePlacementButton = (Button) findViewById(R.id.savePlacement);
+        savePlacementButton.setOnClickListener(view -> {
+            String curFolder = getExternalFilesDir(null).getAbsolutePath();
+            String filepath = curFolder + File.separator + "scenarios" + File.separator + currentScenario + ".csv";
+            try (PrintWriter printWriter = new PrintWriter(new FileOutputStream(filepath, false))) {
+                StringBuilder sbSave = new StringBuilder();
+
+                // column names
+                sbSave.append("model")
+                    .append(",").append("xOffset")
+                    .append(",").append("yOffset")
+                    .append(",").append("tasks")
+                    .append(",").append("threads")
+                    .append(",").append("aimodel")
+                    .append(",").append("device")
+                    .append("\n");
+
+                android.graphics.Point center = getScreenCenter();
+                for (int i = 0; i < objectCount; ++i) {
+                    sbSave.append(renderArray[i].fileName)
+                        .append(",").append(fragment.getArSceneView().getScene().getCamera().worldToScreenPoint(renderArray[i].baseAnchor.getWorldPosition()).x - center.x)
+                        .append(",").append(fragment.getArSceneView().getScene().getCamera().worldToScreenPoint(renderArray[i].baseAnchor.getWorldPosition()).y - center.y)
+                        .append(",").append(textNumOfAiTasks.getText().toString())
+                        .append(",").append(mList.get(0).getClassifier().getNumThreads())
+                        .append(",").append(mList.get(0).getClassifier().getModelName())
+                        .append(",").append(mList.get(0).getClassifier().getDevice())
+                        .append("\n");
+                }
+                printWriter.write(sbSave.toString());
+                Toast.makeText(MainActivity.this, String.format("Saved %d model placement(s)", objectCount), Toast.LENGTH_LONG).show();
+
+            } catch (FileNotFoundException e) {
+                e.printStackTrace();
+                Toast.makeText(MainActivity.this, e.toString(), Toast.LENGTH_LONG).show();
             }
         });
 
@@ -1944,6 +2103,9 @@ else{
                 currentModel = parent.getItemAtPosition(pos).toString();
                 break;
 
+            case R.id.scenario:
+                currentScenario = parent.getItemAtPosition(pos).toString();
+                break;
 //            case R.id.userScoreSpinner:
 //                for (int i = 0; i < objectCount; i++) {
 //                    if (renderArray[i].baseAnchor.isSelected())
@@ -3035,7 +3197,29 @@ public float delta (float a, float b , float c1,float creal,  float d, float gam
 
     }
 
+    private void addObject(Uri model, baseRenderable renderArrayObj, float xOffset, float yOffset) {
+        Frame frame = fragment.getArSceneView().getArFrame();
+        android.graphics.Point pt = getScreenCenter();
+        List<HitResult> hits;
+        if (frame != null) {
+            hits = frame.hitTest(pt.x + xOffset, pt.y + yOffset);
+            for (HitResult hit : hits) {
+                Trackable trackable = hit.getTrackable();
+                if (trackable instanceof Plane &&
+                        ((Plane) trackable).isPoseInPolygon(hit.getHitPose())) {
+                    Anchor newAnchor = hit.createAnchor();
+                    placeObject(fragment, newAnchor, model, renderArrayObj);
 
+                    break;
+                }
+            }
+
+        }
+
+
+
+
+    }
 
     private void placeObject(ArFragment fragment, Anchor anchor, Uri model, baseRenderable renderArrayObj) { ;
 

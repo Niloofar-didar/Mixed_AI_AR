@@ -9,7 +9,6 @@
     tools:showIn="@layout/activity_main">
 
     <androidx.recyclerview.widget.RecyclerView
-        android:translationZ="90dp"
         android:id="@+id/recycler_view_aiSettings"
         android:layout_width="match_parent"
         android:layout_height="320dp"
@@ -17,6 +16,7 @@
         android:background="#513400"
         android:orientation="horizontal"
         android:scrollbars="horizontal"
+        android:translationZ="90dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintVertical_bias="1.0"
@@ -24,17 +24,17 @@
         tools:listitem="@layout/ai_settings_card_view_design" />
 
 
-<!--    <fragment-->
-<!--        android:id="@+id/sceneform_fragment"-->
-<!--        android:name="com.arcore.jinghuaz.demo.WritingArFragment"-->
-<!--        android:layout_width="403dp"-->
-<!--        android:layout_height="558dp"-->
-<!--        app:layout_constraintBottom_toTopOf="@id/gallery_layout"-->
-<!--        app:layout_constraintEnd_toEndOf="parent"-->
-<!--        app:layout_constraintStart_toStartOf="parent"-->
-<!--        app:layout_constraintTop_toTopOf="parent"-->
-<!--        app:layout_constraintVertical_chainStyle="spread"-->
-<!--        app:layout_constraintVertical_weight="9" />-->
+    <!--    <fragment-->
+    <!--        android:id="@+id/sceneform_fragment"-->
+    <!--        android:name="com.arcore.jinghuaz.demo.WritingArFragment"-->
+    <!--        android:layout_width="403dp"-->
+    <!--        android:layout_height="558dp"-->
+    <!--        app:layout_constraintBottom_toTopOf="@id/gallery_layout"-->
+    <!--        app:layout_constraintEnd_toEndOf="parent"-->
+    <!--        app:layout_constraintStart_toStartOf="parent"-->
+    <!--        app:layout_constraintTop_toTopOf="parent"-->
+    <!--        app:layout_constraintVertical_chainStyle="spread"-->
+    <!--        app:layout_constraintVertical_weight="9" />-->
 
 
     <fragment
@@ -64,7 +64,7 @@
         app:layout_constraintVertical_weight="1">
 
 
-                <Spinner
+        <Spinner
             android:id="@+id/MDE"
             android:layout_width="37dp"
             android:layout_height="wrap_content"
@@ -130,7 +130,7 @@
             android:layout_alignParentRight="true"
             android:layout_gravity="right"
             android:layout_marginTop="-4dp"
-            android:layout_marginRight="8dp"
+            android:layout_marginRight="15dp"
             android:text="Place Object" />
 
         <Spinner
@@ -142,6 +142,17 @@
             android:layout_alignParentBottom="true"
             android:layout_marginLeft="41dp"
             android:layout_marginBottom="25dp"
+            android:visibility="visible" />
+
+        <Spinner
+            android:id="@+id/scenario"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentLeft="true"
+
+            android:layout_alignParentBottom="true"
+            android:layout_marginLeft="41dp"
+            android:layout_marginBottom="1dp"
             android:visibility="visible" />
 
         <Switch
@@ -185,7 +196,7 @@
             android:layout_marginBottom="26dp"
             android:visibility="invisible" />
 
-                <Spinner
+        <Spinner
             android:id="@+id/Bwidth"
             android:layout_width="38dp"
             android:layout_height="14dp"
@@ -214,8 +225,8 @@
         android:id="@+id/clearButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="600dp"
-        android:layout_marginRight="144dp"
+        android:layout_marginTop="580dp"
+        android:layout_marginRight="16dp"
         android:text="Clear"
         app:layout_constraintRight_toRightOf="@+id/sceneform_fragment"
         app:layout_constraintTop_toTopOf="@+id/sceneform_fragment" />
@@ -296,6 +307,32 @@
         app:layout_constraintStart_toEndOf="@+id/button_popAiTask"
         app:layout_constraintTop_toTopOf="@+id/button_pushAiTask"
         app:layout_constraintVertical_bias="0.571" />
+
+    <Button
+        android:id="@+id/autoPlacement"
+        android:layout_width="68dp"
+        android:layout_height="38dp"
+        android:layout_gravity="right"
+
+        android:layout_marginTop="587dp"
+        android:layout_marginEnd="120dp"
+        android:text="load"
+        android:visibility="visible"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <Button
+        android:id="@+id/savePlacement"
+        android:layout_width="68dp"
+        android:layout_height="38dp"
+        android:layout_gravity="right"
+
+        android:layout_marginTop="587dp"
+        android:layout_marginEnd="208dp"
+        android:text="save"
+        android:visibility="visible"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
 
 
 </androidx.constraintlayout.widget.ConstraintLayout>
