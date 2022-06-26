@@ -18,6 +18,8 @@ class DynamicBitmapSource(private val bitmapUpdaterApi : BitmapUpdaterApi) {
     private fun runStream() {
         bitmapStream = flow {
             while (run) {
+                // get latest bitmap from BitmapUpdaterApi
+//                val bitmapStream = bitmapUpdaterApi.latestBitmap
                 emit(bitmapUpdaterApi.latestBitmap)
             }
         }.flowOn(Dispatchers.Default)
@@ -31,6 +33,7 @@ class DynamicBitmapSource(private val bitmapUpdaterApi : BitmapUpdaterApi) {
 
     fun pauseStream() {
         run = false
+//        bitmapUpdaterApi.latestBitmap=null
         Log.d("CANCEL", "STOPPING STREAM")
     }
 }
