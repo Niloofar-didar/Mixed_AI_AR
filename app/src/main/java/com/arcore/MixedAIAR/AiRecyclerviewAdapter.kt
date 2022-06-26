@@ -8,7 +8,9 @@ import android.view.ViewGroup
 import android.widget.*
 import android.widget.AbsListView.CHOICE_MODE_SINGLE
 import androidx.recyclerview.widget.RecyclerView
+import kotlinx.coroutines.delay
 import java.io.IOException
+import java.lang.Thread.sleep
 
 /**
  * Adapter for RecyclerView to populate ai_settings_card_view_design.xml
@@ -110,11 +112,17 @@ class AiRecyclerviewAdapter(var mList: MutableList<AiItemsViewModel>, val stream
      * Updates model to parameters chosen by pressing ai_settings_card_view_design
      * Stops collector, stops bitmap stream
      */
-    fun updateActiveModel(holder: ViewHolder, itemsView : AiItemsViewModel, position: Int) {
+    private fun updateActiveModel(holder: ViewHolder, itemsView : AiItemsViewModel, position: Int) {
         val switchToggleStream = activity.findViewById<Switch>(R.id.switch_streamToggle)
 
-        itemsView.collector?.pauseCollect()
-        switchToggleStream.isChecked = false
+//        if(itemsView.collector?.run == true) {
+//            itemsView.collector?.pauseCollect()
+        if (switchToggleStream.isChecked) {
+//            switchToggleStream.isChecked = false
+            itemsView.collector?.pauseCollect()
+            sleep(50)
+        }
+//        }
 
 
         // Get UI information before delegating to background
@@ -183,6 +191,9 @@ class AiRecyclerviewAdapter(var mList: MutableList<AiItemsViewModel>, val stream
                 "Model: ${itemsView.classifier?.modelName}\n" +
                 "Device: ${itemsView.classifier?.device}"
         itemsView.collector = BitmapCollector(streamSource, itemsView.classifier, position, activity)
+        if (switchToggleStream.isChecked) {
+            itemsView.collector!!.startCollect()
+        }
     }
 
 
