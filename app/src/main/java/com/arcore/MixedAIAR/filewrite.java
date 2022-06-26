@@ -48,9 +48,7 @@ public class filewrite implements  Runnable{
 
 
                             // if(minstance.renderArray[1]!=null)
-                             disfromfirstobj= minstance.renderArray[0].return_distance();
-
-
+                             disfromfirstobj= minstance.renderArray.get(0).return_distance();
 
                             //   GLES20.glDisable(GLES20.GL_CULL_FACE);
 
