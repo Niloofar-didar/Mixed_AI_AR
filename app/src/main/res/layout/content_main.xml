@@ -9,6 +9,7 @@
     tools:showIn="@layout/activity_main">
 
     <androidx.recyclerview.widget.RecyclerView
+        android:translationZ="90dp"
         android:id="@+id/recycler_view_aiSettings"
         android:layout_width="match_parent"
         android:layout_height="320dp"
@@ -16,7 +17,6 @@
         android:background="#513400"
         android:orientation="horizontal"
         android:scrollbars="horizontal"
-        android:translationZ="90dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintVertical_bias="1.0"
@@ -49,6 +49,16 @@
         app:layout_constraintVertical_bias="1.0"
         app:layout_constraintVertical_chainStyle="spread"
         app:layout_constraintVertical_weight="9" />
+
+    <Button
+        android:id="@+id/removeButton"
+        android:layout_width="69dp"
+        android:layout_height="41dp"
+        android:layout_marginTop="548dp"
+        android:text="Remove"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintRight_toRightOf="@+id/sceneform_fragment"
+        app:layout_constraintTop_toTopOf="@+id/sceneform_fragment" />
 
     <RelativeLayout
         android:id="@+id/gallery_layout"
@@ -172,7 +182,8 @@
             android:layout_height="38dp"
             android:layout_marginRight="93dp"
             android:layout_toLeftOf="@id/placeObjButton"
-            android:text="Dec All" />
+            android:text="Dec All"
+            android:visibility="invisible" />
 
         <Switch
             android:id="@+id/un_percSwitch3"
@@ -194,7 +205,8 @@
             android:layout_height="41dp"
             android:layout_marginRight="18dp"
             android:layout_toLeftOf="@id/placeObjButton"
-            android:text="prd" />
+            android:text="prd"
+            android:visibility="invisible" />
 
         <Spinner
             android:id="@+id/WSelect"
@@ -234,11 +246,11 @@
 
     <Button
         android:id="@+id/clearButton"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="580dp"
-        android:layout_marginRight="16dp"
-        android:text="Clear"
+        android:layout_width="69dp"
+        android:layout_height="41dp"
+        android:layout_marginTop="592dp"
+        android:text="Clear All"
+        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintRight_toRightOf="@+id/sceneform_fragment"
         app:layout_constraintTop_toTopOf="@+id/sceneform_fragment" />
 
@@ -261,14 +273,13 @@
 
     <Button
         android:id="@+id/button_toggleUi"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="16dp"
-        android:text="Toggle AI Vis"
+        android:layout_width="85dp"
+        android:layout_height="47dp"
+        android:text="Toggle"
         app:layout_constraintBottom_toBottomOf="@+id/switch_streamToggle"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.0"
-        app:layout_constraintStart_toStartOf="parent" />
+        app:layout_constraintStart_toStartOf="@+id/guideline2" />
 
     <Switch
         android:id="@+id/switch_streamToggle"
