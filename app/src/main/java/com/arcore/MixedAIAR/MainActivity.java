@@ -192,6 +192,10 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
 
     private String[] scenarioList = null;
     private String currentScenario = null;
+    private int scenarioTickLength = 60000;
+    private String[] taskConfigList = null;
+    private String currentTaskConfig = null;
+    private int taskConfigTickLength = 100;
 
     List<String> mLines = new ArrayList<>();
     //  List<String> time_tris = new ArrayList<>();
@@ -1058,6 +1062,16 @@ else{
             Log.e("ScenarioReading", e.getMessage());
         }
 
+        // set up task config list
+        try {
+            taskConfigList = getAssets().list("taskconfigs");
+            for (int i = 0; i < taskConfigList.length; ++i) {
+                taskConfigList[i] = taskConfigList[i].substring(0, taskConfigList[i].length() - 4);
+            }
+        } catch (IOException e) {
+            Log.e("TaskConfigReading", e.getMessage());
+        }
+
         //setup the model drop down menu
         Spinner modelSpinner = (Spinner) findViewById(R.id.modelSelect);
         modelSpinner.setOnItemSelectedListener(this);
@@ -1115,6 +1129,13 @@ else{
                 android.R.layout.simple_list_item_1, scenarioList);
         scenarioSelectAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         scenarioSpinner.setAdapter(scenarioSelectAdapter);
+
+        Spinner taskConfigSpinner = (Spinner) findViewById(R.id.taskConfig);
+        taskConfigSpinner.setOnItemSelectedListener(this);
+        ArrayAdapter<String> taskConfigSelectAdapter = new ArrayAdapter<String>(MainActivity.this,
+                android.R.layout.simple_list_item_1, taskConfigList);
+        taskConfigSelectAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        taskConfigSpinner.setAdapter(taskConfigSelectAdapter);
 
         //decimate all obj at the same time
         Switch referenceObjectSwitch = (Switch) findViewById(R.id.refSwitch);
@@ -1589,110 +1610,122 @@ else{
         });
 
         Button autoPlacementButton = (Button) findViewById(R.id.autoPlacement);
-        autoPlacementButton.setOnClickListener(view -> new Thread(() -> {
-            try {
-                InputStream inputStream = getResources().getAssets().open("scenarios" + File.separator + currentScenario + ".csv");
-                InputStreamReader inputStreamReader = new InputStreamReader(inputStream);
-//                        String curFolder = getExternalFilesDir(null).getAbsolutePath();
-//                        String filepath = curFolder + File.separator + "scenarios" + File.separator + "scenario1.csv";
+        autoPlacementButton.setOnClickListener(view -> {
+            runOnUiThread(clearButton::callOnClick);
+            mList.clear();
+            new Thread(() -> {
+                try {
+                    InputStream taskInputStream = getResources().getAssets().open("taskconfigs" + File.separator + currentTaskConfig + ".csv");
+                    InputStreamReader taskInputStreamReader = new InputStreamReader(taskInputStream);
+                    //                        String curFolder = getExternalFilesDir(null).getAbsolutePath();
+//                        String filepath = curFolder + File.separator + "scenarios" + File.separator + "config1.csv";
 //                        InputStreamReader inputStreamReader = new InputStreamReader(new BufferedInputStream(new FileInputStream(filepath)));
 
-                BufferedReader br = new BufferedReader(inputStreamReader);
-                br.readLine();  // column names
+                    BufferedReader taskBr = new BufferedReader(taskInputStreamReader);
+                    taskBr.readLine();  // column names
 
-                AiItemsViewModel testView = new AiItemsViewModel();
-                List<String> aiModels = testView.getModels();
-                List<String> devices = testView.getDevices();
+                    InputStream sceneInputStream = getResources().getAssets().open("scenarios" + File.separator + currentScenario + ".csv");
+                    InputStreamReader sceneInputStreamReader = new InputStreamReader(sceneInputStream);
+                    //                        String curFolder = getExternalFilesDir(null).getAbsolutePath();
+//                        String filepath = curFolder + File.separator + "scenarios" + File.separator + "config1.csv";
+//                        InputStreamReader inputStreamReader = new InputStreamReader(new BufferedInputStream(new FileInputStream(filepath)));
 
-                runOnUiThread(() -> {
-                    final int[] i = {0};
-                    countDownTimer = new CountDownTimer(Long.MAX_VALUE, 1000) {
-                        @Override
-                        public void onTick(long millisUntilFinished) {
-                            i[0] = (i[0] + 1) % 10;
-                            if (i[0] != 0) {
-                                runOnUiThread(() -> Toast.makeText(MainActivity.this, "" + i[0], Toast.LENGTH_SHORT).show());
-                                return;
+                    BufferedReader sceneBr = new BufferedReader(sceneInputStreamReader);
+                    sceneBr.readLine();  // column names
+
+                    runOnUiThread(() -> {
+                        final int[] i = {0};
+                        CountDownTimer taskTimer, sceneTimer;
+                        sceneTimer = new CountDownTimer(Long.MAX_VALUE, scenarioTickLength) {
+                            @Override
+                            public void onTick(long millisUntilFinished) {
+                                // tick per 1 second, reading new line each time
+                                try {
+                                    String record = sceneBr.readLine();
+                                    if (record == null) {
+                                        this.cancel();
+                                        runOnUiThread(() -> Toast.makeText(MainActivity.this, "Finished loading scenario", Toast.LENGTH_LONG).show());
+                                        return;
+                                    }
+
+                                    String[] cols = record.split(",");
+                                    currentModel = cols[0];
+                                    float xOffset = Float.parseFloat(cols[1]);
+                                    float yOffset = Float.parseFloat(cols[2]);
+
+
+                                    policy = policySpinner.getSelectedItem().toString();
+
+                                    modelSpinner.setSelection(modelSelectAdapter.getPosition(currentModel));
+                                    float original_tris = excel_tris.get(excelname.indexOf(currentModel));
+                                    renderArray[objectCount] = new decimatedRenderable(currentModel, original_tris);
+                                    addObject(Uri.parse("models/" + currentModel + ".sfb"), renderArray[objectCount], xOffset, yOffset);
+                                    Toast.makeText(MainActivity.this,
+                                            String.format("Model: %s\nPos: (%f, %f)",
+                                                    currentModel, xOffset, yOffset), Toast.LENGTH_LONG).show();
+
+                                } catch (IOException e) {
+                                    e.printStackTrace();
+                                }
                             }
 
-                            // tick per 10 seconds, reading new line each time
-                            try {
-                                String line = br.readLine();
-                                if (line == null) {
-                                    countDownTimer.cancel();
-                                    runOnUiThread(() -> Toast.makeText(MainActivity.this, "Finished loading preset placements", Toast.LENGTH_LONG).show());
-                                    return;
-                                }
-
-                                String[] cols = line.split(",");
-                                currentModel = cols[0];
-                                float xOffset = Float.parseFloat(cols[1]);
-                                float yOffset = Float.parseFloat(cols[2]);
-                                int tasks = Integer.parseInt(cols[3]);
-                                int threads = Integer.parseInt(cols[4]);
-                                String aiModel = cols[5];
-                                String device = cols[6];
-
-                                int numAiTasks = Integer.parseInt(textNumOfAiTasks.getText().toString());
-                                // check for max limit
-
-                                if (numAiTasks < tasks) {
-                                    while (numAiTasks < tasks) {
-                                        numAiTasks++;
-                                        // stop stream
-                                        switchToggleStream.setChecked(false);
-                                        // update num of AI tasks
-                                        textNumOfAiTasks.setText(String.format("%d", numAiTasks));
-                                        mList.add(new AiItemsViewModel());
-                                        adapter.setMList(mList);
-                                        recyclerView_aiSettings.setAdapter(adapter);
-                                    }
-                                } else {
-                                    while (numAiTasks > tasks) {
-                                        numAiTasks--;
-                                        // stop stream
-                                        switchToggleStream.setChecked(false);
-                                        // update num of AI tasks
-                                        textNumOfAiTasks.setText(String.format("%d", numAiTasks));
-                                        mList.remove(numAiTasks);
-                                        adapter.setMList(mList);
-                                        recyclerView_aiSettings.setAdapter(adapter);
-                                    }
-                                }
-
-                                for (int i = 0; i < mList.size(); ++i) {
-                                    adapter.updateActiveModel(aiModels.indexOf(aiModel), devices.indexOf(device), threads, mList.get(i), i);
-                                    //                                        TextView aiTextInfo = (TextView) findViewById(R.id.textView_aiModelInfo);
-                                    //                                        Toast.makeText(MainActivity.this, String.format("Threads: %d\nModel: %s\nDevice: %s",
-                                    //                                                mList.get(i).getClassifier().getNumThreads(), mList.get(i).getClassifier().getModelName(), mList.get(i).getClassifier().getDevice()), Toast.LENGTH_LONG).show();
-                                }
-
-                                policy = policySpinner.getSelectedItem().toString();
-
-                                modelSpinner.setSelection(modelSelectAdapter.getPosition(currentModel));
-                                float original_tris = excel_tris.get(excelname.indexOf(currentModel));
-                                renderArray[objectCount] = new decimatedRenderable(currentModel, original_tris);
-                                addObject(Uri.parse("models/" + currentModel + ".sfb"), renderArray[objectCount], xOffset, yOffset);
-                                Toast.makeText(MainActivity.this,
-                                        String.format("Model: %s Pos: (%f, %f) Tasks: %d Threads: %d AIModel: %s Device: %s",
-                                                currentModel, xOffset, yOffset, tasks, threads, aiModel, device), Toast.LENGTH_LONG).show();
-
-                            } catch (IOException e) {
-                                e.printStackTrace();
+                            @Override
+                            public void onFinish() {
                             }
-                        }
+                        };
 
-                        @Override
-                        public void onFinish() {
-                            runOnUiThread(() -> Toast.makeText(MainActivity.this, "Finished placement", Toast.LENGTH_LONG).show());
-                        }
-                    }.start();
-                });
-            } catch (IOException e) {
-                e.printStackTrace();
-                runOnUiThread(() -> Toast.makeText(MainActivity.this, e.toString(), Toast.LENGTH_LONG).show());
-            }
-        }).start());
+                        taskTimer = new CountDownTimer(Long.MAX_VALUE, taskConfigTickLength) {
+                            @Override
+                            public void onTick(long millisUntilFinished) {
+                                try {
+                                    String record = taskBr.readLine();
+                                    if (record == null) {
+                                        this.cancel();
+                                        Toast.makeText(MainActivity.this, "All AI task info has been applied", Toast.LENGTH_LONG).show();
+                                        sceneTimer.start();
+                                        return;
+                                    }
+
+                                    String[] cols = record.split(",");
+                                    int numThreads = Integer.parseInt(cols[0]);
+                                    String aiModel = cols[1];
+                                    String device = cols[2];
+
+                                    AiItemsViewModel taskView = new AiItemsViewModel();
+                                    switchToggleStream.setChecked(false);
+                                    mList.add(taskView);
+                                    adapter.setMList(mList);
+                                    recyclerView_aiSettings.setAdapter(adapter);
+                                    adapter.updateActiveModel(
+                                            taskView.getModels().indexOf(aiModel),
+                                            taskView.getDevices().indexOf(device),
+                                            numThreads,
+                                            taskView,
+                                            i[0]
+                                    );
+
+                                    i[0]++;
+                                    textNumOfAiTasks.setText(String.format("%d", i[0]));
+//
+                                    Toast.makeText(MainActivity.this,
+                                            String.format("New AI Task [threads=%d, model=%s, device=%s]", numThreads, aiModel, device),
+                                            Toast.LENGTH_SHORT).show();
+                                } catch (IOException e) {
+                                    e.printStackTrace();
+                                }
+                            }
+
+                            @Override
+                            public void onFinish() {
+                            }
+                        }.start();
+                    });
+                } catch (IOException e) {
+                    e.printStackTrace();
+                    runOnUiThread(() -> Toast.makeText(MainActivity.this, e.toString(), Toast.LENGTH_LONG).show());
+                }
+            }).start();
+        });
 
         Button savePlacementButton = (Button) findViewById(R.id.savePlacement);
         savePlacementButton.setOnClickListener(view -> {
@@ -2105,6 +2138,10 @@ else{
 
             case R.id.scenario:
                 currentScenario = parent.getItemAtPosition(pos).toString();
+                break;
+
+            case R.id.taskConfig:
+                currentTaskConfig = parent.getItemAtPosition(pos).toString();
                 break;
 //            case R.id.userScoreSpinner:
 //                for (int i = 0; i < objectCount; i++) {

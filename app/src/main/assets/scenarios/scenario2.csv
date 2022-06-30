@@ -1,5 +1,6 @@
-model,xOffset,yOffset,tasks,threads,aimodel,device
-plant,200,0,2,1,MN v2 1.0 Q 224,GPU
-plant,0,-200,4,3,IN V1 Q 224,GPU
-plant,-200,0,6,6,mnasnet,GPU
-plant,0,200,8,1,Inception v4 Float,GPU
+model,xOffset,yOffset
+splane,300,300
+splane,300,-300
+splane,-300,-300
+splane,-300,300
+plant,0,0

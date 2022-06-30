@@ -155,6 +155,17 @@
             android:layout_marginBottom="1dp"
             android:visibility="visible" />
 
+        <Spinner
+            android:id="@+id/taskConfig"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentLeft="true"
+
+            android:layout_alignParentBottom="true"
+            android:layout_marginLeft="169dp"
+            android:layout_marginBottom="2dp"
+            android:visibility="visible" />
+
         <Switch
             android:id="@+id/refSwitch"
             android:layout_width="75dp"

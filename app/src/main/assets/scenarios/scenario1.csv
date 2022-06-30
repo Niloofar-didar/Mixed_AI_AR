@@ -1,10 +1,10 @@
-model,xOffset,yOffset,tasks,threads,aimodel,device
-Cabin,200,200,1,1,MN V1 1.0 F 224,GPU
-CocacolaFinal,200,0,2,1,MN v2 1.0 Q 224,GPU
-Cabin,200,-200,3,3,MN v1 1.0 Q 224,GPU
-CocacolaFinal,0,-200,4,3,IN V1 Q 224,GPU
-Cabin,-200,-200,5,6,MN v1 0.25 Q 128,GPU
-CocacolaFinal,-200,0,6,6,mnasnet,GPU
-Cabin,-200,200,7,1,Inception v4 Quant,GPU
-CocacolaFinal,0,200,8,1,Inception v4 Float,GPU
-Cabin,0,0,9,5,Mobilenet v2 Float,GPU
+model,xOffset,yOffset
+Cabin,200,200
+CocacolaFinal,200,0
+Cabin,200,-200
+CocacolaFinal,0,-200
+Cabin,-200,-200
+CocacolaFinal,-200,0
+Cabin,-200,200
+CocacolaFinal,0,200
+Cabin,0,0
