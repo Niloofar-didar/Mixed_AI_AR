@@ -86,7 +86,7 @@ class BitmapCollector(
                     classifier?.time +
                     ".csv")
 //        file.appendText("timestamp,response,guess3,acc3,guess2,acc2,guess1,acc1\n")
-//        file.appendText("overhead,classification Time,response time\n ")
+        file.appendText("overhead,classification Time,response time\n ")
         job = viewModelScope.launch(Dispatchers.IO) {
             bitmapSource?.bitmapStream?.collect {
                 Log.d("CANCEL", "$index collected $it")
@@ -110,7 +110,7 @@ class BitmapCollector(
                     totalResponseTime+=responseTime
                     Log.d("times", "${overhead},${classificationTime},${responseTime}")
                     outputText.append("${overhead},${classificationTime},${responseTime}\n")
-    //                file.appendText(outputText.toString())
+                    file.appendText(outputText.toString())
                 }
             }
         }

@@ -698,7 +698,7 @@ else{
                     /** Check for null classifiers.
                      *  This will not let you start the stream if any are found
                      */
-                    Boolean noNullClassifiers = true;
+                    boolean noNullClassifiers = true;
                     for (int i = 0; i < mList.size(); i++) {
                         if (mList.get(i).getClassifier()==null) {
                             noNullClassifiers = false;
@@ -1657,7 +1657,28 @@ else{
 
                     runOnUiThread(() -> {
                         final int[] i = {0};
-                        CountDownTimer taskTimer, sceneTimer;
+                        CountDownTimer taskTimer, sceneTimer, removeTimer;
+                        removeTimer = new CountDownTimer(Long.MAX_VALUE, scenarioTickLength) {
+                            @Override
+                            public void onTick(long millisUntilFinished) {
+                                if (objectCount == 0) {
+                                    this.cancel();
+                                    runOnUiThread(() -> Toast.makeText(MainActivity.this, "Finished clearing scenario", Toast.LENGTH_LONG).show());
+                                    switchToggleStream.setChecked(false);
+                                    return;
+                                }
+
+                                String name = renderArray.get(objectCount-1).fileName;
+                                renderArray.get(objectCount-1).baseAnchor.select();
+                                runOnUiThread(removeButton::callOnClick);
+                                runOnUiThread(Toast.makeText(MainActivity.this, "Removed " + name, Toast.LENGTH_LONG)::show);
+                            }
+
+                            @Override
+                            public void onFinish() {
+                            }
+                        };
+
                         sceneTimer = new CountDownTimer(Long.MAX_VALUE, scenarioTickLength) {
                             @Override
                             public void onTick(long millisUntilFinished) {
@@ -1667,6 +1688,7 @@ else{
                                     if (record == null) {
                                         this.cancel();
                                         runOnUiThread(() -> Toast.makeText(MainActivity.this, "Finished loading scenario", Toast.LENGTH_LONG).show());
+                                        removeTimer.start();
                                         return;
                                     }
 
@@ -1704,9 +1726,12 @@ else{
                                     if (record == null) {
                                         this.cancel();
                                         Toast.makeText(MainActivity.this, "All AI task info has been applied", Toast.LENGTH_LONG).show();
+                                        switchToggleStream.setChecked(true);
                                         sceneTimer.start();
                                         return;
                                     }
+
+                                    if (switchToggleStream.isChecked()) switchToggleStream.setChecked(false);
 
                                     String[] cols = record.split(",");
                                     int numThreads = Integer.parseInt(cols[0]);
@@ -1714,7 +1739,6 @@ else{
                                     String device = cols[2];
 
                                     AiItemsViewModel taskView = new AiItemsViewModel();
-                                    switchToggleStream.setChecked(false);
                                     mList.add(taskView);
                                     adapter.setMList(mList);
                                     recyclerView_aiSettings.setAdapter(adapter);
@@ -1730,7 +1754,7 @@ else{
                                     textNumOfAiTasks.setText(String.format("%d", i[0]));
 //
                                     Toast.makeText(MainActivity.this,
-                                            String.format("New AI Task [threads=%d, model=%s, device=%s]", numThreads, aiModel, device),
+                                            String.format("New AI Task %s %s %d", taskView.getClassifier().getModelName(), taskView.getClassifier().getDevice(), taskView.getClassifier().getNumThreads()),
                                             Toast.LENGTH_SHORT).show();
                                 } catch (IOException e) {
                                     e.printStackTrace();
