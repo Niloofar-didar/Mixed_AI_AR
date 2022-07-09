@@ -194,7 +194,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
 
     private String[] scenarioList = null;
     private String currentScenario = null;
-    private int scenarioTickLength = 60000;
+    private int scenarioTickLength = 5000;
     private String[] taskConfigList = null;
     private String currentTaskConfig = null;
     private int taskConfigTickLength = 100;
@@ -1633,7 +1633,7 @@ else{
 
         Button autoPlacementButton = (Button) findViewById(R.id.autoPlacement);
         autoPlacementButton.setOnClickListener(view -> {
-            runOnUiThread(clearButton::callOnClick);
+//            runOnUiThread(clearButton::callOnClick);
             mList.clear();
             new Thread(() -> {
                 try {
@@ -1776,34 +1776,52 @@ else{
         Button savePlacementButton = (Button) findViewById(R.id.savePlacement);
         savePlacementButton.setOnClickListener(view -> {
             String curFolder = getExternalFilesDir(null).getAbsolutePath();
-            String filepath = curFolder + File.separator + "scenarios" + File.separator + currentScenario + ".csv";
-            try (PrintWriter printWriter = new PrintWriter(new FileOutputStream(filepath, false))) {
-                StringBuilder sbSave = new StringBuilder();
+            int numSaved = new File(curFolder + File.separator + "saved_scenarios_configs").list().length;
+            String saveDir = curFolder + File.separator + "saved_scenarios_configs" + File.separator + "save" + numSaved;
+            new File(saveDir).mkdirs();
+
+            String sceneFilepath = saveDir + File.separator + "scenario" + numSaved + ".csv";
+            try (PrintWriter scenePrintWriter = new PrintWriter(new FileOutputStream(sceneFilepath, false))) {
+                StringBuilder sbSceneSave = new StringBuilder();
 
                 // column names
-                sbSave.append("model")
+                sbSceneSave.append("model")
                     .append(",").append("xOffset")
                     .append(",").append("yOffset")
-                    .append(",").append("tasks")
-                    .append(",").append("threads")
-                    .append(",").append("aimodel")
-                    .append(",").append("device")
                     .append("\n");
 
                 android.graphics.Point center = getScreenCenter();
                 for (int i = 0; i < objectCount; ++i) {
-                    sbSave.append(renderArray.get(i).fileName)
+                    sbSceneSave.append(renderArray.get(i).fileName)
                         .append(",").append(fragment.getArSceneView().getScene().getCamera().worldToScreenPoint(renderArray.get(i).baseAnchor.getWorldPosition()).x - center.x)
                         .append(",").append(fragment.getArSceneView().getScene().getCamera().worldToScreenPoint(renderArray.get(i).baseAnchor.getWorldPosition()).y - center.y)
-                        .append(",").append(textNumOfAiTasks.getText().toString())
-                        .append(",").append(mList.get(0).getClassifier().getNumThreads())
-                        .append(",").append(mList.get(0).getClassifier().getModelName())
-                        .append(",").append(mList.get(0).getClassifier().getDevice())
                         .append("\n");
                 }
-                printWriter.write(sbSave.toString());
+                scenePrintWriter.write(sbSceneSave.toString());
                 Toast.makeText(MainActivity.this, String.format("Saved %d model placement(s)", objectCount), Toast.LENGTH_LONG).show();
+            } catch (FileNotFoundException e) {
+                e.printStackTrace();
+                Toast.makeText(MainActivity.this, e.toString(), Toast.LENGTH_LONG).show();
+            }
 
+            String taskFilepath = saveDir + File.separator + "taskconfig" + numSaved + ".csv";
+            try (PrintWriter taskPrintWriter = new PrintWriter(new FileOutputStream(taskFilepath))) {
+                StringBuilder sbTaskSave = new StringBuilder();
+
+                // column names
+                sbTaskSave.append("threads")
+                        .append(",").append("aimodel")
+                        .append(",").append("device")
+                        .append("\n");
+
+                for (AiItemsViewModel taskView : mList) {
+                    sbTaskSave.append(taskView.getCurrentNumThreads())
+                            .append(",").append(taskView.getModels().get(taskView.getCurrentModel()))
+                            .append(",").append(taskView.getDevices().get(taskView.getCurrentDevice()))
+                            .append("\n");
+                }
+                taskPrintWriter.write(sbTaskSave.toString());
+                Toast.makeText(MainActivity.this, String.format("Saved %d AI task config(s)", mList.size()), Toast.LENGTH_LONG).show();
             } catch (FileNotFoundException e) {
                 e.printStackTrace();
                 Toast.makeText(MainActivity.this, e.toString(), Toast.LENGTH_LONG).show();
@@ -3718,7 +3736,7 @@ public float delta (float a, float b , float c1,float creal,  float d, float gam
                         //    if(objectCount>=0) { // remove- ni april 21 temperory
                         Float mean_gpu = 0f;
                         float dist = 0;
-                        if (renderArray.size()>=2)
+                        if (renderArray.size()>=1)
                             dist = renderArray.get(0).return_distance();
 
                         String filname=" ";
