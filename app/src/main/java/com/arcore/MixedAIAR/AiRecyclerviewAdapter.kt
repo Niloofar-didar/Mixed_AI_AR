@@ -136,7 +136,8 @@ class AiRecyclerviewAdapter(var mList: MutableList<AiItemsViewModel>, val stream
         // Do not update if there is no change
         if (modelIndex == itemsView.currentModel
             && deviceIndex == itemsView.currentDevice
-            && numThreads == itemsView.currentNumThreads) {
+            && numThreads == itemsView.currentNumThreads
+            && itemsView.classifier != null) {
             return
         }
         itemsView.currentModel = modelIndex
