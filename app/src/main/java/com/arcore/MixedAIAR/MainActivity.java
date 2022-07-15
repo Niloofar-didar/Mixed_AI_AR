@@ -1,7 +1,9 @@
 package com.arcore.MixedAIAR;
 
 
+import java.io.BufferedInputStream;
 import java.io.BufferedReader;
+import java.io.FileInputStream;
 import java.util.Map.Entry;
 import java.util.stream.Collectors;
 import java.io.File;
@@ -192,12 +194,13 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
     boolean setDesTh=false;// used just for the first time when we run AI models and get the highest baseline throughput
     List<Float> decTris= new ArrayList<>();// create a list of decimated
 
-    private String[] scenarioList = null;
+    private ArrayList<String> scenarioList = new ArrayList<>();
     private String currentScenario = null;
-    private int scenarioTickLength = 5000;
-    private String[] taskConfigList = null;
+    private int scenarioTickLength = 60000;
+    private ArrayList<String> taskConfigList = new ArrayList<>();
     private String currentTaskConfig = null;
-    private int taskConfigTickLength = 100;
+    private int taskConfigTickLength = 20000;
+    private int pauseLength = 10000;
 
     List<String> mLines = new ArrayList<>();
     //  List<String> time_tris = new ArrayList<>();
@@ -1048,24 +1051,23 @@ else{
             Log.e("AssetReading", e.getMessage());
         }
 
-        // set up scenario list
+        // set up scenario and asset list
         try {
-            scenarioList = getAssets().list("scenarios");
-            for (int i = 0; i < scenarioList.length; ++i) {
-                scenarioList[i] = scenarioList[i].substring(0, scenarioList[i].length() - 4);
-            }
-        } catch (IOException e) {
-            Log.e("ScenarioReading", e.getMessage());
-        }
+            String curFolder = getExternalFilesDir(null).getAbsolutePath();
+            File saveDir = new File(curFolder + File.separator + "saved_scenarios_configs");
+            saveDir.mkdirs();
+            String[] saves = saveDir.list();
 
-        // set up task config list
-        try {
-            taskConfigList = getAssets().list("taskconfigs");
-            for (int i = 0; i < taskConfigList.length; ++i) {
-                taskConfigList[i] = taskConfigList[i].substring(0, taskConfigList[i].length() - 4);
+            for (int i = 0; i < saves.length; ++i) {
+                String[] files = new File(curFolder + File.separator + "saved_scenarios_configs" + File.separator + saves[i]).list();
+                for (int j = 0; j < 2; ++j) {
+                    if (files[j].contains("scenario")) scenarioList.add(i + File.separator + files[j]);
+                    else if (files[j].contains("config")) taskConfigList.add(i + File.separator + files[j]);
+                }
+
             }
-        } catch (IOException e) {
-            Log.e("TaskConfigReading", e.getMessage());
+        } catch (Exception e) {
+            Log.e("ScenarioReading", e.getMessage());
         }
 
         //setup the model drop down menu
@@ -1637,20 +1639,20 @@ else{
             mList.clear();
             new Thread(() -> {
                 try {
-                    InputStream taskInputStream = getResources().getAssets().open("taskconfigs" + File.separator + currentTaskConfig + ".csv");
-                    InputStreamReader taskInputStreamReader = new InputStreamReader(taskInputStream);
-                    //                        String curFolder = getExternalFilesDir(null).getAbsolutePath();
-//                        String filepath = curFolder + File.separator + "scenarios" + File.separator + "config1.csv";
-//                        InputStreamReader inputStreamReader = new InputStreamReader(new BufferedInputStream(new FileInputStream(filepath)));
+//                    InputStream taskInputStream = getResources().getAssets().open("taskconfigs" + File.separator + currentTaskConfig + ".csv");
+//                    InputStreamReader taskInputStreamReader = new InputStreamReader(taskInputStream);
+                        String curFolder = getExternalFilesDir(null).getAbsolutePath();
+
+                        String taskFilepath = curFolder + File.separator + "saved_scenarios_configs" + File.separator + "save" + currentTaskConfig;
+                        InputStreamReader taskInputStreamReader = new InputStreamReader(new BufferedInputStream(new FileInputStream(taskFilepath)));
 
                     BufferedReader taskBr = new BufferedReader(taskInputStreamReader);
                     taskBr.readLine();  // column names
 
-                    InputStream sceneInputStream = getResources().getAssets().open("scenarios" + File.separator + currentScenario + ".csv");
-                    InputStreamReader sceneInputStreamReader = new InputStreamReader(sceneInputStream);
-                    //                        String curFolder = getExternalFilesDir(null).getAbsolutePath();
-//                        String filepath = curFolder + File.separator + "scenarios" + File.separator + "config1.csv";
-//                        InputStreamReader inputStreamReader = new InputStreamReader(new BufferedInputStream(new FileInputStream(filepath)));
+//                    InputStream sceneInputStream = getResources().getAssets().open("scenarios" + File.separator + currentScenario + ".csv");
+//                    InputStreamReader sceneInputStreamReader = new InputStreamReader(sceneInputStream);
+                        String sceneFilepath = curFolder + File.separator + "saved_scenarios_configs" + File.separator + "save" + currentScenario;
+                        InputStreamReader sceneInputStreamReader = new InputStreamReader(new BufferedInputStream(new FileInputStream(sceneFilepath)));
 
                     BufferedReader sceneBr = new BufferedReader(sceneInputStreamReader);
                     sceneBr.readLine();  // column names
@@ -1663,8 +1665,17 @@ else{
                             public void onTick(long millisUntilFinished) {
                                 if (objectCount == 0) {
                                     this.cancel();
-                                    runOnUiThread(() -> Toast.makeText(MainActivity.this, "Finished clearing scenario", Toast.LENGTH_LONG).show());
+                                    runOnUiThread(() -> Toast.makeText(MainActivity.this, "Finished clearing scenario, wait for some time", Toast.LENGTH_LONG).show());
+//                                    Timer t = new Timer();
+//                                    t.schedule(new TimerTask() {
+//                                        @Override
+//                                        public void run() {
+//                                            switchToggleStream.setChecked(false);
+//                                            runOnUiThread(() -> Toast.makeText(MainActivity.this, "You can pause and save collected data now", Toast.LENGTH_LONG).show());
+//                                        }
+//                                    }, pauseLength);
                                     switchToggleStream.setChecked(false);
+                                    runOnUiThread(() -> Toast.makeText(MainActivity.this, "You can pause and save collected data now", Toast.LENGTH_LONG).show());
                                     return;
                                 }
 
@@ -1688,6 +1699,13 @@ else{
                                     if (record == null) {
                                         this.cancel();
                                         runOnUiThread(() -> Toast.makeText(MainActivity.this, "Finished loading scenario", Toast.LENGTH_LONG).show());
+//                                        Timer t = new Timer();
+//                                        t.schedule(new TimerTask() {
+//                                            @Override
+//                                            public void run() {
+//                                                removeTimer.start();
+//                                            }
+//                                        }, pauseLength);
                                         removeTimer.start();
                                         return;
                                     }
@@ -1727,6 +1745,13 @@ else{
                                         this.cancel();
                                         Toast.makeText(MainActivity.this, "All AI task info has been applied", Toast.LENGTH_LONG).show();
                                         switchToggleStream.setChecked(true);
+                                        Timer t = new Timer();
+//                                        t.schedule(new TimerTask() {
+//                                            @Override
+//                                            public void run() {
+//                                                sceneTimer.start();
+//                                            }
+//                                        }, pauseLength);
                                         sceneTimer.start();
                                         return;
                                     }
@@ -1798,13 +1823,15 @@ else{
                         .append("\n");
                 }
                 scenePrintWriter.write(sbSceneSave.toString());
+                scenarioSelectAdapter.add(numSaved + File.separator + "scenario" + numSaved + ".csv");
+
                 Toast.makeText(MainActivity.this, String.format("Saved %d model placement(s)", objectCount), Toast.LENGTH_LONG).show();
             } catch (FileNotFoundException e) {
                 e.printStackTrace();
                 Toast.makeText(MainActivity.this, e.toString(), Toast.LENGTH_LONG).show();
             }
 
-            String taskFilepath = saveDir + File.separator + "taskconfig" + numSaved + ".csv";
+            String taskFilepath = saveDir + File.separator + "config" + numSaved + ".csv";
             try (PrintWriter taskPrintWriter = new PrintWriter(new FileOutputStream(taskFilepath))) {
                 StringBuilder sbTaskSave = new StringBuilder();
 
@@ -1821,6 +1848,8 @@ else{
                             .append("\n");
                 }
                 taskPrintWriter.write(sbTaskSave.toString());
+                taskConfigSelectAdapter.add(numSaved + File.separator + "config" + numSaved + ".csv");
+
                 Toast.makeText(MainActivity.this, String.format("Saved %d AI task config(s)", mList.size()), Toast.LENGTH_LONG).show();
             } catch (FileNotFoundException e) {
                 e.printStackTrace();
@@ -3736,7 +3765,8 @@ public float delta (float a, float b , float c1,float creal,  float d, float gam
                         //    if(objectCount>=0) { // remove- ni april 21 temperory
                         Float mean_gpu = 0f;
                         float dist = 0;
-                        if (renderArray.size()>=1)
+//                        if (renderArray.size()>=2)
+                        if (objectCount >= 1)
                             dist = renderArray.get(0).return_distance();
 
                         String filname=" ";
