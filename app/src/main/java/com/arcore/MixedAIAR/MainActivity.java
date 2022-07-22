@@ -44,6 +44,7 @@ import android.os.CountDownTimer;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
+import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -1635,7 +1636,7 @@ else{
 
         Button autoPlacementButton = (Button) findViewById(R.id.autoPlacement);
         autoPlacementButton.setOnClickListener(view -> {
-//            runOnUiThread(clearButton::callOnClick);
+            runOnUiThread(clearButton::callOnClick);
             mList.clear();
             new Thread(() -> {
                 try {
@@ -1674,7 +1675,7 @@ else{
 //                                            runOnUiThread(() -> Toast.makeText(MainActivity.this, "You can pause and save collected data now", Toast.LENGTH_LONG).show());
 //                                        }
 //                                    }, pauseLength);
-                                    switchToggleStream.setChecked(false);
+//                                    switchToggleStream.setChecked(false);
                                     runOnUiThread(() -> Toast.makeText(MainActivity.this, "You can pause and save collected data now", Toast.LENGTH_LONG).show());
                                     return;
                                 }
@@ -3299,7 +3300,8 @@ public float delta (float a, float b , float c1,float creal,  float d, float gam
     //This also creates a file in the apps internal directory to help me find it better, to be honest.
     private void initializeGallery() {
         //LinearLayout galleryR1 = findViewById(R.id.gallery_layout_r1);
-        RelativeLayout galleryr2 = findViewById(R.id.gallery_layout);
+//        RelativeLayout galleryr2 = findViewById(R.id.gallery_layout);
+        ConstraintLayout galleryr2 = findViewById(R.id.gallery_layout);
 
         //row 1
 
