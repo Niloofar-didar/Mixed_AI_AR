@@ -110,7 +110,7 @@ class BitmapCollector(
                     totalResponseTime+=responseTime
                     Log.d("times", "${overhead},${classificationTime},${responseTime}")
                     outputText.append("${overhead},${classificationTime},${responseTime}\n")
-    //                file.appendText(outputText.toString())
+//                    file.appendText(outputText.toString())
                 }
             }
         }

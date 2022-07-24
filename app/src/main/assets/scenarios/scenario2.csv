@@ -1,0 +1,6 @@
+model,xOffset,yOffset
+splane,300,300
+splane,300,-300
+splane,-300,-300
+splane,-300,300
+plant,0,0
