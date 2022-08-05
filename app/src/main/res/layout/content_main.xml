@@ -9,7 +9,6 @@
     tools:showIn="@layout/activity_main">
 
     <androidx.recyclerview.widget.RecyclerView
-        android:translationZ="90dp"
         android:id="@+id/recycler_view_aiSettings"
         android:layout_width="match_parent"
         android:layout_height="320dp"
@@ -17,6 +16,7 @@
         android:background="#513400"
         android:orientation="horizontal"
         android:scrollbars="horizontal"
+        android:translationZ="90dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintVertical_bias="1.0"
@@ -24,17 +24,17 @@
         tools:listitem="@layout/ai_settings_card_view_design" />
 
 
-<!--    <fragment-->
-<!--        android:id="@+id/sceneform_fragment"-->
-<!--        android:name="com.arcore.jinghuaz.demo.WritingArFragment"-->
-<!--        android:layout_width="403dp"-->
-<!--        android:layout_height="558dp"-->
-<!--        app:layout_constraintBottom_toTopOf="@id/gallery_layout"-->
-<!--        app:layout_constraintEnd_toEndOf="parent"-->
-<!--        app:layout_constraintStart_toStartOf="parent"-->
-<!--        app:layout_constraintTop_toTopOf="parent"-->
-<!--        app:layout_constraintVertical_chainStyle="spread"-->
-<!--        app:layout_constraintVertical_weight="9" />-->
+    <!--    <fragment-->
+    <!--        android:id="@+id/sceneform_fragment"-->
+    <!--        android:name="com.arcore.jinghuaz.demo.WritingArFragment"-->
+    <!--        android:layout_width="403dp"-->
+    <!--        android:layout_height="558dp"-->
+    <!--        app:layout_constraintBottom_toTopOf="@id/gallery_layout"-->
+    <!--        app:layout_constraintEnd_toEndOf="parent"-->
+    <!--        app:layout_constraintStart_toStartOf="parent"-->
+    <!--        app:layout_constraintTop_toTopOf="parent"-->
+    <!--        app:layout_constraintVertical_chainStyle="spread"-->
+    <!--        app:layout_constraintVertical_weight="9" />-->
 
 
     <fragment
@@ -74,7 +74,7 @@
         app:layout_constraintVertical_weight="1">
 
 
-                <Spinner
+        <Spinner
             android:id="@+id/MDE"
             android:layout_width="37dp"
             android:layout_height="wrap_content"
@@ -197,7 +197,7 @@
             android:layout_marginBottom="26dp"
             android:visibility="invisible" />
 
-                <Spinner
+        <Spinner
             android:id="@+id/Bwidth"
             android:layout_width="38dp"
             android:layout_height="14dp"
@@ -307,6 +307,54 @@
         app:layout_constraintStart_toEndOf="@+id/button_popAiTask"
         app:layout_constraintTop_toTopOf="@+id/button_pushAiTask"
         app:layout_constraintVertical_bias="0.571" />
+
+    <TextView
+        android:id="@+id/textView_throughput"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="0"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.968"
+        app:layout_constraintStart_toStartOf="@+id/guideline2"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.022" />
+
+    <TextView
+        android:id="@+id/textView4"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="12dp"
+        android:text="Throughput"
+        app:layout_constraintBottom_toBottomOf="@+id/textView_throughput"
+        app:layout_constraintEnd_toStartOf="@+id/textView_throughput"
+        app:layout_constraintHorizontal_bias="1.0"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/textView_throughput"
+        app:layout_constraintVertical_bias="0.0" />
+
+    <TextView
+        android:id="@+id/textView5"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="12dp"
+        android:text="GPU Utilization"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="@+id/textView4"
+        app:layout_constraintHorizontal_bias="1.0"
+        app:layout_constraintStart_toStartOf="@+id/guideline2"
+        app:layout_constraintTop_toBottomOf="@+id/textView4"
+        app:layout_constraintVertical_bias="0.0" />
+
+    <TextView
+        android:id="@+id/textView_gpuUtilization"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="0"
+        app:layout_constraintBottom_toBottomOf="@+id/textView5"
+        app:layout_constraintEnd_toEndOf="@+id/textView_throughput"
+        app:layout_constraintStart_toStartOf="@+id/textView_throughput"
+        app:layout_constraintTop_toTopOf="@+id/textView5" />
 
 
 </androidx.constraintlayout.widget.ConstraintLayout>

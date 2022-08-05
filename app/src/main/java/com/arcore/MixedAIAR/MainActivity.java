@@ -39,7 +39,6 @@ import android.os.CountDownTimer;
 //import android.support.v7.app.AlertDialog;
 //import android.support.v7.app.AppCompatActivity;
 //import android.support.v7.widget.Toolbar;
-import android.util.Log;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
@@ -105,7 +104,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
     private PointerDrawable pointer = new PointerDrawable();
     private static final String GLTF_ASSET = "https://storage.googleapis.com/ar-answers-in-search-models/static/Tiger/model.glb";
     private static MainActivity Instance = new MainActivity();
-
+    private String gpuUtil;
 //    static
 //    {
 //        Instance =
@@ -154,9 +153,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
 
     List<Double> totTrisList= new LinkedList<>();
 
-    ListMultimap<Double, Double> trisMeanDisk = ArrayListMultimap.create();//  a map from tot tris to mean dis at current period
-    Double[] meanDisk =  trisMeanDisk.values().toArray(new Double[0]);
-
+    ListMultimap<Double, Double> trisMeanDisk = ArrayListMultimap.create();//  a map from tot tris to mean dis at
     ListMultimap<Double, Double> trisMeanDiskk = ArrayListMultimap.create();//  a map from tot tris to mean dis at next period
     Double[] meanDiskk =  trisMeanDiskk.values().toArray(new Double[0]);
 
@@ -651,6 +648,8 @@ else{
         Button buttonPushAiTask = (Button) findViewById(R.id.button_pushAiTask);
         Button buttonPopAiTask = (Button) findViewById(R.id.button_popAiTask);
         TextView textNumOfAiTasks = (TextView) findViewById(R.id.text_numOfAiTasks);
+        TextView textThroughput = (TextView) findViewById(R.id.textView_throughput);
+        TextView textGpuUtilization = (TextView) findViewById(R.id.textView_gpuUtilization);
 
         buttonPushAiTask.setOnClickListener(new View.OnClickListener() {
             public void onClick(View view) {
@@ -708,7 +707,9 @@ else{
                         for (int i = 0; i < mList.size(); i++) {
 //                        Log.d("CHECKCHG", String.valueOf((mList.get(i).getClassifier()==null)));
 //                            mList.get(i).getCollector().setEnd(System.nanoTime()/1000000);
-                            mList.get(i).getCollector().startCollect();
+                            if(mList.get(i).getRunCollection()) {
+                                mList.get(i).getCollector().startCollect();
+                            }
                         }
                     } else {
                         Toast toast = Toast.makeText(MainActivity.this,
@@ -1714,7 +1715,15 @@ else{
         t.scheduleAtFixedRate(
                 new TimerTask() {
 
+
+
                     public void run() {
+
+                        runOnUiThread(() -> {
+                            textGpuUtilization.setText(""+ gpuUtil);
+                        });
+
+
 
 //@@@@@@@@@@@ This is to collect total triangle data every 500 ms @@@@@@@@@@@
                         //long time1= System.nanoTime()/1000000;
@@ -1723,14 +1732,24 @@ else{
                        // long curTime= SystemClock.uptimeMillis();
 
                         if(switchToggleStream.isChecked()) // in the begining we collect data for zero tris
-
-
                         {
+                            double throughputWriter = 0;
+
                            if(!setDesTh){
                                double throughput= getThroughput();
                                des_Thr= 0.6*throughput;
                                setDesTh=true;
                            }
+                           else {
+                               throughputWriter = getThroughput();
+                           }
+                            double finalThroughputWriter = throughputWriter;
+                            runOnUiThread(() -> {
+                                textThroughput.setText(""+ finalThroughputWriter);
+                                textGpuUtilization.setText(""+ gpuUtil);
+                            });
+
+
 
                             new dataCol(MainActivity.this).run(); // this is to collect mean thr, total_tris. average dis
 
@@ -3486,10 +3505,10 @@ public float delta (float a, float b , float c1,float creal,  float d, float gam
                         String current_gpu = null;
                         try {
 
-                            String[] InstallBusyBoxCmd = new String[]{
-                                    "su", "-c", "cat /sys/class/kgsl/kgsl-3d0/gpu_busy_percentage"};
+//                            String[] InstallBusyBoxCmd = new String[]{
+//                                     "cat /sys/class/kgsl/kgsl-3d0/gpu_busy_percentage"};
 
-                            process2 = Runtime.getRuntime().exec(InstallBusyBoxCmd);
+                            process2 = Runtime.getRuntime().exec("cat /sys/class/kgsl/kgsl-3d0/gpu_busy_percentage");
                             BufferedReader stdInput = new BufferedReader(new
                                     InputStreamReader(process2.getInputStream()));
 // Read the output from the command
@@ -3513,6 +3532,7 @@ public float delta (float a, float b , float c1,float creal,  float d, float gam
 
 
                         try (PrintWriter writer = new PrintWriter(new FileOutputStream(FILEPATH, true))) {
+                            gpuUtil = ""+mean_gpu;
 
                             StringBuilder sb = new StringBuilder();
                             sb.append(dateFormat.format(new Date())); sb.append(',');

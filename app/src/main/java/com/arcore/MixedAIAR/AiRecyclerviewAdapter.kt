@@ -57,6 +57,8 @@ class AiRecyclerviewAdapter(var mList: MutableList<AiItemsViewModel>, val stream
         holder.deviceListView.setItemChecked(itemsViewModel.currentDevice, true) // 0 = gpu
 
 
+
+
         // set current consumer to device[0] and model[0] from ItemsViewModel
 //        initializeActiveModel(itemsViewModel)
 //        itemsViewModel.classifier?.numThreads = holder.numberPicker.value
@@ -71,8 +73,10 @@ class AiRecyclerviewAdapter(var mList: MutableList<AiItemsViewModel>, val stream
         holder.deviceListView.setOnItemClickListener {
                 parent, view, pos, id -> updateActiveModel(holder, itemsViewModel, position)
         }
-        // display current model info
-//        holder.textAiInfo.text = "${itemsViewModel.classifier?.modelName} ${itemsViewModel.classifier?.device}"
+        holder.toggle.setOnCheckedChangeListener { buttonView, isChecked ->
+            itemsViewModel.runCollection = isChecked
+        }
+
         holder.textAiInfo.text = "Threads: ${itemsViewModel.classifier?.numThreads}\n" +
                 "Model: ${itemsViewModel.classifier?.modelName}\n" +
                 "Device: ${itemsViewModel.classifier?.device}"
@@ -93,6 +97,7 @@ class AiRecyclerviewAdapter(var mList: MutableList<AiItemsViewModel>, val stream
         val deviceListView: ListView = itemView.findViewById(R.id.device)
         val numberPicker: NumberPicker= itemView.findViewById(R.id.numberPicker_aiThreadCount)
         val textAiInfo : TextView = itemView.findViewById(R.id.textView_aiModelInfo)
+        val toggle : Switch = itemView.findViewById(R.id.switchToggleCollection)
     }
 
     /**

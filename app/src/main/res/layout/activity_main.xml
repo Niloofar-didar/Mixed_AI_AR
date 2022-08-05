@@ -57,7 +57,9 @@
         android:id="@+id/include"
         layout="@layout/content_main"
         android:layout_width="match_parent"
-        android:layout_height="match_parent" />
+        android:layout_height="match_parent"
+        app:layout_anchor="@+id/include"
+        app:layout_anchorGravity="center" />
 
     <!--    <include-->
     <!--        android:id="@+id/include"-->

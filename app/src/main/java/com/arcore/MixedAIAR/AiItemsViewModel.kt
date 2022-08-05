@@ -13,4 +13,5 @@ class AiItemsViewModel {
     var currentDevice = 0
     var currentModel = 0
     var currentNumThreads = 1
+    var runCollection = true
 }
