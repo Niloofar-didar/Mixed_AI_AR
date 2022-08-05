@@ -1,7 +1,9 @@
 package com.arcore.MixedAIAR;
 
 
+import java.io.BufferedInputStream;
 import java.io.BufferedReader;
+import java.io.FileInputStream;
 import java.util.Map.Entry;
 import java.util.stream.Collectors;
 import java.io.File;
@@ -42,6 +44,7 @@ import android.os.CountDownTimer;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
+import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -190,7 +193,13 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
     boolean setDesTh=false;// used just for the first time when we run AI models and get the highest baseline throughput
     List<Float> decTris= new ArrayList<>();// create a list of decimated
 
-
+    private ArrayList<String> scenarioList = new ArrayList<>();
+    private String currentScenario = null;
+    private int scenarioTickLength = 60000;
+    private ArrayList<String> taskConfigList = new ArrayList<>();
+    private String currentTaskConfig = null;
+    private int taskConfigTickLength = 20000;
+    private int pauseLength = 10000;
 
     List<String> mLines = new ArrayList<>();
     //  List<String> time_tris = new ArrayList<>();
@@ -693,7 +702,7 @@ else{
                     /** Check for null classifiers.
                      *  This will not let you start the stream if any are found
                      */
-                    Boolean noNullClassifiers = true;
+                    boolean noNullClassifiers = true;
                     for (int i = 0; i < mList.size(); i++) {
                         if (mList.get(i).getClassifier()==null) {
                             noNullClassifiers = false;
@@ -1045,6 +1054,25 @@ else{
             Log.e("AssetReading", e.getMessage());
         }
 
+        // set up scenario and asset list
+        try {
+            String curFolder = getExternalFilesDir(null).getAbsolutePath();
+            File saveDir = new File(curFolder + File.separator + "saved_scenarios_configs");
+            saveDir.mkdirs();
+            String[] saves = saveDir.list();
+
+            for (int i = 0; i < saves.length; ++i) {
+                String[] files = new File(curFolder + File.separator + "saved_scenarios_configs" + File.separator + saves[i]).list();
+                for (int j = 0; j < 2; ++j) {
+                    if (files[j].contains("scenario")) scenarioList.add(i + File.separator + files[j]);
+                    else if (files[j].contains("config")) taskConfigList.add(i + File.separator + files[j]);
+                }
+
+            }
+        } catch (Exception e) {
+            Log.e("ScenarioReading", e.getMessage());
+        }
+
         //setup the model drop down menu
         Spinner modelSpinner = (Spinner) findViewById(R.id.modelSelect);
         modelSpinner.setOnItemSelectedListener(this);
@@ -1096,6 +1124,19 @@ else{
 
         policy = policySpinner.getSelectedItem().toString();
 
+        Spinner scenarioSpinner = (Spinner) findViewById(R.id.scenario);
+        scenarioSpinner.setOnItemSelectedListener(this);
+        ArrayAdapter<String> scenarioSelectAdapter = new ArrayAdapter<String>(MainActivity.this,
+                android.R.layout.simple_list_item_1, scenarioList);
+        scenarioSelectAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        scenarioSpinner.setAdapter(scenarioSelectAdapter);
+
+        Spinner taskConfigSpinner = (Spinner) findViewById(R.id.taskConfig);
+        taskConfigSpinner.setOnItemSelectedListener(this);
+        ArrayAdapter<String> taskConfigSelectAdapter = new ArrayAdapter<String>(MainActivity.this,
+                android.R.layout.simple_list_item_1, taskConfigList);
+        taskConfigSelectAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        taskConfigSpinner.setAdapter(taskConfigSelectAdapter);
 
         //decimate all obj at the same time
         Switch referenceObjectSwitch = (Switch) findViewById(R.id.refSwitch);
@@ -1595,6 +1636,230 @@ else{
             }
         });
 
+        Button autoPlacementButton = (Button) findViewById(R.id.autoPlacement);
+        autoPlacementButton.setOnClickListener(view -> {
+            runOnUiThread(clearButton::callOnClick);
+            mList.clear();
+            new Thread(() -> {
+                try {
+//                    InputStream taskInputStream = getResources().getAssets().open("taskconfigs" + File.separator + currentTaskConfig + ".csv");
+//                    InputStreamReader taskInputStreamReader = new InputStreamReader(taskInputStream);
+                        String curFolder = getExternalFilesDir(null).getAbsolutePath();
+
+                        String taskFilepath = curFolder + File.separator + "saved_scenarios_configs" + File.separator + "save" + currentTaskConfig;
+                        InputStreamReader taskInputStreamReader = new InputStreamReader(new BufferedInputStream(new FileInputStream(taskFilepath)));
+
+                    BufferedReader taskBr = new BufferedReader(taskInputStreamReader);
+                    taskBr.readLine();  // column names
+
+//                    InputStream sceneInputStream = getResources().getAssets().open("scenarios" + File.separator + currentScenario + ".csv");
+//                    InputStreamReader sceneInputStreamReader = new InputStreamReader(sceneInputStream);
+                        String sceneFilepath = curFolder + File.separator + "saved_scenarios_configs" + File.separator + "save" + currentScenario;
+                        InputStreamReader sceneInputStreamReader = new InputStreamReader(new BufferedInputStream(new FileInputStream(sceneFilepath)));
+
+                    BufferedReader sceneBr = new BufferedReader(sceneInputStreamReader);
+                    sceneBr.readLine();  // column names
+
+                    runOnUiThread(() -> {
+                        final int[] i = {0};
+                        CountDownTimer taskTimer, sceneTimer, removeTimer;
+                        removeTimer = new CountDownTimer(Long.MAX_VALUE, scenarioTickLength) {
+                            @Override
+                            public void onTick(long millisUntilFinished) {
+                                if (objectCount == 0) {
+                                    this.cancel();
+                                    runOnUiThread(() -> Toast.makeText(MainActivity.this, "Finished clearing scenario, wait for some time", Toast.LENGTH_LONG).show());
+//                                    Timer t = new Timer();
+//                                    t.schedule(new TimerTask() {
+//                                        @Override
+//                                        public void run() {
+//                                            switchToggleStream.setChecked(false);
+//                                            runOnUiThread(() -> Toast.makeText(MainActivity.this, "You can pause and save collected data now", Toast.LENGTH_LONG).show());
+//                                        }
+//                                    }, pauseLength);
+//                                    switchToggleStream.setChecked(false);
+                                    runOnUiThread(() -> Toast.makeText(MainActivity.this, "You can pause and save collected data now", Toast.LENGTH_LONG).show());
+                                    return;
+                                }
+
+                                String name = renderArray.get(objectCount-1).fileName;
+                                renderArray.get(objectCount-1).baseAnchor.select();
+                                runOnUiThread(removeButton::callOnClick);
+                                runOnUiThread(Toast.makeText(MainActivity.this, "Removed " + name, Toast.LENGTH_LONG)::show);
+                            }
+
+                            @Override
+                            public void onFinish() {
+                            }
+                        };
+
+                        sceneTimer = new CountDownTimer(Long.MAX_VALUE, scenarioTickLength) {
+                            @Override
+                            public void onTick(long millisUntilFinished) {
+                                // tick per 1 second, reading new line each time
+                                try {
+                                    String record = sceneBr.readLine();
+                                    if (record == null) {
+                                        this.cancel();
+                                        runOnUiThread(() -> Toast.makeText(MainActivity.this, "Finished loading scenario", Toast.LENGTH_LONG).show());
+//                                        Timer t = new Timer();
+//                                        t.schedule(new TimerTask() {
+//                                            @Override
+//                                            public void run() {
+//                                                removeTimer.start();
+//                                            }
+//                                        }, pauseLength);
+                                        removeTimer.start();
+                                        return;
+                                    }
+
+                                    String[] cols = record.split(",");
+                                    currentModel = cols[0];
+                                    float xOffset = Float.parseFloat(cols[1]);
+                                    float yOffset = Float.parseFloat(cols[2]);
+
+
+                                    policy = policySpinner.getSelectedItem().toString();
+
+                                    modelSpinner.setSelection(modelSelectAdapter.getPosition(currentModel));
+                                    float original_tris = excel_tris.get(excelname.indexOf(currentModel));
+                                    renderArray.add(objectCount, new decimatedRenderable(currentModel, original_tris));
+                                    addObject(Uri.parse("models/" + currentModel + ".sfb"), renderArray.get(objectCount), xOffset, yOffset);
+                                    Toast.makeText(MainActivity.this,
+                                            String.format("Model: %s\nPos: (%f, %f)",
+                                                    currentModel, xOffset, yOffset), Toast.LENGTH_LONG).show();
+
+                                } catch (IOException e) {
+                                    e.printStackTrace();
+                                }
+                            }
+
+                            @Override
+                            public void onFinish() {
+                            }
+                        };
+
+                        taskTimer = new CountDownTimer(Long.MAX_VALUE, taskConfigTickLength) {
+                            @Override
+                            public void onTick(long millisUntilFinished) {
+                                try {
+                                    String record = taskBr.readLine();
+                                    if (record == null) {
+                                        this.cancel();
+                                        Toast.makeText(MainActivity.this, "All AI task info has been applied", Toast.LENGTH_LONG).show();
+                                        switchToggleStream.setChecked(true);
+                                        Timer t = new Timer();
+//                                        t.schedule(new TimerTask() {
+//                                            @Override
+//                                            public void run() {
+//                                                sceneTimer.start();
+//                                            }
+//                                        }, pauseLength);
+                                        sceneTimer.start();
+                                        return;
+                                    }
+
+                                    if (switchToggleStream.isChecked()) switchToggleStream.setChecked(false);
+
+                                    String[] cols = record.split(",");
+                                    int numThreads = Integer.parseInt(cols[0]);
+                                    String aiModel = cols[1];
+                                    String device = cols[2];
+
+                                    AiItemsViewModel taskView = new AiItemsViewModel();
+                                    mList.add(taskView);
+                                    adapter.setMList(mList);
+                                    recyclerView_aiSettings.setAdapter(adapter);
+                                    adapter.updateActiveModel(
+                                            taskView.getModels().indexOf(aiModel),
+                                            taskView.getDevices().indexOf(device),
+                                            numThreads,
+                                            taskView,
+                                            i[0]
+                                    );
+
+                                    i[0]++;
+                                    textNumOfAiTasks.setText(String.format("%d", i[0]));
+//
+                                    Toast.makeText(MainActivity.this,
+                                            String.format("New AI Task %s %s %d", taskView.getClassifier().getModelName(), taskView.getClassifier().getDevice(), taskView.getClassifier().getNumThreads()),
+                                            Toast.LENGTH_SHORT).show();
+                                } catch (IOException e) {
+                                    e.printStackTrace();
+                                }
+                            }
+
+                            @Override
+                            public void onFinish() {
+                            }
+                        }.start();
+                    });
+                } catch (IOException e) {
+                    e.printStackTrace();
+                    runOnUiThread(() -> Toast.makeText(MainActivity.this, e.toString(), Toast.LENGTH_LONG).show());
+                }
+            }).start();
+        });
+
+        Button savePlacementButton = (Button) findViewById(R.id.savePlacement);
+        savePlacementButton.setOnClickListener(view -> {
+            String curFolder = getExternalFilesDir(null).getAbsolutePath();
+            int numSaved = new File(curFolder + File.separator + "saved_scenarios_configs").list().length;
+            String saveDir = curFolder + File.separator + "saved_scenarios_configs" + File.separator + "save" + numSaved;
+            new File(saveDir).mkdirs();
+
+            String sceneFilepath = saveDir + File.separator + "scenario" + numSaved + ".csv";
+            try (PrintWriter scenePrintWriter = new PrintWriter(new FileOutputStream(sceneFilepath, false))) {
+                StringBuilder sbSceneSave = new StringBuilder();
+
+                // column names
+                sbSceneSave.append("model")
+                    .append(",").append("xOffset")
+                    .append(",").append("yOffset")
+                    .append("\n");
+
+                android.graphics.Point center = getScreenCenter();
+                for (int i = 0; i < objectCount; ++i) {
+                    sbSceneSave.append(renderArray.get(i).fileName)
+                        .append(",").append(fragment.getArSceneView().getScene().getCamera().worldToScreenPoint(renderArray.get(i).baseAnchor.getWorldPosition()).x - center.x)
+                        .append(",").append(fragment.getArSceneView().getScene().getCamera().worldToScreenPoint(renderArray.get(i).baseAnchor.getWorldPosition()).y - center.y)
+                        .append("\n");
+                }
+                scenePrintWriter.write(sbSceneSave.toString());
+                scenarioSelectAdapter.add(numSaved + File.separator + "scenario" + numSaved + ".csv");
+
+                Toast.makeText(MainActivity.this, String.format("Saved %d model placement(s)", objectCount), Toast.LENGTH_LONG).show();
+            } catch (FileNotFoundException e) {
+                e.printStackTrace();
+                Toast.makeText(MainActivity.this, e.toString(), Toast.LENGTH_LONG).show();
+            }
+
+            String taskFilepath = saveDir + File.separator + "config" + numSaved + ".csv";
+            try (PrintWriter taskPrintWriter = new PrintWriter(new FileOutputStream(taskFilepath))) {
+                StringBuilder sbTaskSave = new StringBuilder();
+
+                // column names
+                sbTaskSave.append("threads")
+                        .append(",").append("aimodel")
+                        .append(",").append("device")
+                        .append("\n");
+
+                for (AiItemsViewModel taskView : mList) {
+                    sbTaskSave.append(taskView.getCurrentNumThreads())
+                            .append(",").append(taskView.getModels().get(taskView.getCurrentModel()))
+                            .append(",").append(taskView.getDevices().get(taskView.getCurrentDevice()))
+                            .append("\n");
+                }
+                taskPrintWriter.write(sbTaskSave.toString());
+                taskConfigSelectAdapter.add(numSaved + File.separator + "config" + numSaved + ".csv");
+
+                Toast.makeText(MainActivity.this, String.format("Saved %d AI task config(s)", mList.size()), Toast.LENGTH_LONG).show();
+            } catch (FileNotFoundException e) {
+                e.printStackTrace();
+                Toast.makeText(MainActivity.this, e.toString(), Toast.LENGTH_LONG).show();
+            }
+        });
+
         //seekbar setup
         SeekBar simpleBar = (SeekBar) findViewById(R.id.simpleBar);
         simpleBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
@@ -1739,6 +2004,7 @@ else{
                                double throughput= getThroughput();
                                des_Thr= 0.6*throughput;
                                setDesTh=true;
+                               throughputWriter = throughput;
                            }
                            else {
                                throughputWriter = getThroughput();
@@ -1805,7 +2071,7 @@ else{
 //        Log.d("rt", String.valueOf(meanResponseTimes[0]));
         double avg = Arrays.stream(meanthr).average().orElse(Double.NaN);
 
-//        Log.d("Throughput", "rt: " +String.valueOf(avg) +" thrpt: " +String.valueOf((1/avg)*1000));
+        Log.d("Throughput", "rt: " +String.valueOf(avg) +" thrpt: " +String.valueOf((1/avg)*1000));
         return avg;
           //      (1/avg)*1000;
     }
@@ -1994,6 +2260,13 @@ else{
                 currentModel = parent.getItemAtPosition(pos).toString();
                 break;
 
+            case R.id.scenario:
+                currentScenario = parent.getItemAtPosition(pos).toString();
+                break;
+
+            case R.id.taskConfig:
+                currentTaskConfig = parent.getItemAtPosition(pos).toString();
+                break;
 //            case R.id.userScoreSpinner:
 //                for (int i = 0; i < objectCount; i++) {
 //                    if (renderArray[i].baseAnchor.isSelected())
@@ -3048,7 +3321,8 @@ public float delta (float a, float b , float c1,float creal,  float d, float gam
     //This also creates a file in the apps internal directory to help me find it better, to be honest.
     private void initializeGallery() {
         //LinearLayout galleryR1 = findViewById(R.id.gallery_layout_r1);
-        RelativeLayout galleryr2 = findViewById(R.id.gallery_layout);
+//        RelativeLayout galleryr2 = findViewById(R.id.gallery_layout);
+        ConstraintLayout galleryr2 = findViewById(R.id.gallery_layout);
 
         //row 1
 
@@ -3085,7 +3359,29 @@ public float delta (float a, float b , float c1,float creal,  float d, float gam
 
     }
 
+    private void addObject(Uri model, baseRenderable renderArrayObj, float xOffset, float yOffset) {
+        Frame frame = fragment.getArSceneView().getArFrame();
+        android.graphics.Point pt = getScreenCenter();
+        List<HitResult> hits;
+        if (frame != null) {
+            hits = frame.hitTest(pt.x + xOffset, pt.y + yOffset);
+            for (HitResult hit : hits) {
+                Trackable trackable = hit.getTrackable();
+                if (trackable instanceof Plane &&
+                        ((Plane) trackable).isPoseInPolygon(hit.getHitPose())) {
+                    Anchor newAnchor = hit.createAnchor();
+                    placeObject(fragment, newAnchor, model, renderArrayObj);
 
+                    break;
+                }
+            }
+
+        }
+
+
+
+
+    }
 
     private void placeObject(ArFragment fragment, Anchor anchor, Uri model, baseRenderable renderArrayObj) { ;
 
@@ -3492,7 +3788,8 @@ public float delta (float a, float b , float c1,float creal,  float d, float gam
                         //    if(objectCount>=0) { // remove- ni april 21 temperory
                         Float mean_gpu = 0f;
                         float dist = 0;
-                        if (renderArray.size()>=2)
+//                        if (renderArray.size()>=2)
+                        if (objectCount >= 1)
                             dist = renderArray.get(0).return_distance();
 
                         String filname=" ";

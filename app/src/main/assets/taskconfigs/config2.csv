@@ -1,0 +1,4 @@
+threads,aimodel,device
+1,MN V1 1.0 F 224,CPU
+2,MN v2 1.0 Q 224,GPU
+3,MN v1 1.0 Q 224,NPU

@@ -2,7 +2,7 @@
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:layout_width="match_parent"
+    android:layout_width="wrap_content"
     android:layout_height="match_parent"
     app:layout_behavior="@string/appbar_scrolling_view_behavior"
     tools:context=".MainActivity"
@@ -52,15 +52,16 @@
 
     <Button
         android:id="@+id/removeButton"
-        android:layout_width="69dp"
+        android:layout_width="wrap_content"
         android:layout_height="41dp"
-        android:layout_marginTop="548dp"
+        android:layout_marginTop="584dp"
+        android:layout_marginEnd="304dp"
         android:text="Remove"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintRight_toRightOf="@+id/sceneform_fragment"
         app:layout_constraintTop_toTopOf="@+id/sceneform_fragment" />
 
-    <RelativeLayout
+    <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/gallery_layout"
         android:layout_width="422dp"
         android:layout_height="71dp"
@@ -78,103 +79,129 @@
             android:id="@+id/MDE"
             android:layout_width="37dp"
             android:layout_height="wrap_content"
-            android:layout_alignParentLeft="true"
 
-            android:layout_alignParentBottom="true"
             android:layout_marginLeft="115dp"
             android:layout_marginBottom="17dp"
-            android:visibility="invisible" />
+            android:visibility="invisible"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintLeft_toLeftOf="parent" />
 
         <Button
             android:id="@+id/autoD"
             android:layout_width="68dp"
             android:layout_height="38dp"
-            android:layout_alignParentTop="true"
-            android:layout_alignParentRight="true"
             android:layout_gravity="right"
-            android:layout_marginTop="31dp"
-            android:layout_marginRight="15dp"
+            android:layout_marginTop="4dp"
+            android:layout_marginRight="152dp"
 
             android:text="autoD"
-            android:visibility="visible" />
+            android:visibility="visible"
+            app:layout_constraintRight_toRightOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
 
         <Spinner
             android:id="@+id/policy"
             android:layout_width="34dp"
             android:layout_height="11dp"
-            android:layout_alignParentLeft="true"
 
-            android:layout_alignParentBottom="true"
             android:layout_marginLeft="11dp"
             android:layout_marginBottom="22dp"
-            android:visibility="invisible" />
+            android:visibility="invisible"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintLeft_toLeftOf="parent" />
 
         <Button
             android:id="@+id/predict"
             android:layout_width="66dp"
             android:layout_height="36dp"
-            android:layout_alignParentTop="true"
-            android:layout_alignParentRight="true"
             android:layout_gravity="right"
             android:layout_marginTop="34dp"
-            android:layout_marginRight="10dp"
+            android:layout_marginEnd="10dp"
             android:text="predict"
-            android:visibility="invisible" />
+            android:visibility="invisible"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
 
         <Spinner
             android:id="@+id/modelSelect2"
             android:layout_width="wrap_content"
             android:layout_height="11dp"
-            android:layout_alignParentLeft="true"
 
-            android:layout_alignParentBottom="true"
             android:layout_marginLeft="186dp"
             android:layout_marginBottom="14dp"
-            android:visibility="invisible" />
+            android:visibility="invisible"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintLeft_toLeftOf="parent" />
 
         <Button
             android:id="@+id/placeObjButton"
-            android:layout_width="69dp"
+            android:layout_width="wrap_content"
             android:layout_height="38dp"
-            android:layout_alignParentTop="true"
-            android:layout_alignParentRight="true"
             android:layout_gravity="right"
-            android:layout_marginTop="-4dp"
-            android:layout_marginRight="8dp"
-            android:text="Place Object" />
+            android:layout_marginTop="4dp"
+            android:layout_marginEnd="16dp"
+            android:text="Place Object"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
 
         <Spinner
             android:id="@+id/modelSelect"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_alignParentLeft="true"
 
-            android:layout_alignParentBottom="true"
-            android:layout_marginLeft="41dp"
-            android:layout_marginBottom="25dp"
-            android:visibility="visible" />
+            android:layout_marginLeft="8dp"
+            android:layout_marginTop="14dp"
+            android:layout_marginBottom="40dp"
+            android:visibility="visible"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <Spinner
+            android:id="@+id/scenario"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+
+            android:layout_marginLeft="5dp"
+            android:layout_marginBottom="5dp"
+            android:visibility="visible"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintLeft_toLeftOf="parent" />
+
+        <Spinner
+            android:id="@+id/taskConfig"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+
+            android:layout_marginLeft="171dp"
+            android:layout_marginBottom="5dp"
+            android:visibility="visible"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintLeft_toLeftOf="parent" />
 
         <Switch
             android:id="@+id/refSwitch"
             android:layout_width="75dp"
             android:layout_height="38dp"
             android:layout_marginRight="93dp"
-            android:layout_toLeftOf="@id/placeObjButton"
             android:text="Dec All"
-            android:visibility="invisible" />
+            android:visibility="invisible"
+            app:layout_constraintRight_toLeftOf="@id/placeObjButton"
+            app:layout_constraintTop_toTopOf="parent" />
 
         <Switch
             android:id="@+id/un_percSwitch3"
             android:layout_width="0dp"
             android:layout_height="16dp"
             android:layout_marginRight="119dp"
-            android:layout_toLeftOf="@id/placeObjButton"
             android:checked="false"
             android:clickable="true"
             android:showText="false"
             android:splitTrack="false"
             android:text="UndP"
             android:visibility="invisible"
+            app:layout_constraintRight_toLeftOf="@id/placeObjButton"
+            app:layout_constraintTop_toTopOf="parent"
             tools:checked="false" />
 
         <Switch
@@ -182,33 +209,34 @@
             android:layout_width="72dp"
             android:layout_height="41dp"
             android:layout_marginRight="18dp"
-            android:layout_toLeftOf="@id/placeObjButton"
             android:text="prd"
-            android:visibility="invisible" />
+            android:visibility="invisible"
+            app:layout_constraintRight_toLeftOf="@id/placeObjButton"
+            app:layout_constraintTop_toTopOf="parent" />
 
         <Spinner
             android:id="@+id/WSelect"
             android:layout_width="28dp"
             android:layout_height="wrap_content"
-            android:layout_alignParentLeft="true"
 
-            android:layout_alignParentBottom="true"
             android:layout_marginLeft="129dp"
             android:layout_marginBottom="26dp"
-            android:visibility="invisible" />
+            android:visibility="invisible"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintLeft_toLeftOf="parent" />
 
         <Spinner
             android:id="@+id/Bwidth"
             android:layout_width="38dp"
             android:layout_height="14dp"
-            android:layout_alignParentLeft="true"
 
-            android:layout_alignParentBottom="true"
             android:layout_marginLeft="59dp"
             android:layout_marginBottom="10dp"
-            android:visibility="invisible" />
+            android:visibility="invisible"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintLeft_toLeftOf="parent" />
 
-    </RelativeLayout>
+    </androidx.constraintlayout.widget.ConstraintLayout>
 
     <SeekBar
         android:id="@+id/simpleBar"
@@ -224,9 +252,10 @@
 
     <Button
         android:id="@+id/clearButton"
-        android:layout_width="69dp"
+        android:layout_width="wrap_content"
         android:layout_height="41dp"
-        android:layout_marginTop="592dp"
+        android:layout_marginTop="584dp"
+        android:layout_marginEnd="12dp"
         android:text="Clear All"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintRight_toRightOf="@+id/sceneform_fragment"
@@ -355,6 +384,32 @@
         app:layout_constraintEnd_toEndOf="@+id/textView_throughput"
         app:layout_constraintStart_toStartOf="@+id/textView_throughput"
         app:layout_constraintTop_toTopOf="@+id/textView5" />
+
+    <Button
+        android:id="@+id/autoPlacement"
+        android:layout_width="68dp"
+        android:layout_height="38dp"
+        android:layout_gravity="right"
+
+        android:layout_marginTop="588dp"
+        android:layout_marginEnd="128dp"
+        android:text="load"
+        android:visibility="visible"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <Button
+        android:id="@+id/savePlacement"
+        android:layout_width="68dp"
+        android:layout_height="38dp"
+        android:layout_gravity="right"
+
+        android:layout_marginTop="588dp"
+        android:layout_marginEnd="216dp"
+        android:text="save"
+        android:visibility="visible"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
 
 
 </androidx.constraintlayout.widget.ConstraintLayout>

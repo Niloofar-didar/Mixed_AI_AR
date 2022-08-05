@@ -1,0 +1,10 @@
+threads,aimodel,device
+1,MN V1 1.0 F 224,GPU
+1,MN v2 1.0 Q 224,GPU
+3,MN v1 1.0 Q 224,GPU
+3,IN V1 Q 224,GPU
+6,MN v1 0.25 Q 128,GPU
+6,mnasnet,GPU
+1,Inception v4 Quant,GPU
+1,Inception v4 Float,GPU
+5,Mobilenet v2 Float,GPU

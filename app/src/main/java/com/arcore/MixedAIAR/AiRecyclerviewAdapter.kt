@@ -117,7 +117,10 @@ class AiRecyclerviewAdapter(var mList: MutableList<AiItemsViewModel>, val stream
      * Updates model to parameters chosen by pressing ai_settings_card_view_design
      * Stops collector, stops bitmap stream
      */
-    private fun updateActiveModel(holder: ViewHolder, itemsView : AiItemsViewModel, position: Int) {
+
+
+
+    fun updateActiveModel(modelIndex: Int, deviceIndex: Int, numThreads: Int, itemsView : AiItemsViewModel, position: Int) {
         val switchToggleStream = activity.findViewById<Switch>(R.id.switch_streamToggle)
 
 //        if(itemsView.collector?.run == true) {
@@ -131,14 +134,15 @@ class AiRecyclerviewAdapter(var mList: MutableList<AiItemsViewModel>, val stream
 
 
         // Get UI information before delegating to background
-        val modelIndex: Int = holder.modelListView.checkedItemPosition
-        val deviceIndex: Int = holder.deviceListView.checkedItemPosition
-        val numThreads: Int = holder.numberPicker.value
+//        val modelIndex: Int = holder.modelListView.checkedItemPosition
+//        val deviceIndex: Int = holder.deviceListView.checkedItemPosition
+//        val numThreads: Int = holder.numberPicker.value
 
         // Do not update if there is no change
         if (modelIndex == itemsView.currentModel
             && deviceIndex == itemsView.currentDevice
-            && numThreads == itemsView.currentNumThreads) {
+            && numThreads == itemsView.currentNumThreads
+            && itemsView.classifier != null) {
             return
         }
         itemsView.currentModel = modelIndex
@@ -192,14 +196,17 @@ class AiRecyclerviewAdapter(var mList: MutableList<AiItemsViewModel>, val stream
         }
 
         itemsView.classifier?.numThreads = threads
-        holder.textAiInfo.text = "Threads: ${itemsView.classifier?.numThreads}\n" +
-                "Model: ${itemsView.classifier?.modelName}\n" +
-                "Device: ${itemsView.classifier?.device}"
+
         itemsView.collector = BitmapCollector(streamSource, itemsView.classifier, position, activity)
         if (switchToggleStream.isChecked) {
             itemsView.collector!!.startCollect()
         }
     }
 
-
+    private fun updateActiveModel(holder: ViewHolder, itemsView : AiItemsViewModel, position: Int) {
+        updateActiveModel(holder.modelListView.checkedItemPosition, holder.deviceListView.checkedItemPosition, holder.numberPicker.value, itemsView, position)
+        holder.textAiInfo.text = "Threads: ${itemsView.classifier?.numThreads}\n" +
+                "Model: ${itemsView.classifier?.modelName}\n" +
+                "Device: ${itemsView.classifier?.device}"
+    }
 }

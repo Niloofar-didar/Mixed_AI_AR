@@ -1,0 +1,10 @@
+model,xOffset,yOffset
+Cabin,200,200
+CocacolaFinal,200,0
+Cabin,200,-200
+CocacolaFinal,0,-200
+Cabin,-200,-200
+CocacolaFinal,-200,0
+Cabin,-200,200
+CocacolaFinal,0,200
+Cabin,0,0
