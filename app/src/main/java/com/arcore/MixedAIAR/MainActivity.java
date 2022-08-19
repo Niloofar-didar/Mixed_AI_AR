@@ -96,6 +96,7 @@ import static java.lang.Math.abs;
   compare anchor and hit position in place object
 
 */
+
 public class MainActivity extends AppCompatActivity implements AdapterView.OnItemSelectedListener {
 
     // BitmapUpdaterApi gets bitmap version of ar camera frame each time
@@ -106,13 +107,15 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
     private ArFragment fragment;
     private PointerDrawable pointer = new PointerDrawable();
     private static final String GLTF_ASSET = "https://storage.googleapis.com/ar-answers-in-search-models/static/Tiger/model.glb";
-    private static MainActivity Instance = new MainActivity();
+  //  private static MainActivity Instance = new MainActivity();
+    private static com.arcore.MixedAIAR.MainActivity Instance = new com.arcore.MixedAIAR.MainActivity();
 
-//    static
+
+    //    static
 //    {
 //        Instance =
 //    }
-    public static MainActivity getInstance()
+    public static com.arcore.MixedAIAR.MainActivity getInstance()
     {
         return Instance;
     }
@@ -121,9 +124,9 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
     private boolean isHitting;
 
    //  baseRenderable renderArray[] = new baseRenderable[obj_count];
-     List<baseRenderable> renderArray =  new ArrayList<baseRenderable>();
+    List<com.arcore.MixedAIAR.MainActivity.baseRenderable> renderArray =  new ArrayList<com.arcore.MixedAIAR.MainActivity.baseRenderable>();
 
-     List<Float>ratioArray = new ArrayList<Float>();
+    List<Float>ratioArray = new ArrayList<Float>();
     List<Float>cacheArray = new ArrayList<Float>();
     List<Float>updatednetw = new ArrayList<Float>();
 
@@ -146,7 +149,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
 
 
     double des_Q= 1- (0.3f); //# this is avg desired Q
-    double des_Thr = 20f;
+    double des_Thr = 25f;
     ListMultimap<Double, List<Double>> thParamList = ArrayListMultimap.create();//  a map from tot tris to measured RE
 
 
@@ -197,10 +200,10 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
 
     private ArrayList<String> scenarioList = new ArrayList<>();
     private String currentScenario = null;
-    private int scenarioTickLength = 60000;
+    private int scenarioTickLength = 50000;
     private ArrayList<String> taskConfigList = new ArrayList<>();
     private String currentTaskConfig = null;
-    private int taskConfigTickLength = 20000;
+    private int taskConfigTickLength = 50000;
     private int pauseLength = 10000;
 
     List<String> mLines = new ArrayList<>();
@@ -220,7 +223,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
     File obj;
     File tris_num;
     File GPU_usage;
-
+    boolean trisChanged=false;
     float percReduction = 0;
     int decision_p=1;
     List<Integer> o_tris = new ArrayList<>();
@@ -436,7 +439,7 @@ else{
     }
 
     //reference renderables, cannot be changed when decimation percentage is selected
-    private class refRenderable extends baseRenderable {
+    private class refRenderable extends com.arcore.MixedAIAR.MainActivity.baseRenderable {
         refRenderable(String filename, float tris) {
             this.fileName = filename;
             this.orig_tris=tris;
@@ -497,7 +500,7 @@ else{
 
 
     //Decimated renderable -- has the ability to redraw and make model request from the manager
-    private class decimatedRenderable extends baseRenderable {
+    private class decimatedRenderable extends com.arcore.MixedAIAR.MainActivity.baseRenderable {
         decimatedRenderable(String filename, float tris) {
             this.fileName = filename;
             this.orig_tris=tris;
@@ -719,7 +722,7 @@ else{
                             mList.get(i).getCollector().startCollect();
                         }
                     } else {
-                        Toast toast = Toast.makeText(MainActivity.this,
+                        Toast toast = Toast.makeText(com.arcore.MixedAIAR.MainActivity.this,
                                 "Set all AI models & Devices before continuing", Toast.LENGTH_LONG);
                         toast.show();
                         switchToggleStream.setChecked(false);
@@ -777,7 +780,7 @@ else{
         //user score setup
         Spinner ratingSpinner = (Spinner) findViewById(R.id.userScoreSpinner);
         ratingSpinner.setOnItemSelectedListener(this);
-        ArrayAdapter<String> ratingAdapter = new ArrayAdapter<String>(MainActivity.this,
+        ArrayAdapter<String> ratingAdapter = new ArrayAdapter<String>(com.arcore.MixedAIAR.MainActivity.this,
                 android.R.layout.simple_list_item_1, getResources().getStringArray(R.array.user_score));
         ratingAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         ratingSpinner.setAdapter(ratingAdapter);
@@ -815,12 +818,6 @@ else{
         }
 
 
-        Spinner MDESpinner = (Spinner) findViewById(R.id.MDE);
-        MDESpinner.setOnItemSelectedListener(this);
-        ArrayAdapter<Integer> MDESelectAdapter = new ArrayAdapter<Integer>(MainActivity.this, android.R.layout.simple_list_item_1, MDE_Selection);
-        //  ArrayAdapter WSelectAdapter1 = new ArrayAdapter(MainActivity.this,android.R.layout.simple_list_item_1, Collections.singletonList(W_Selection));
-        MDESelectAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        MDESpinner.setAdapter(MDESelectAdapter);
 
 
         String currentFolder = getExternalFilesDir(null).getAbsolutePath();
@@ -889,7 +886,7 @@ else{
             sbb.append(',');
             sbb.append("nextTris");
             sbb.append(',');
-            sbb.append("Algorithm Cal Tris");
+            sbb.append("Algorithm_Tris");
             sbb.append(',');
             sbb.append("Recalculated Tris");
             sbb.append(',');
@@ -898,6 +895,8 @@ else{
             sbb.append("pAI");
             sbb.append(',');
             sbb.append("TwoModels_Accuracy");
+            sbb.append(',');
+            sbb.append("tot_tris");
             sbb.append('\n');
             writer.write(sbb.toString());
             System.out.println("done!");
@@ -1074,53 +1073,53 @@ else{
         //setup the model drop down menu
         Spinner modelSpinner = (Spinner) findViewById(R.id.modelSelect);
         modelSpinner.setOnItemSelectedListener(this);
-        ArrayAdapter<String> modelSelectAdapter = new ArrayAdapter<String>(MainActivity.this,
+        ArrayAdapter<String> modelSelectAdapter = new ArrayAdapter<String>(com.arcore.MixedAIAR.MainActivity.this,
                 android.R.layout.simple_list_item_1, assetList);
         modelSelectAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         modelSpinner.setAdapter(modelSelectAdapter);
 
 
         //setup the model drop down for object count selection
-        Spinner countSpinner = (Spinner) findViewById(R.id.modelSelect2);
-        countSpinner.setOnItemSelectedListener(this);
-        ArrayAdapter<Integer> countSelectAdapter = new ArrayAdapter<Integer>(MainActivity.this,
-                android.R.layout.simple_list_item_1, objcount);
-        countSelectAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        countSpinner.setAdapter(countSelectAdapter);
+//        Spinner countSpinner = (Spinner) findViewById(R.id.modelSelect2);
+//        countSpinner.setOnItemSelectedListener(this);
+//        ArrayAdapter<Integer> countSelectAdapter = new ArrayAdapter<Integer>(MainActivity.this,
+//                android.R.layout.simple_list_item_1, objcount);
+//        countSelectAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+//        countSpinner.setAdapter(countSelectAdapter);
 
 
         for (int a = 0; a < temp_ww; a++) {
             W_Selection[a] = a + 1;
         }
         //setup the model drop down for object count selection
-        Spinner WSpinner = (Spinner) findViewById(R.id.WSelect);
-        WSpinner.setOnItemSelectedListener(this);
-        ArrayAdapter<Integer> WSelectAdapter = new ArrayAdapter<Integer>(MainActivity.this, android.R.layout.simple_list_item_1, W_Selection);
-        //  ArrayAdapter WSelectAdapter1 = new ArrayAdapter(MainActivity.this,android.R.layout.simple_list_item_1, Collections.singletonList(W_Selection));
-        WSelectAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        WSpinner.setAdapter(WSelectAdapter);
-
-        final int[] ww = {(int) WSpinner.getSelectedItem()};
-
-
-        //setup the model drop down for object count selection
-        Spinner BWSpinner = (Spinner) findViewById(R.id.Bwidth);
-        BWSpinner.setOnItemSelectedListener(this);
-        ArrayAdapter<Integer> BWSelectAdapter = new ArrayAdapter<Integer>(MainActivity.this, android.R.layout.simple_list_item_1, BW_Selection);
-        //  ArrayAdapter WSelectAdapter1 = new ArrayAdapter(MainActivity.this,android.R.layout.simple_list_item_1, Collections.singletonList(W_Selection));
-        BWSelectAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        BWSpinner.setAdapter(BWSelectAdapter);
+//        Spinner WSpinner = (Spinner) findViewById(R.id.WSelect);
+//        WSpinner.setOnItemSelectedListener(this);
+//        ArrayAdapter<Integer> WSelectAdapter = new ArrayAdapter<Integer>(MainActivity.this, android.R.layout.simple_list_item_1, W_Selection);
+//        //  ArrayAdapter WSelectAdapter1 = new ArrayAdapter(MainActivity.this,android.R.layout.simple_list_item_1, Collections.singletonList(W_Selection));
+//        WSelectAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+//        WSpinner.setAdapter(WSelectAdapter);
+//
+//        final int[] ww = {(int) WSpinner.getSelectedItem()};
 
 
         //setup the model drop down for object count selection
-        Spinner policySpinner = (Spinner) findViewById(R.id.policy);
-        policySpinner.setOnItemSelectedListener(this);
-        ArrayAdapter<String> policySelectAdapter = new ArrayAdapter<String>(MainActivity.this,
-                android.R.layout.simple_list_item_1, Policy_Selection);
-        policySelectAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        policySpinner.setAdapter(policySelectAdapter);
+//        Spinner BWSpinner = (Spinner) findViewById(R.id.Bwidth);
+//        BWSpinner.setOnItemSelectedListener(this);
+//        ArrayAdapter<Integer> BWSelectAdapter = new ArrayAdapter<Integer>(MainActivity.this, android.R.layout.simple_list_item_1, BW_Selection);
+//        //  ArrayAdapter WSelectAdapter1 = new ArrayAdapter(MainActivity.this,android.R.layout.simple_list_item_1, Collections.singletonList(W_Selection));
+//        BWSelectAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+//        BWSpinner.setAdapter(BWSelectAdapter);
 
-        policy = policySpinner.getSelectedItem().toString();
+
+        //setup the model drop down for object count selection
+//        Spinner policySpinner = (Spinner) findViewById(R.id.policy);
+//        policySpinner.setOnItemSelectedListener(this);
+//        ArrayAdapter<String> policySelectAdapter = new ArrayAdapter<String>(MainActivity.this,
+//                android.R.layout.simple_list_item_1, Policy_Selection);
+//        policySelectAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+//        policySpinner.setAdapter(policySelectAdapter);
+
+//        policy = policySpinner.getSelectedItem().toString();
 
         Spinner scenarioSpinner = (Spinner) findViewById(R.id.scenario);
         scenarioSpinner.setOnItemSelectedListener(this);
@@ -1137,50 +1136,50 @@ else{
         taskConfigSpinner.setAdapter(taskConfigSelectAdapter);
 
         //decimate all obj at the same time
-        Switch referenceObjectSwitch = (Switch) findViewById(R.id.refSwitch);
-        referenceObjectSwitch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
-
-                if (b) {
-                    decAll = true;
-                } else {
-                    decAll = false;
-                }
-            }
-        });
+//        Switch referenceObjectSwitch = (Switch) findViewById(R.id.refSwitch);
+//        referenceObjectSwitch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+//            @Override
+//            public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
+//
+//                if (b) {
+//                    decAll = true;
+//                } else {
+//                    decAll = false;
+//                }
+//            }
+//        });
 
 // for prediction
-        Switch multipleSwitch = (Switch) findViewById(R.id.refSwitch4);
-        multipleSwitch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
+//        Switch multipleSwitch = (Switch) findViewById(R.id.refSwitch4);
+//        multipleSwitch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+//            @Override
+//            public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
+//
+//                if (b) {
+//                    autoPlace = true;
+//
+//                } else {
+//                    autoPlace = false;
+//                    // stopService(i);
+//
+//
+//                }
+//            }
+//
+//        });
 
-                if (b) {
-                    autoPlace = true;
 
-                } else {
-                    autoPlace = false;
-                    // stopService(i);
-
-
-                }
-            }
-
-        });
-
-
-        Switch underpercSwitch = (Switch) findViewById(R.id.un_percSwitch3);
-        underpercSwitch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
-                if (b) {
-                    under_Perc = true;
-                } else {
-                    under_Perc = false;
-                }
-            }
-        });
+//        Switch underpercSwitch = (Switch) findViewById(R.id.un_percSwitch3);
+//        underpercSwitch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+//            @Override
+//            public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
+//                if (b) {
+//                    under_Perc = true;
+//                } else {
+//                    under_Perc = false;
+//                }
+//            }
+//        });
 
 
 
@@ -1345,53 +1344,55 @@ else{
         placeObjectButton.setOnClickListener(new View.OnClickListener() {
             public void onClick(View view) {
 
-                policy = policySpinner.getSelectedItem().toString();
+               // policy = policySpinner.getSelectedItem().toString();
 
 
-                int selectedCount = (int) countSpinner.getSelectedItem();
+//                int selectedCount = (int) countSpinner.getSelectedItem();
+//
+//                if (autoPlace == true && selectedCount != 1) {
+//                    // renderArray[objectCount] = new refRenderable(modelSpinner.getSelectedItem().toString());
+//                    //addObject(Uri.parse("models/" + currentModel + ".sfb"), renderArray[objectCount]);
+//
+//
+//                    countDownTimer = new CountDownTimer(Long.MAX_VALUE, 100) {
+//
+//                        // This is called after every 3 sec interval.
+//                        public void onTick(long millisUntilFinished) {
+//
+//                            if (objectCount < selectedCount) {
+//                                float original_tris=excel_tris.get(excelname.indexOf(currentModel));
+//                                renderArray.add(objectCount, new decimatedRenderable(modelSpinner.getSelectedItem().toString(),original_tris));
+//                              //  renderArray[objectCount] = new decimatedRenderable(modelSpinner.getSelectedItem().toString(),original_tris);
+//
+//                                addObject(Uri.parse("models/" + currentModel + ".sfb"), renderArray.get(objectCount));
+//
+//                            }
+//                            if (objectCount == selectedCount)
+//                                countDownTimer.cancel();
+//
+//                        }
+//
+//                        public void onFinish() {
+//                            if (objectCount == selectedCount)
+//                                countDownTimer.cancel();
+//
+//
+//                        }
+//                    }.start();
+//
+//                    // countDownTimer.start();
+//
+//
+//                }
 
-                if (autoPlace == true && selectedCount != 1) {
-                    // renderArray[objectCount] = new refRenderable(modelSpinner.getSelectedItem().toString());
-                    //addObject(Uri.parse("models/" + currentModel + ".sfb"), renderArray[objectCount]);
-
-
-                    countDownTimer = new CountDownTimer(Long.MAX_VALUE, 100) {
-
-                        // This is called after every 3 sec interval.
-                        public void onTick(long millisUntilFinished) {
-
-                            if (objectCount < selectedCount) {
-                                float original_tris=excel_tris.get(excelname.indexOf(currentModel));
-                                renderArray.add(objectCount, new decimatedRenderable(modelSpinner.getSelectedItem().toString(),original_tris));
-                              //  renderArray[objectCount] = new decimatedRenderable(modelSpinner.getSelectedItem().toString(),original_tris);
-
-                                addObject(Uri.parse("models/" + currentModel + ".sfb"), renderArray.get(objectCount));
-
-                            }
-                            if (objectCount == selectedCount)
-                                countDownTimer.cancel();
-
-                        }
-
-                        public void onFinish() {
-                            if (objectCount == selectedCount)
-                                countDownTimer.cancel();
-
-
-                        }
-                    }.start();
-
-                    // countDownTimer.start();
-
-
-                } else {// define a counter 3 s to add obj ev time for gpu_model
+              //  else {// define a counter 3 s to add obj ev time for gpu_model
 
 
                     //   ImageView simpleAndy = new ImageView(this);
                     //  simpleAndy.setImageResource(R.drawable.droid_thumb);
                     // simpleAndy.setContentDescription("andy");
                     float original_tris=excel_tris.get(excelname.indexOf(currentModel));
-                    renderArray.add(objectCount,new decimatedRenderable(modelSpinner.getSelectedItem().toString(),original_tris));
+                    renderArray.add(objectCount,new com.arcore.MixedAIAR.MainActivity.decimatedRenderable(modelSpinner.getSelectedItem().toString(),original_tris));
                     addObject(Uri.parse("models/" + currentModel + ".sfb"), renderArray.get(objectCount));
                    
 
@@ -1399,7 +1400,7 @@ else{
 //                    renderArray[objectCount] = new decimatedRenderable(modelSpinner.getSelectedItem().toString());
 //                    addObject(Uri.parse("models/" + currentModel + ".sfb"), renderArray[objectCount]);
 
-                }
+                //}
 
 
 
@@ -1418,7 +1419,7 @@ else{
 
                 TextView posText = (TextView) findViewById(R.id.dec_req);
 
-                Toast toast = Toast.makeText(MainActivity.this,
+                Toast toast = Toast.makeText(com.arcore.MixedAIAR.MainActivity.this,
                         "Please Upload the decimated objects to the Phone storage", Toast.LENGTH_LONG);
 
                 toast.show();
@@ -1570,8 +1571,9 @@ else{
                         distance_log.remove(i);
                         deg_error_log.remove(i);
                         Server_reg_Freq.remove(i);
-                      //  decimate_thread.remove(i);
+                        //  decimate_thread.remove(i);
                         renderArray.remove(i);
+                        trisChanged=true;
                     }// if the item is selected
                 }
 
@@ -1626,7 +1628,7 @@ else{
                 distance_log.clear();
 
                 deg_error_log.clear();
-              //  lastQuality.clear();
+                //  lastQuality.clear();
                 Server_reg_Freq.clear();
 
                 decimate_thread.clear();
@@ -1640,8 +1642,7 @@ else{
             mList.clear();
             new Thread(() -> {
                 try {
-//                    InputStream taskInputStream = getResources().getAssets().open("taskconfigs" + File.separator + currentTaskConfig + ".csv");
-//                    InputStreamReader taskInputStreamReader = new InputStreamReader(taskInputStream);
+//
                         String curFolder = getExternalFilesDir(null).getAbsolutePath();
 
                         String taskFilepath = curFolder + File.separator + "saved_scenarios_configs" + File.separator + "save" + currentTaskConfig;
@@ -1650,8 +1651,7 @@ else{
                     BufferedReader taskBr = new BufferedReader(taskInputStreamReader);
                     taskBr.readLine();  // column names
 
-//                    InputStream sceneInputStream = getResources().getAssets().open("scenarios" + File.separator + currentScenario + ".csv");
-//                    InputStreamReader sceneInputStreamReader = new InputStreamReader(sceneInputStream);
+
                         String sceneFilepath = curFolder + File.separator + "saved_scenarios_configs" + File.separator + "save" + currentScenario;
                         InputStreamReader sceneInputStreamReader = new InputStreamReader(new BufferedInputStream(new FileInputStream(sceneFilepath)));
 
@@ -1667,15 +1667,7 @@ else{
                                 if (objectCount == 0) {
                                     this.cancel();
                                     runOnUiThread(() -> Toast.makeText(MainActivity.this, "Finished clearing scenario, wait for some time", Toast.LENGTH_LONG).show());
-//                                    Timer t = new Timer();
-//                                    t.schedule(new TimerTask() {
-//                                        @Override
-//                                        public void run() {
-//                                            switchToggleStream.setChecked(false);
-//                                            runOnUiThread(() -> Toast.makeText(MainActivity.this, "You can pause and save collected data now", Toast.LENGTH_LONG).show());
-//                                        }
-//                                    }, pauseLength);
-//                                    switchToggleStream.setChecked(false);
+
                                     runOnUiThread(() -> Toast.makeText(MainActivity.this, "You can pause and save collected data now", Toast.LENGTH_LONG).show());
                                     return;
                                 }
@@ -1700,13 +1692,7 @@ else{
                                     if (record == null) {
                                         this.cancel();
                                         runOnUiThread(() -> Toast.makeText(MainActivity.this, "Finished loading scenario", Toast.LENGTH_LONG).show());
-//                                        Timer t = new Timer();
-//                                        t.schedule(new TimerTask() {
-//                                            @Override
-//                                            public void run() {
-//                                                removeTimer.start();
-//                                            }
-//                                        }, pauseLength);
+
                                         removeTimer.start();
                                         return;
                                     }
@@ -1717,7 +1703,7 @@ else{
                                     float yOffset = Float.parseFloat(cols[2]);
 
 
-                                    policy = policySpinner.getSelectedItem().toString();
+                                  //  policy = policySpinner.getSelectedItem().toString();
 
                                     modelSpinner.setSelection(modelSelectAdapter.getPosition(currentModel));
                                     float original_tris = excel_tris.get(excelname.indexOf(currentModel));
@@ -1736,52 +1722,63 @@ else{
                             public void onFinish() {
                             }
                         };
-
+                        final boolean[] startObject = {false};
                         taskTimer = new CountDownTimer(Long.MAX_VALUE, taskConfigTickLength) {
                             @Override
                             public void onTick(long millisUntilFinished) {
+
+                                /// This is when we turned on the AI tasks and waited for 50s. Now we start the object placement
+                                if(startObject[0] ==true){
+
+                                    this.cancel();
+                                    sceneTimer.start();
+                                    return;
+
+                                }
+
                                 try {
                                     String record = taskBr.readLine();
-                                    if (record == null) {
-                                        this.cancel();
-                                        Toast.makeText(MainActivity.this, "All AI task info has been applied", Toast.LENGTH_LONG).show();
-                                        switchToggleStream.setChecked(true);
-                                        Timer t = new Timer();
-//                                        t.schedule(new TimerTask() {
-//                                            @Override
-//                                            public void run() {
-//                                                sceneTimer.start();
-//                                            }
-//                                        }, pauseLength);
-                                        sceneTimer.start();
-                                        return;
+                                    // this is to run all selected AI tasks -> after this we need to waite for 50 sec and them start the object placement
+                                    while (record != null) {
+
+                                        if (record!=null && switchToggleStream.isChecked())// this is to restart the previous AI tasks
+                                            switchToggleStream.setChecked(false);
+
+                                        String[] cols = record.split(",");
+                                        int numThreads = Integer.parseInt(cols[0]);
+                                        String aiModel = cols[1];
+                                        String device = cols[2];
+
+                                        AiItemsViewModel taskView = new AiItemsViewModel();
+                                        mList.add(taskView);
+                                        adapter.setMList(mList);
+                                        recyclerView_aiSettings.setAdapter(adapter);
+                                        adapter.updateActiveModel(
+                                                taskView.getModels().indexOf(aiModel),
+                                                taskView.getDevices().indexOf(device),
+                                                numThreads,
+                                                taskView,
+                                                i[0]
+                                        );
+
+                                        i[0]++;
+                                        textNumOfAiTasks.setText(String.format("%d", i[0]));
+//
+                                        Toast.makeText(MainActivity.this,
+                                                String.format("New AI Task %s %s %d", taskView.getClassifier().getModelName(), taskView.getClassifier().getDevice(), taskView.getClassifier().getNumThreads()),
+                                                Toast.LENGTH_SHORT).show();
+
+                                        record = taskBr.readLine();
+
                                     }
 
-                                    if (switchToggleStream.isChecked()) switchToggleStream.setChecked(false);
+                                    if (record == null) {// this is to immidiately start the AI tasks
+                                        Toast.makeText(MainActivity.this, "All AI task info has been applied", Toast.LENGTH_LONG).show();
+                                        switchToggleStream.setChecked(true);
+                                        startObject[0] =true; // to make sure if we have ML tasks running
+                                    }
 
-                                    String[] cols = record.split(",");
-                                    int numThreads = Integer.parseInt(cols[0]);
-                                    String aiModel = cols[1];
-                                    String device = cols[2];
 
-                                    AiItemsViewModel taskView = new AiItemsViewModel();
-                                    mList.add(taskView);
-                                    adapter.setMList(mList);
-                                    recyclerView_aiSettings.setAdapter(adapter);
-                                    adapter.updateActiveModel(
-                                            taskView.getModels().indexOf(aiModel),
-                                            taskView.getDevices().indexOf(device),
-                                            numThreads,
-                                            taskView,
-                                            i[0]
-                                    );
-
-                                    i[0]++;
-                                    textNumOfAiTasks.setText(String.format("%d", i[0]));
-//
-                                    Toast.makeText(MainActivity.this,
-                                            String.format("New AI Task %s %s %d", taskView.getClassifier().getModelName(), taskView.getClassifier().getDevice(), taskView.getClassifier().getNumThreads()),
-                                            Toast.LENGTH_SHORT).show();
                                 } catch (IOException e) {
                                     e.printStackTrace();
                                 }
@@ -1992,11 +1989,11 @@ else{
                         {
                            if(!setDesTh){
                                double throughput= getThroughput();
-                               des_Thr= 0.6*throughput;
+                               des_Thr= 0.65*throughput;
                                setDesTh=true;
                            }
 
-                            new dataCol(MainActivity.this).run(); // this is to collect mean thr, total_tris. average dis
+                            new dataCol(com.arcore.MixedAIAR.MainActivity.this).run(); // this is to collect mean thr, total_tris. average dis
 
                         }
 /* since we periodically run the model for thr/RE -> even if there is a wrong point before adding tris count and the model calculates wrong num, it will be adjusted based on new
@@ -2533,17 +2530,17 @@ private float computeWidth(ArrayList<Float> point){
 
 
 
-            if(policy== "Aggressive")
-                predicted_distances.get(i).set(t,maxdis);
-            else if (policy== "Conservative")
-                predicted_distances.get(i).set(t,mindis);
-            else { // middle case
+//            if(policy== "Aggressive")
+//                predicted_distances.get(i).set(t,maxdis);
+//            else if (policy== "Conservative")
+//                predicted_distances.get(i).set(t,mindis);
+           // else { // middle case
 
                 ArrayList<Float> point= nextfivesec.get(t);// get next five area coordinates for time t
                 float pointcx= point.get(0); float pointcz= point.get(1);
                 tempdis = renderArray.get(i).return_distance_predicted(pointcx, pointcz);
                 predicted_distances.get(i).set(t, tempdis);
-            }
+            //}
        }
 
     }
@@ -2796,7 +2793,7 @@ private float computeWidth(ArrayList<Float> point){
     }
 
 
-    public List<String> predictwindow( MainActivity ma,List<Boolean> cls, float fath, float qprev, float d11, int ww, int ind, int dindex, ArrayList<Float> predicted_d) {
+    public List<String> predictwindow(com.arcore.MixedAIAR.MainActivity ma, List<Boolean> cls, float fath, float qprev, float d11, int ww, int ind, int dindex, ArrayList<Float> predicted_d) {
 
 
         List<String> temppredict = new ArrayList<String>();
@@ -3300,8 +3297,8 @@ public float delta (float a, float b , float c1,float creal,  float d, float gam
     //This also creates a file in the apps internal directory to help me find it better, to be honest.
     private void initializeGallery() {
         //LinearLayout galleryR1 = findViewById(R.id.gallery_layout_r1);
-//        RelativeLayout galleryr2 = findViewById(R.id.gallery_layout);
-        ConstraintLayout galleryr2 = findViewById(R.id.gallery_layout);
+     //   RelativeLayout galleryr2 = findViewById(R.id.gallery_layout);
+       ConstraintLayout galleryr2 = findViewById(R.id.gallery_layout);
 
         //row 1
 
@@ -3314,7 +3311,7 @@ public float delta (float a, float b , float c1,float creal,  float d, float gam
 
     //this came with the app, it sends out a ray to a plane and wherever it hits, it makes an anchor
     //then it calls placeobject
-    private void addObject(Uri model, baseRenderable renderArrayObj) {
+    private void addObject(Uri model, com.arcore.MixedAIAR.MainActivity.baseRenderable renderArrayObj) {
         Frame frame = fragment.getArSceneView().getArFrame();
         android.graphics.Point pt = getScreenCenter();
         List<HitResult> hits;
@@ -3362,7 +3359,7 @@ public float delta (float a, float b , float c1,float creal,  float d, float gam
 
     }
 
-    private void placeObject(ArFragment fragment, Anchor anchor, Uri model, baseRenderable renderArrayObj) { ;
+    private void placeObject(ArFragment fragment, Anchor anchor, Uri model, com.arcore.MixedAIAR.MainActivity.baseRenderable renderArrayObj) { ;
 
 
     try {
@@ -3477,14 +3474,14 @@ public float delta (float a, float b , float c1,float creal,  float d, float gam
 
         deg_error_log.add("");
 
-
+        trisChanged=true;
 
         TextView posText = (TextView) findViewById(R.id.objnum);
         posText.setText( "obj_num: " +objectCount);
 
         File file = new File(this.getExternalFilesDir(null), "/degmodel_file.csv");
 
-        File tris = new File(MainActivity.this.getFilesDir(), "text");
+        File tris = new File(com.arcore.MixedAIAR.MainActivity.this.getFilesDir(), "text");
 
         Date d1 = null;
         Date d2 = null;
@@ -3767,8 +3764,7 @@ public float delta (float a, float b , float c1,float creal,  float d, float gam
                         //    if(objectCount>=0) { // remove- ni april 21 temperory
                         Float mean_gpu = 0f;
                         float dist = 0;
-//                        if (renderArray.size()>=2)
-                        if (objectCount >= 1)
+                        if (renderArray.size()>=2)
                             dist = renderArray.get(0).return_distance();
 
                         String filname=" ";

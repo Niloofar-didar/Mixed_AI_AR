@@ -74,136 +74,140 @@ public class dataCol implements Runnable {
         double meanDk = 0; // mean current dis
         double meanDkk = 0; // mean of d in the next period-> you need to cal the average of predicted d for all the objects
         meanThr = mInstance.getThroughput();
-
-  if(meanThr<90 && meanThr>1){
-
-        meanThr = (double) Math.round(meanThr * 100) / 100;
-
-
-
         totTris = mInstance.total_tris;
-        ///1000;
-        for (int i = 0; i < mInstance.objectCount; i++) {
-            meanDk += (double) mInstance.renderArray.get(i).return_distance();
-            meanDkk += mInstance.predicted_distances.get(i).get(1); //  // gets the first time, next 2s-- 3s of every object, ie. d1 of every obj
-        }
 
-        meanDk /= mInstance.objectCount;
-        meanDkk /= mInstance.objectCount;
-        meanDk = (double) (Math.round((double) (100 * meanDk))) / 100;
-        meanDkk = (double) (Math.round((double) (100 * meanDkk))) / 100;
+        if(meanThr<90 && meanThr>1){
 
-        if (meanDkk == 0)
-            meanDkk = meanDk;
+            meanThr = (double) Math.round(meanThr * 100) / 100;
 
-        int variousTris = mInstance.trisMeanThr.keySet().size();
+
+
+
+            ///1000;
+            for (int i = 0; i < mInstance.objectCount; i++) {
+                meanDk += (double) mInstance.renderArray.get(i).return_distance();
+                meanDkk += mInstance.predicted_distances.get(i).get(1); //  // gets the first time, next 2s-- 3s of every object, ie. d1 of every obj
+            }
+
+            meanDk /= mInstance.objectCount;
+            meanDkk /= mInstance.objectCount;
+            meanDk = (double) (Math.round((double) (100 * meanDk))) / 100;
+            meanDkk = (double) (Math.round((double) (100 * meanDkk))) / 100;
+
+            if (meanDkk == 0)
+                meanDkk = meanDk;
+
+            int variousTris = mInstance.trisMeanThr.keySet().size();
 
 
 // nill added 8 april
-        int ind = -1;
-        if (variousTris < 3) {
+            int ind = -1;
+            if (variousTris < 3) {
 
-            if (mInstance.trisMeanThr.get(totTris).size() == 10) { // we keep inf of last 10 points
-
-                ind = cleanOutArraysThr(totTris, meanDk, mInstance);// cleans out the closest data to the curr one
-
-            }
-
-            mInstance.trisMeanThr.put(totTris, meanThr);
-            mInstance.thParamList.put(totTris, Arrays.asList(totTris, meanDk, 1.0));
-            int startTris = mInstance.totTrisList.indexOf(totTris);
-            if (mInstance.totTrisList.size() != 0 && ind != -1)
-                mInstance.totTrisList.set(ind + startTris, totTris);
-            else
-                mInstance.totTrisList.add(totTris);
-            mInstance.trisMeanDisk.put(totTris, meanDk); //removes from the head (older data) -> to then add to the tail
-            mInstance.trisMeanDiskk.put(totTris, meanDkk);
-
-
-        }
-
-
-        if (mInstance.objectCount != 0) {//to avoid wrong inf from tris=0 -> we won't have re or distance at this situation
-
-            int size = mInstance.trisMeanThr.size();// total points regardless of points with similar tris
-            // starting throughput model
-            if (variousTris >= 2) {// at least two points to start modeling
-
-
-// checks error of the model after new added model
-                double mape = 0.0; // mean of absolute error
-                double fit = mInstance.rohT * totTris + mInstance.rohD * meanDk + mInstance.delta;
-                //double fit = mInstance.thSlope * totTris + mInstance.thIntercept;;
-                mape = Math.abs((meanThr - fit) / meanThr);
-
-                ind = -1;
                 if (mInstance.trisMeanThr.get(totTris).size() == 10) { // we keep inf of last 10 points
+
                     ind = cleanOutArraysThr(totTris, meanDk, mInstance);// cleans out the closest data to the curr one
 
                 }
 
+                mInstance.trisMeanThr.put(totTris, meanThr);
+                mInstance.thParamList.put(totTris, Arrays.asList(totTris, meanDk, 1.0));
+                int startTris = mInstance.totTrisList.indexOf(totTris);
+                if (mInstance.totTrisList.size() != 0 && ind != -1)
+                    mInstance.totTrisList.set(ind + startTris, totTris);
+                else
+                    mInstance.totTrisList.add(totTris);
+                mInstance.trisMeanDisk.put(totTris, meanDk); //removes from the head (older data) -> to then add to the tail
+                mInstance.trisMeanDiskk.put(totTris, meanDkk);
 
-                 if (mape >= 0.1 && variousTris >= 2) {// we ignore tris=0 them we need points with at least two diff tris in order to generate the line
+
+            }
+
+
+            if (mInstance.objectCount != 0) {//to avoid wrong inf from tris=0 -> we won't have re or distance at this situation
+
+                int size = mInstance.trisMeanThr.size();// total points regardless of points with similar tris
+                // starting throughput model
+                if (variousTris >= 2)
+
+
+                {// at least two points to start modeling
+
+
+// checks error of the model after new added model
+                    double mape = 0.0; // mean of absolute error
+                    double fit = mInstance.rohT * totTris + mInstance.rohD * meanDk + mInstance.delta;
+                    //double fit = mInstance.thSlope * totTris + mInstance.thIntercept;;
+                    mape = Math.abs((meanThr - fit) / meanThr);
+
+                    ind = -1;
+                    if (mInstance.trisMeanThr.get(totTris).size() == 10) { // we keep inf of last 10 points
+                        ind = cleanOutArraysThr(totTris, meanDk, mInstance);// cleans out the closest data to the curr one
+
+                    }
+
+
+                    if (mape >= 0.1 && variousTris >= 2) {// we ignore tris=0 them we need points with at least two diff tris in order to generate the line
 // 8 april
 
-               // if (variousTris >= 2) {
-                    // first delete if the bin is full -> look for the index which has the distance very close to the current distance
-                    // int tListSize = mInstance.totTrisList.size();
-                    int startTris = mInstance.totTrisList.indexOf(totTris);
-                    if (mInstance.totTrisList.size() != 0 && ind != -1)
-                        mInstance.totTrisList.set(ind + startTris, totTris);
-                    else
-                        mInstance.totTrisList.add(totTris);
+                        // if (variousTris >= 2) {
+                        // first delete if the bin is full -> look for the index which has the distance very close to the current distance
+                        // int tListSize = mInstance.totTrisList.size();
+                        int startTris = mInstance.totTrisList.indexOf(totTris);
+                        if (mInstance.totTrisList.size() != 0 && ind != -1)
+                            mInstance.totTrisList.set(ind + startTris, totTris);
+                        else
+                            mInstance.totTrisList.add(totTris);
 
-                    mInstance.trisMeanThr.put(totTris, meanThr);
-                    mInstance.thParamList.put(totTris, Arrays.asList(totTris, meanDk, 1.0));
-                    mInstance.trisMeanDisk.put(totTris, meanDk); //removes from the head (older data) -> to then add to the tail
-                    mInstance.trisMeanDiskk.put(totTris, meanDkk);
-
-
-                   // if( mape >= 0.1 ){
-
-                    ListMultimap<Double, List<Double>> copythParamList = ArrayListMultimap.create(mInstance.thParamList);// take a copy to then fill it for training up to capacity of 10
-                    ListMultimap<Double, Double> copytrisMeanDisk = ArrayListMultimap.create(mInstance.trisMeanDisk);// take a copy to then fill it for training up to capacity of 10
-                    ListMultimap<Double, Double> copytrisMeanDiskk = ArrayListMultimap.create(mInstance.trisMeanDiskk);// take a copy to then fill it for training up to capacity of 10
-                    ListMultimap<Double, Double> copytrisMeanThr = ArrayListMultimap.create(mInstance.trisMeanThr);// take a copy to then fill it for training up to capacity of 10
+                        mInstance.trisMeanThr.put(totTris, meanThr);
+                        mInstance.thParamList.put(totTris, Arrays.asList(totTris, meanDk, 1.0));
+                        mInstance.trisMeanDisk.put(totTris, meanDk); //removes from the head (older data) -> to then add to the tail
+                        mInstance.trisMeanDiskk.put(totTris, meanDkk);
 
 
-                    for (double curT : mInstance.trisMeanThr.keySet()) {
+                        // if( mape >= 0.1 ){
 
-                        //  if(curT!=0 && mInstance.trisDec.containsKey((float) curT)  && mInstance.trisDec.get((float) curT).get(0)==true)
-                        //  decTris.add(curT);// a list of all decimated-exp tris
+                        ListMultimap<Double, List<Double>> copythParamList = ArrayListMultimap.create(mInstance.thParamList);// take a copy to then fill it for training up to capacity of 10
+                        ListMultimap<Double, Double> copytrisMeanDisk = ArrayListMultimap.create(mInstance.trisMeanDisk);// take a copy to then fill it for training up to capacity of 10
+                        ListMultimap<Double, Double> copytrisMeanDiskk = ArrayListMultimap.create(mInstance.trisMeanDiskk);// take a copy to then fill it for training up to capacity of 10
+                        ListMultimap<Double, Double> copytrisMeanThr = ArrayListMultimap.create(mInstance.trisMeanThr);// take a copy to then fill it for training up to capacity of 10
 
-                        if (mInstance.trisMeanDisk.get(curT).size() < 10) {
-                            int index = mInstance.trisMeanDisk.get(curT).size();
-                            double mmeanTh = 0, mmeanDK = 0;
 
-                            for (int i = 0; i < index; i++) {
-                                mmeanTh += mInstance.trisMeanThr.get(curT).get(i);
-                                mmeanDK += mInstance.trisMeanDisk.get(curT).get(i);
-                                //mmeanDKk+=mInstance.trisMeanDiskk.get(totTris).get(i);
-                            }
+                        for (double curT : mInstance.trisMeanThr.keySet()) {
 
-                            mmeanTh /= index;
-                            mmeanDK /= index;
-                            //   mmeanDKk/=index;
+                            //  if(curT!=0 && mInstance.trisDec.containsKey((float) curT)  && mInstance.trisDec.get((float) curT).get(0)==true)
+                            //  decTris.add(curT);// a list of all decimated-exp tris
 
-                            for (int j = index; j < 10; j++) {
+                            if (mInstance.trisMeanDisk.get(curT).size() < 10) {
+                                int index = mInstance.trisMeanDisk.get(curT).size();
+                                double mmeanTh = 0, mmeanDK = 0;
 
-                                copytrisMeanThr.put(curT, mmeanTh);
-                                copythParamList.put(curT, Arrays.asList(curT, mmeanDK, 1.0));
+                                for (int i = 0; i < index; i++) {
+                                    mmeanTh += mInstance.trisMeanThr.get(curT).get(i);
+                                    mmeanDK += mInstance.trisMeanDisk.get(curT).get(i);
+                                    //mmeanDKk+=mInstance.trisMeanDiskk.get(totTris).get(i);
+                                }
 
-                            }
-                        }// if <10
-                    }
+                                mmeanTh /= index;
+                                mmeanDK /= index;
+                                //   mmeanDKk/=index;
+
+                                for (int j = index; j < 10; j++) {
+
+                                    copytrisMeanThr.put(curT, mmeanTh);
+                                    copythParamList.put(curT, Arrays.asList(curT, mmeanDK, 1.0));
+
+                                }
+                            }// if <10
+                        }
 
 
             /* @@@@ here we check if we have any record for the
           decimated objects, if yes, we need to check the ratio of decimated itration over added scenarios, we define a rate of 40% to make sure that we have
            at least the record for decimated object equal to 40% of the added scenarios*/
-                    int decCount = mInstance.decTris.size();// #iterations of decimated objects
+                        int decCount = mInstance.decTris.size();// #iterations of decimated objects
 
-                   ///@@@ nill commented on june 5 ince for remove scenarios it ruins the throughput modeling-> we have reduction in tris already
+                        ///@@@ nill commented on june 5 ince for remove scenarios it ruins the throughput modeling-> we have reduction in tris already
                    /*
                     if (decCount != 0) // means that we have at least one record of decimated objects
                     {
@@ -234,107 +238,107 @@ public class dataCol implements Runnable {
                     }*/
 
 
-                    double[] throughput = copytrisMeanThr.values().stream()
-                            .mapToDouble(Double::doubleValue)
-                            .toArray();
+                        double[] throughput = copytrisMeanThr.values().stream()
+                                .mapToDouble(Double::doubleValue)
+                                .toArray();
 
-                    double[] y = Arrays.copyOfRange(throughput, 0, throughput.length);
-                    double[][] thRegParameters = copythParamList.values().stream()
-                            .map(l -> l.stream().mapToDouble(Double::doubleValue).toArray())
-                            .toArray(double[][]::new);
+                        double[] y = Arrays.copyOfRange(throughput, 0, throughput.length);
+                        double[][] thRegParameters = copythParamList.values().stream()
+                                .map(l -> l.stream().mapToDouble(Double::doubleValue).toArray())
+                                .toArray(double[][]::new);
 
-                    mLinearRegression regression = new mLinearRegression(thRegParameters, y);
-                    mInstance.rohT = regression.beta(0);
-                    mInstance.rohD = regression.beta(1);
-                    mInstance.delta = regression.beta(2);
-                    mInstance.thRmse = regression.rmse;
-                    trainedThr = true;
+                        mLinearRegression regression = new mLinearRegression(thRegParameters, y);
+                        mInstance.rohT = regression.beta(0);
+                        mInstance.rohD = regression.beta(1);
+                        mInstance.delta = regression.beta(2);
+                        mInstance.thRmse = regression.rmse;
+                        trainedThr = true;
 
-       //         }// end of modeling throughput
+                        //         }// end of modeling throughput
 
-            }// end of i tris>2
+                    }// end of i tris>2
 
-                double predThr = mInstance.rohT * totTris + mInstance.rohD * meanDk + mInstance.delta;
+                    double predThr = mInstance.rohT * totTris + mInstance.rohD * meanDk + mInstance.delta;
 
-                mape = Math.abs((meanThr - predThr) / meanThr);
-                if (mape >= 0.1)
-                    accmodel = false;// after training we check to see if the model is accurate to then cal next triangle
-
-
-                predThr = (double) Math.round((double) predThr * 100) / 100;
-                writeThr(meanThr, predThr, trainedThr);// for the urrent period
+                    mape = Math.abs((meanThr - predThr) / meanThr);
+                    if (mape >= 0.1)
+                        accmodel = false;// after training we check to see if the model is accurate to then cal next triangle
 
 
-            } //  throughput model
+                    predThr = (double) Math.round((double) predThr * 100) / 100;
+                    writeThr(meanThr, predThr, trainedThr);// for the urrent period
+
+
+                } //  throughput model
 
 //
 
 
-            //******************  RE modeling *************
-            // double sum = 0;
-            double avgq = calculateMeanQuality();
+                //******************  RE modeling *************
+                // double sum = 0;
+                double avgq = calculateMeanQuality();
 
-            double PRoAR = (double) Math.round((avgq / mInstance.des_Q) * 100) / 100;
-            double PRoAI = (double) Math.round((meanThr / mInstance.des_Thr) * 100) / 100;
-            double reMsrd = PRoAR / PRoAI;
-            reMsrd = (double) Math.round(reMsrd * 100) / 100;
+                double PRoAR = (double) Math.round((avgq / mInstance.des_Q) * 100) / 100;
+                double PRoAI = (double) Math.round((meanThr / mInstance.des_Thr) * 100) / 100;
+                double reMsrd = PRoAR / PRoAI;
+                reMsrd = (double) Math.round(reMsrd * 100) / 100;
 
-            // double predThr=  mInstance.thSlope * totTris + mInstance.thIntercept;
-            double predThr = mInstance.rohT * totTris + mInstance.rohD * meanDk + mInstance.delta;
+                // double predThr=  mInstance.thSlope * totTris + mInstance.thIntercept;
+                double predThr = mInstance.rohT * totTris + mInstance.rohD * meanDk + mInstance.delta;
 
-            predThr = (double) Math.round((double) predThr * 100) / 100;// uses predicted thr in current period to model it based on current measured RE
-            int reModSize = mInstance.trisRe.size();
+                predThr = (double) Math.round((double) predThr * 100) / 100;// uses predicted thr in current period to model it based on current measured RE
+                int reModSize = mInstance.trisRe.size();
 
-            if (reModSize < 4)// april 8{
-            {
+                if (reModSize < 4)// april 8{
+                {
 
-                cleanOutArraysRE(totTris, meanDk, mInstance);// check to remove extra value in the RE parameters list
-                mInstance.trisRe.put(totTris, reMsrd);
-                mInstance.reParamList.put(totTris, Arrays.asList(totTris, meanDk, meanThr, 1.0));
-            }
+                    cleanOutArraysRE(totTris, meanDk, mInstance);// check to remove extra value in the RE parameters list
+                    mInstance.trisRe.put(totTris, reMsrd);
+                    mInstance.reParamList.put(totTris, Arrays.asList(totTris, meanDk, meanThr, 1.0));
+                }
 
 
-            if (reModSize >= 4) { // ignore first 10 point we need to have four known variables to solve an equation with three unknown var
+                if (reModSize >= 4) { // ignore first 10 point we need to have four known variables to solve an equation with three unknown var
 //@@ niloo please add test the trained data and check rmse, if it is above 20% , then retrain
 
-                double mape = 0.0;      //  sum of square error
-                double fit = mInstance.alphaT * totTris + mInstance.alphaD * meanDk + mInstance.alphaH * meanThr + mInstance.zeta;// for current period
-                mape = Math.abs((reMsrd - fit) / reMsrd);
+                    double mape = 0.0;      //  sum of square error
+                    double fit = mInstance.alphaT * totTris + mInstance.alphaD * meanDk + mInstance.alphaH * meanThr + mInstance.zeta;// for current period
+                    mape = Math.abs((reMsrd - fit) / reMsrd);
 
 
-                if (mape >= 0.10 && variousTris >= 2) {// we ignore tris=0 them we need points with at least two diff tris in order to generate the line
+                    if (mape >= 0.10 && variousTris >= 2) {// we ignore tris=0 them we need points with at least two diff tris in order to generate the line
 
-                    cleanOutArraysRE(totTris, meanDk, mInstance);
-                    mInstance.trisRe.put(totTris, reMsrd); // april 8
-                    mInstance.reParamList.put(totTris, Arrays.asList(totTris, meanDk, meanThr, 1.0));
+                        cleanOutArraysRE(totTris, meanDk, mInstance);
+                        mInstance.trisRe.put(totTris, reMsrd); // april 8
+                        mInstance.reParamList.put(totTris, Arrays.asList(totTris, meanDk, meanThr, 1.0));
 
-                    ListMultimap<Double, List<Double>> copyreParamList = ArrayListMultimap.create(mInstance.reParamList);// take a copy to then fill it for training up to capacity of 10
-                    ListMultimap<Double, Double> copytrisRe = ArrayListMultimap.create(mInstance.trisRe);// take a copy to then fill it for training up to capacity of 10
+                        ListMultimap<Double, List<Double>> copyreParamList = ArrayListMultimap.create(mInstance.reParamList);// take a copy to then fill it for training up to capacity of 10
+                        ListMultimap<Double, Double> copytrisRe = ArrayListMultimap.create(mInstance.trisRe);// take a copy to then fill it for training up to capacity of 10
 
-                    for (double curT : mInstance.trisRe.keySet()) {
+                        for (double curT : mInstance.trisRe.keySet()) {
 
-                        if (curT != 0 && mInstance.trisRe.get(curT).size() < 10) {
-                            int index = mInstance.trisRe.get(curT).size();
-                            double meanRE = 0, mmeanDK = 0, meanPrth = 0;
+                            if (curT != 0 && mInstance.trisRe.get(curT).size() < 10) {
+                                int index = mInstance.trisRe.get(curT).size();
+                                double meanRE = 0, mmeanDK = 0, meanPrth = 0;
 
-                            for (int i = 0; i < index; i++) {
-                                meanRE += mInstance.trisRe.get(curT).get(i);
-                                List<Double> reParL = mInstance.reParamList.get(curT).get(i);
-                                mmeanDK += reParL.get(1);
-                                meanPrth += reParL.get(2);
-                            }
+                                for (int i = 0; i < index; i++) {
+                                    meanRE += mInstance.trisRe.get(curT).get(i);
+                                    List<Double> reParL = mInstance.reParamList.get(curT).get(i);
+                                    mmeanDK += reParL.get(1);
+                                    meanPrth += reParL.get(2);
+                                }
 
-                            meanRE /= index;
-                            mmeanDK /= index;
-                            meanPrth /= index;
+                                meanRE /= index;
+                                mmeanDK /= index;
+                                meanPrth /= index;
 
-                            for (int j = index; j < 10; j++) {
-                                copytrisRe.put(curT, meanRE);
-                                copyreParamList.put(curT, Arrays.asList(curT, mmeanDK, meanPrth, 1.0));
+                                for (int j = index; j < 10; j++) {
+                                    copytrisRe.put(curT, meanRE);
+                                    copyreParamList.put(curT, Arrays.asList(curT, mmeanDK, meanPrth, 1.0));
 
-                            }
-                        }// if <10
-                    }// for all the current data
+                                }
+                            }// if <10
+                        }// for all the current data
 
 
 
@@ -343,177 +347,185 @@ public class dataCol implements Runnable {
                           @@@@ here we check if we have any record for the
           decimated objects, if yes, we need to check the ratio of decimated itration over added scenarios, we define a rate of 40% to make sure that we have
            at least the record for decimated object equal to 40% of the added scenarios*/
-                   // int added=mInstance.trisDec.size();
-                    int decCount= mInstance.decTris.size();// #iterations of decimated objects
-                    if(decCount!=0) // means that we have at least one record of decimated objects
-                    {
-                        int j=0;
+                        // int added=mInstance.trisDec.size();
+                        int decCount= mInstance.decTris.size();// #iterations of decimated objects
+                        if(decCount!=0) // means that we have at least one record of decimated objects
+                        {
+                            int j=0;
 
-                        int upCount= (int) Math.ceil(0.3 * mInstance.objectCount);
-                        for (int i= decCount; i<upCount; i++){
-                            if(j>mInstance.decTris.size()-1)
-                                j=0;
-                            double currentT=mInstance.decTris.get(j);// one of the triangles from the list of decimated-exp
-                            List<Double> reList = new LinkedList<>(copytrisRe.get(currentT));// since copy list has full data
-                            for (double re :reList)
-                                copytrisRe.put(currentT, re);
+                            int upCount= (int) Math.ceil(0.3 * mInstance.objectCount);
+                            for (int i= decCount; i<upCount; i++){
+                                if(j>mInstance.decTris.size()-1)
+                                    j=0;
+                                double currentT=mInstance.decTris.get(j);// one of the triangles from the list of decimated-exp
+                                List<Double> reList = new LinkedList<>(copytrisRe.get(currentT));// since copy list has full data
+                                for (double re :reList)
+                                    copytrisRe.put(currentT, re);
 
-                            List< List<Double>> repList = new LinkedList<>(copyreParamList.get(currentT));// since copy list has full data
-                            for (List<Double> repr :repList)
-                                copyreParamList.put(currentT,repr);
-
-
-                            j+=1;
+                                List< List<Double>> repList = new LinkedList<>(copyreParamList.get(currentT));// since copy list has full data
+                                for (List<Double> repr :repList)
+                                    copyreParamList.put(currentT,repr);
 
 
+                                j+=1;
 
 
+
+
+                            }
+
+                        }
+
+
+
+
+                        double[] RE = copytrisRe.values().stream()
+                                .mapToDouble(Double::doubleValue)
+                                .toArray();
+
+                        double[][] reRegParameters = copyreParamList.values().stream()
+                                .map(l -> l.stream().mapToDouble(Double::doubleValue).toArray())
+                                .toArray(double[][]::new);
+                        if (variousTris >= 3) {
+                            mLinearRegression regression = new mLinearRegression(reRegParameters, RE);
+                            if (!Double.isNaN(regression.beta(0))) {
+                                mInstance.alphaT = regression.beta(0);
+                                mInstance.alphaD = regression.beta(1);
+                                mInstance.alphaH = regression.beta(2);
+                                mInstance.zeta = regression.beta(3);
+                                trainedRE = true;
+                            }
                         }
 
                     }
 
-
-
-
-                    double[] RE = copytrisRe.values().stream()
-                            .mapToDouble(Double::doubleValue)
-                            .toArray();
-
-                    double[][] reRegParameters = copyreParamList.values().stream()
-                            .map(l -> l.stream().mapToDouble(Double::doubleValue).toArray())
-                            .toArray(double[][]::new);
-                    if (variousTris >= 3) {
-                        mLinearRegression regression = new mLinearRegression(reRegParameters, RE);
-                        if (!Double.isNaN(regression.beta(0))) {
-                            mInstance.alphaT = regression.beta(0);
-                            mInstance.alphaD = regression.beta(1);
-                            mInstance.alphaH = regression.beta(2);
-                            mInstance.zeta = regression.beta(3);
-                            trainedRE = true;
-                        }
-                    }
-
-                }
-
-                // current period
-                double predRE = mInstance.alphaT * totTris + mInstance.alphaD * meanDk + mInstance.alphaH * meanThr + mInstance.zeta;
+                    // current period
+                    double predRE = mInstance.alphaT * totTris + mInstance.alphaD * meanDk + mInstance.alphaH * meanThr + mInstance.zeta;
 
 
 // nill added temp
-                //mInstance.odraAlg((float) totTris/2);
-
-                mape = Math.abs((reMsrd - predRE) / reMsrd);// log this
-                if (mape >= 0.1)
-                    accmodel = false;// after training we check to see if the model is accurate to then cal next triangle
 
 
-                predRE = (double) Math.round((double) predRE * 100) / 100;
+                    mape = Math.abs((reMsrd - predRE) / reMsrd);// log this
+                    if (mape >= 0.1)
+                        accmodel = false;// after training we check to see if the model is accurate to then cal next triangle
 
-                //  if (variousTris>=3 && Math.abs(deltaRe) >= 0.2 && (PRoAR < 0.7 || PRoAI < 0.7))// test and see what is the re range
-                double nextTris = totTris;
-                double algNxtTris = totTris; // the accurate triangle count after running the reassignment algorithm
 
-                if (variousTris >= 3 && (reMsrd >= 1.2 || (reMsrd <= 0.8 && avgq != 1)))// if re is not balances (or pAR is not close to PAI, we will change the next tris count
-                    // the last cond (reMsrd <0.8 && avgq!=1) says that if the AI is working better than AR and AI has not in original quality so that we can increase tot tris
-                    mInstance.lastConscCounter++;
+                    predRE = (double) Math.round((double) predRE * 100) / 100;
 
-                else
-                    mInstance.lastConscCounter = 0;
+                    //  if (variousTris>=3 && Math.abs(deltaRe) >= 0.2 && (PRoAR < 0.7 || PRoAI < 0.7))// test and see what is the re range
+                    double nextTris = totTris;
+                    double algNxtTris = totTris; // the accurate triangle count after running the reassignment algorithm
+
+                    if (variousTris >= 3 && (reMsrd >= 1.2 || (reMsrd <= 0.8 && avgq != 1)))// if re is not balances (or pAR is not close to PAI, we will change the next tris count
+                        // the last cond (reMsrd <0.8 && avgq!=1) says that if the AI is working better than AR and AI has not in original quality so that we can increase tot tris
+                        mInstance.lastConscCounter++;
+
+                    else
+                        mInstance.lastConscCounter = 0;
 // now we calculate next period tris here :)
 
-                //     odraAlg((float) minTrisThreshold+1000);
 
-                //@@@@ this is to rebalance quality for user percieved quality-> we need to rebalance quality of the decimated objects
-                if(mInstance.prevtotTris!=totTris  && mInstance.lastConscCounter<5 )// means that there is
+                    //@@@@ this is to rebalance quality for user percieved quality-> we need to rebalance quality of the decimated objects
+                    if( mInstance.trisChanged==true
+                            //mInstance.prevtotTris!=totTris
+                            && mInstance.lastConscCounter<5 )// means that there is
                     // achange in new triangle count && RE is within the balanced threshold
-                {
-                    try {
-                        odraAlg((float) totTris);
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
-                }
+                    {
+                        mInstance.trisChanged=false; // turn the flag off
 
+                        // Temp cmt for motivation experiment
+                      /*  try {
+                            algNxtTris=  odraAlg((float) totTris);
 
-                if (accmodel && mInstance.lastConscCounter >= 5) // the second condition is to skip change in nexttris for the first loop while we just had a change in tot tris
-                {
-
-                    double nomin = 1 - ((mInstance.alphaD + (mInstance.alphaH * mInstance.rohD)) * meanDkk)
-                            - (mInstance.zeta + (mInstance.alphaH * mInstance.delta));
-                    double denom = mInstance.alphaT + (mInstance.rohT * mInstance.alphaH); //α + ργ
-                    double tmpnextTris = (nomin / denom);
-
-                    if(tmpnextTris>0){
-
-                    // temporarily inactive to not to run algo-> just wanna check nexttris values
-                    if (tmpnextTris < mInstance.orgTrisAllobj && tmpnextTris > minTrisThreshold)
-                        nextTris = tmpnextTris;
-
-                    else if (tmpnextTris < minTrisThreshold )
-                        nextTris = minTrisThreshold + 1000;
-
-                    else if (tmpnextTris > mInstance.orgTrisAllobj)
-                        nextTris = mInstance.orgTrisAllobj;
-
-                     // update next tris and call algorithm if and only if the new tris is between a correct range
-
-
-                        writeNextTris(mInstance.alphaD, mInstance.alphaH, mInstance.rohD, meanDkk, mInstance.zeta, mInstance.delta,
-                                mInstance.alphaT, mInstance.rohT, nomin, denom, totTris, nextTris);// writes to the file
-
-
-                        trainedTris = true;
-
-                        // call main algorithm to distribute triangles
-                        try {
-                            odraAlg((float) nextTris);
-                            mInstance.decTris.add(mInstance.total_tris);
                         } catch (InterruptedException e) {
                             e.printStackTrace();
-                        }
-                        algNxtTris = mInstance.total_tris;
-                        // algNxtTris= (double)Math.round((double)algNxtTris * 1000) / 1000;
-
+                        }*/
                     }
 
 
-                }//if
-                writeRE(reMsrd, predRE, trainedRE, totTris, nextTris, algNxtTris, trainedTris, PRoAR, PRoAI, accmodel);// writes to the file
+                    if (accmodel && mInstance.lastConscCounter >= 5) // the second condition is to skip change in nexttris for the first loop while we just had a change in tot tris
+                    {
 
-                //  writeRE(reMsrd, predRE, trainedRE,totTris, nextTris,trainedTris, PRoAR, PRoAI);// writes to the file
+                        double nomin = 1 - ((mInstance.alphaD + (mInstance.alphaH * mInstance.rohD)) * meanDkk)
+                                - (mInstance.zeta + (mInstance.alphaH * mInstance.delta));
+                        double denom = mInstance.alphaT + (mInstance.rohT * mInstance.alphaH); //α + ργ
+                        double tmpnextTris = (nomin / denom);
+
+                        if(tmpnextTris>0){
+
+                            // temporarily inactive to not to run algo-> just wanna check nexttris values
+                            if (tmpnextTris < mInstance.orgTrisAllobj && tmpnextTris > minTrisThreshold)
+                                nextTris = tmpnextTris;
+
+                            else if (tmpnextTris < minTrisThreshold )
+                                nextTris = minTrisThreshold + 1000;
+
+                            else if (tmpnextTris > mInstance.orgTrisAllobj)
+                                nextTris = mInstance.orgTrisAllobj;
+
+                            // update next tris and call algorithm if and only if the new tris is between a correct range
 
 
-            }            //  RE modeling and next tris
-        }// if we have objs on the screen, we start RE model & training
+                            writeNextTris(mInstance.alphaD, mInstance.alphaH, mInstance.rohD, meanDkk, mInstance.zeta, mInstance.delta,
+                                    mInstance.alphaT, mInstance.rohT, nomin, denom, totTris, nextTris);// writes to the file
 
-      mInstance.prevtotTris = totTris;
 
-    }   // if Nan
+                            trainedTris = true;
+
+                            // call main algorithm to distribute triangles
+                            // Temp cmt for motivation experiment
+                          /*  try {
+                                odraAlg((float) nextTris);
+                                mInstance.decTris.add(mInstance.total_tris);
+                            } catch (InterruptedException e) {
+                                e.printStackTrace();
+                            }
+
+                            */
+                            algNxtTris = mInstance.total_tris;
+                            // algNxtTris= (double)Math.round((double)algNxtTris * 1000) / 1000;
+
+                        }
+
+
+                    }//if
+                    writeRE(reMsrd, predRE, trainedRE, totTris, nextTris, algNxtTris, trainedTris, PRoAR, PRoAI, accmodel,mInstance.orgTrisAllobj);// writes to the file
+
+                    //  writeRE(reMsrd, predRE, trainedRE,totTris, nextTris,trainedTris, PRoAR, PRoAI);// writes to the file
+
+
+                }            //  RE modeling and next tris
+            }// if we have objs on the screen, we start RE model & training
+
+
+
+        }   // if Nan
 
         else
-      Log.d("Mean Throughput is" , "not accepted");
+            Log.d("Mean Throughput is" , "not accepted");
+
+        mInstance.prevtotTris = totTris;
+
+    }//run
 
 
+    public void cleanOutArraysRE(double totTris, double meanDk, MainActivity mInstance){
 
-}//run
-
-
-   public void cleanOutArraysRE(double totTris, double meanDk, MainActivity mInstance){
-
-       int index;
-       if ( mInstance.trisRe.get(totTris).size() == 10)
-       { // we keep inf of last 10 points
-           double []disArray= mInstance.trisMeanDisk.get(totTris).stream()
-                   .mapToDouble(Double::doubleValue)
-                   .toArray();
+        int index;
+        if ( mInstance.trisRe.get(totTris).size() == 10)
+        { // we keep inf of last 10 points
+            double []disArray= mInstance.trisMeanDisk.get(totTris).stream()
+                    .mapToDouble(Double::doubleValue)
+                    .toArray();
             index= findClosest(disArray , meanDk);// the index of value needed to be deleted
-           // since we add if objcount != zero to avoid wrong inf from tris=0 -> we won't have re or distance at this situation
-           mInstance.trisRe.get(totTris).remove(index);
-           mInstance.reParamList.get(totTris).remove(index);
-       }
+            // since we add if objcount != zero to avoid wrong inf from tris=0 -> we won't have re or distance at this situation
+            mInstance.trisRe.get(totTris).remove(index);
+            mInstance.reParamList.get(totTris).remove(index);
+        }
 
-      // return index;
-   }
+        // return index;
+    }
 
 
 
@@ -528,10 +540,10 @@ public class dataCol implements Runnable {
         int index= findClosest(disArray , meanDk);// the index of value needed to be deleted
         mInstance.trisMeanThr.get(totTris).remove(index);
         mInstance.thParamList.get(totTris).remove(index);
-      //  mInstance.totTrisList.remove(index); // 8 april
+        //  mInstance.totTrisList.remove(index); // 8 april
         mInstance.trisMeanDisk.get(totTris).remove(index); //removes from the head (older data) -> to then add to the tail
         mInstance.trisMeanDiskk.get(totTris).remove(index);
-         return  index;
+        return  index;
     }
 
 
@@ -561,7 +573,7 @@ public class dataCol implements Runnable {
         try (PrintWriter writer = new PrintWriter(new FileOutputStream(FILEPATH, true))) {
             StringBuilder sb = new StringBuilder();
             sb.append(dateFormat.format(new Date())); sb.append(',');
-           sb.append(realThr);sb.append(',');
+            sb.append(realThr);sb.append(',');
             sb.append(predThr);
             sb.append(',');  sb.append(trainedFlag);
             sb.append('\n');
@@ -575,7 +587,7 @@ public class dataCol implements Runnable {
     public void writeNextTris(double alphaD, double alphaH,double rohD, double meanDkk,double zeta,double delta,
                               double  alphaT,double rohT,double nomin,double denom, double totTris, double nextTris){
 
-    SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss:SSS");
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss:SSS");
         String currentFolder = mInstance.getExternalFilesDir(null).getAbsolutePath();
         String FILEPATH = currentFolder + File.separator + "NextTrisParameters.csv";
 
@@ -603,11 +615,11 @@ public class dataCol implements Runnable {
     }
 
 
-   // public void writeRE(double realRe, double predRe, boolean trainedFlag,double totT, double nextT, boolean trainedT, double pAR, double pAI){
-        public void writeRE(double realRe, double predRe, boolean trainedFlag,double totT, double nextT,double algTris, boolean trainedT,
-                            double pAR, double pAI,boolean accM){
+    // public void writeRE(double realRe, double predRe, boolean trainedFlag,double totT, double nextT, boolean trainedT, double pAR, double pAI){
+    public void writeRE(double realRe, double predRe, boolean trainedFlag,double totT, double nextT,double algTris, boolean trainedT,
+                        double pAR, double pAI,boolean accM, double totTris){
 
-            SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss:SSS");
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss:SSS");
         String currentFolder = mInstance.getExternalFilesDir(null).getAbsolutePath();
         String FILEPATH = currentFolder + File.separator + "RE.csv";
 
@@ -619,11 +631,12 @@ public class dataCol implements Runnable {
             sb.append(',');  sb.append(trainedFlag);
             sb.append(',');  sb.append(totT);
             sb.append(',');  sb.append(nextT);
-             sb.append(',');  sb.append(algTris);
+            sb.append(',');  sb.append(algTris);
             sb.append(',');  sb.append(trainedT);
             sb.append(',');  sb.append(pAR);
             sb.append(',');  sb.append(pAI);
             sb.append(',');  sb.append(accM);// if both models are accurate
+            sb.append(',');  sb.append(totTris);// if both models are accurate
             sb.append('\n');
             writer.write(sb.toString());
             System.out.println("done!");
@@ -637,7 +650,7 @@ public class dataCol implements Runnable {
     public float calculateMeanQuality( ) {
 
         float sumQual=0;
-     for (int ind = 0; ind < mInstance.objectCount; ind++)
+        for (int ind = 0; ind < mInstance.objectCount; ind++)
         {
             int i =  mInstance.excelname.indexOf( mInstance.renderArray.get(ind).fileName);
             float gamma = mInstance.excel_gamma.get(i);
@@ -647,14 +660,14 @@ public class dataCol implements Runnable {
             float d = mInstance.renderArray.get(ind).return_distance();
             float curQ = mInstance.ratioArray.get(ind);
             float deg_error = (float) (Math.round((float) (Calculate_deg_er(a, b, c, d, gamma, curQ) * 10000))) / 10000;
-        //Nill added
-             float max_nrmd = mInstance.excel_maxd.get(i);
-             float cur_degerror = deg_error / max_nrmd;
-             float quality= 1- cur_degerror;
-             sumQual+=quality;
+            //Nill added
+            float max_nrmd = mInstance.excel_maxd.get(i);
+            float cur_degerror = deg_error / max_nrmd;
+            float quality= 1- cur_degerror;
+            sumQual+=quality;
 
 
-    }
+        }
 
 
         return sumQual/mInstance.objectCount;
@@ -674,7 +687,7 @@ public class dataCol implements Runnable {
 
 
 
-    void odraAlg(float tUP) throws InterruptedException {
+    float odraAlg(float tUP) throws InterruptedException {
 
 
         candidate_obj = new HashMap<>();
@@ -792,7 +805,7 @@ public class dataCol implements Runnable {
         }
 
 
-
+        return mInstance.total_tris; // this returns the total algorithm triangle count
 
     }
 

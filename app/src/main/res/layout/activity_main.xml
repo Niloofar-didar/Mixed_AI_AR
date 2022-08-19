@@ -7,11 +7,10 @@
     tools:context=".MainActivity">
 
 
-
     <com.google.android.material.appbar.AppBarLayout
         android:id="@+id/appBarLayout"
-        android:layout_width="223dp"
-        android:layout_height="wrap_content"
+        android:layout_width="162dp"
+        android:layout_height="80dp"
         android:theme="@style/AppTheme.AppBarOverlay">
 
         <androidx.appcompat.widget.Toolbar
@@ -42,8 +41,8 @@
             tools:layout_editor_absoluteY="0dp" />
 
         <com.google.android.material.textfield.TextInputLayout
-            android:layout_width="match_parent"
-            android:layout_height="match_parent" />
+            android:layout_width="139dp"
+            android:layout_height="21dp" />
 
 
     </com.google.android.material.appbar.AppBarLayout>
