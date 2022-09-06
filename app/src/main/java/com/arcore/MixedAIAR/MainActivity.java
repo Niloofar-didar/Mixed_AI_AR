@@ -133,7 +133,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
 
     int maxtime=6; // 20 means calculates data for next 10 sec ->>>should be even num
     // if 5, goes up to 2.5 s. if 10, goes up to 5s
-
+    double pred_meanD_cur=0; // predicted mean distance in next two second saved as current d in dataCol for next period
     //for RE modeling and algorithm
 
     List<Double> rE= new ArrayList<>();// keeps the record of RE
@@ -147,9 +147,12 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
     //ArrayList <ArrayList<Float>> F_profit= new ArrayList<>();
 
 
+    StringBuilder tasks = new StringBuilder();
 
-    double des_Q= 1- (0.3f); //# this is avg desired Q
-    double des_Thr = 25f;
+
+
+    double des_Q= 0.7; //# this is avg desired Q
+    double des_Thr = 40; // 0.65*throughput; in line 2063,
     ListMultimap<Double, List<Double>> thParamList = ArrayListMultimap.create();//  a map from tot tris to measured RE
 
 
@@ -200,10 +203,11 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
 
     private ArrayList<String> scenarioList = new ArrayList<>();
     private String currentScenario = null;
-    private int scenarioTickLength = 50000;
+    private int scenarioTickLength = 30000;
+    //private int removalTickLength = 30000;
     private ArrayList<String> taskConfigList = new ArrayList<>();
     private String currentTaskConfig = null;
-    private int taskConfigTickLength = 50000;
+    private int taskConfigTickLength = 30000;
     private int pauseLength = 10000;
 
     List<String> mLines = new ArrayList<>();
@@ -253,6 +257,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
     List<String> time_log = new ArrayList<>();
     List<String> distance_log = new ArrayList<>();
     List<String> deg_error_log = new ArrayList<>();
+    List<Float> obj_quality = new ArrayList<>();
     Double prevTris=0d;
     List<Integer> Server_reg_Freq = new ArrayList<>();
 
@@ -314,7 +319,8 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
 
     private static final int KEEP_ALIVE_TIME = 500;
     private final int CORE_THREAD_POOL_SIZE = 10;
-
+    SimpleDateFormat dateFormat = new SimpleDateFormat("HH:mm");
+    String fileseries=dateFormat.format(new Date());
     private final int MAX_THREAD_POOL_SIZE = 10;
     //KEEP_ALIVE_TIME_UNIT  =
     private final TimeUnit KEEP_ALIVE_TIME_UNIT= TimeUnit.MILLISECONDS;
@@ -705,6 +711,11 @@ else{
                     /** Check for null classifiers.
                      *  This will not let you start the stream if any are found
                      */
+                    for (AiItemsViewModel taskView : mList) {
+                        tasks.append(",").append(taskView.getModels().get(taskView.getCurrentModel()));}
+
+
+
                     boolean noNullClassifiers = true;
                     for (int i = 0; i < mList.size(); i++) {
                         if (mList.get(i).getClassifier()==null) {
@@ -769,6 +780,9 @@ else{
         posText1.setText("obj_num: " + 0);
 
 
+        TextView posText2 = (TextView) findViewById(R.id.thr);
+        posText2.setText("Throughput: " );
+
         //create the file to store user score data
         dateFile = new File(getExternalFilesDir(null),
                 (new SimpleDateFormat("yyyy_MM_dd_HH:mm:ss", java.util.Locale.getDefault()).format(new Date())) + ".txt");
@@ -777,13 +791,13 @@ else{
         obj = new File(getExternalFilesDir(null), "obj.txt");
         tris_num = new File(getExternalFilesDir(null), "tris_num.txt");
         GPU_usage = new File(getExternalFilesDir(null), "GPU_usage.txt");
-        //user score setup
-        Spinner ratingSpinner = (Spinner) findViewById(R.id.userScoreSpinner);
-        ratingSpinner.setOnItemSelectedListener(this);
-        ArrayAdapter<String> ratingAdapter = new ArrayAdapter<String>(com.arcore.MixedAIAR.MainActivity.this,
-                android.R.layout.simple_list_item_1, getResources().getStringArray(R.array.user_score));
-        ratingAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        ratingSpinner.setAdapter(ratingAdapter);
+//        //user score setup
+//        Spinner ratingSpinner = (Spinner) findViewById(R.id.userScoreSpinner);
+//        ratingSpinner.setOnItemSelectedListener(this);
+//        ArrayAdapter<String> ratingAdapter = new ArrayAdapter<String>(com.arcore.MixedAIAR.MainActivity.this,
+//                android.R.layout.simple_list_item_1, getResources().getStringArray(R.array.user_score));
+//        ratingAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+//        ratingSpinner.setAdapter(ratingAdapter);
 
 
 //Nil need to read from file/ num tris and write to
@@ -821,7 +835,7 @@ else{
 
 
         String currentFolder = getExternalFilesDir(null).getAbsolutePath();
-        String FILEPATH = currentFolder + File.separator + "GPU_Usage.csv";
+        String FILEPATH = currentFolder + File.separator + "GPU_Usage_"+ fileseries+".csv";
         try (PrintWriter writer = new PrintWriter(new FileOutputStream(FILEPATH, false))) {
 
             StringBuilder sbb = new StringBuilder();
@@ -833,8 +847,12 @@ else{
             sbb.append(',');
             sbb.append("distance"); //sbb.append(',');  sbb.append("serv_req");
             sbb.append(',');
-            sbb.append(" lastobj ");
+            sbb.append("lastobj ");
+            sbb.append(',');
+            sbb.append("objectCount ");
+            sbb.append(',');
 
+            sbb.append("last_obj_quality ");
             sbb.append('\n');
 
 
@@ -848,7 +866,9 @@ else{
 
 
          currentFolder = getExternalFilesDir(null).getAbsolutePath();
-         FILEPATH = currentFolder + File.separator + "Throughput.csv";
+         FILEPATH = currentFolder + File.separator +"Throughput"+ fileseries+".csv";
+
+
         try (PrintWriter writer = new PrintWriter(new FileOutputStream(FILEPATH, false))) {
 
             StringBuilder sbb = new StringBuilder();
@@ -859,6 +879,10 @@ else{
             sbb.append("thr_pred");
             sbb.append(',');
             sbb.append("trainedThr"); //sbb.append(',');  sbb.append("serv_req");
+            sbb.append(',');
+            sbb.append("Tris");
+            sbb.append(',');
+            sbb.append("Models");
             sbb.append('\n');
             writer.write(sbb.toString());
             System.out.println("done!");
@@ -870,7 +894,8 @@ else{
 
 
         currentFolder = getExternalFilesDir(null).getAbsolutePath();
-        FILEPATH = currentFolder + File.separator + "RE.csv";
+        FILEPATH = currentFolder + File.separator + "RE"+ fileseries+".csv";
+
         try (PrintWriter writer = new PrintWriter(new FileOutputStream(FILEPATH, false))) {
 
             StringBuilder sbb = new StringBuilder();
@@ -897,6 +922,10 @@ else{
             sbb.append("TwoModels_Accuracy");
             sbb.append(',');
             sbb.append("tot_tris");
+            sbb.append(',');
+            sbb.append("Average_Quality");
+            sbb.append(',');
+            sbb.append("Algorithm_Duration");
             sbb.append('\n');
             writer.write(sbb.toString());
             System.out.println("done!");
@@ -904,6 +933,34 @@ else{
         } catch (FileNotFoundException e) {
             System.out.println(e.getMessage());
         }
+
+
+
+
+        currentFolder = getExternalFilesDir(null).getAbsolutePath();
+        FILEPATH = currentFolder + File.separator + "Quality"+ fileseries+".csv";
+
+        try (PrintWriter writer = new PrintWriter(new FileOutputStream(FILEPATH, false))) {
+
+            StringBuilder sbb = new StringBuilder();
+            sbb.append("time");
+            sbb.append(',');
+            sbb.append("objectname");
+            sbb.append(',');
+            sbb.append("sensitivity");
+            sbb.append(',');
+            sbb.append("decimation_ratio");
+            sbb.append(',');
+            sbb.append("quality");
+
+            sbb.append('\n');
+            writer.write(sbb.toString());
+            System.out.println("done!");
+
+        } catch (FileNotFoundException e) {
+            System.out.println(e.getMessage());
+        }
+
 
 
 
@@ -1058,11 +1115,22 @@ else{
             saveDir.mkdirs();
             String[] saves = saveDir.list();
 
-            for (int i = 0; i < saves.length; ++i) {
+            for (int i = 0; i <= saves.length; ++i) {
                 String[] files = new File(curFolder + File.separator + "saved_scenarios_configs" + File.separator + saves[i]).list();
                 for (int j = 0; j < 2; ++j) {
-                    if (files[j].contains("scenario")) scenarioList.add(i + File.separator + files[j]);
-                    else if (files[j].contains("config")) taskConfigList.add(i + File.separator + files[j]);
+
+
+
+                    if (files[j].contains("scenario")) {
+
+                        String number= files[j].split("scenario")[1].split(".csv")[0];
+                        scenarioList.add(number + File.separator + files[j]);// it is like 2/scenario2.csv
+
+                    }
+                    else if (files[j].contains("config")) {
+
+                        String number= (files[j].split("config")[1]).split(".csv")[0]; // gets the number for the config
+                        taskConfigList.add(number + File.separator + files[j]);} // it is like 1/config1.csv
                 }
 
             }
@@ -1412,7 +1480,7 @@ else{
         });
 
 
-
+// this is for PAR-AI experiment: the effect of decimation on performance of AI, AI and RE , we add objects fast and then decimate them by 10% every 30 sec- figure 4 in paper
         Button Auto_decimate_butt = (Button) findViewById(R.id.autoD);
         Auto_decimate_butt.setOnClickListener(new View.OnClickListener() {
             public void onClick(View view) {
@@ -1426,9 +1494,9 @@ else{
 
 
                 int repeat = 6; // num of decimation loop, if it is one, just gathers the data of the first  iteration (original objects on the screen)
-                final int[] start = {0};
-                final float[] ratio = {90};
-                countDownTimer = new CountDownTimer(Long.MAX_VALUE, 10000) {
+                final int[] start = {1};
+                final float[] ratio = {80};
+                countDownTimer = new CountDownTimer(Long.MAX_VALUE, 30000) {
 
                     // This is called after every 80 sec interval.
                     public void onTick(long millisUntilFinished) {
@@ -1445,7 +1513,7 @@ else{
 
                         if (start[0] < repeat) {
 
-                            if (start[0] != 0) {  /// at first we delay the auto decimation for 90 seconds to gather data of all objects in
+                           // if (start[0] != 0) {  /// at first we delay the auto decimation for 90 seconds to gather data of all objects in
                                 //screen.  start[0] is for the original objects data collection delay
 
                                 for (int i = 0; i < objectCount; i++) {
@@ -1453,7 +1521,7 @@ else{
                                     //decimate all when referenceObjectSwitchCheck= True
 
 
-                                    if (under_Perc == false) {
+                                    //if (under_Perc == false) {
                                         total_tris = total_tris - (ratioArray.get(i) * o_tris.get(i));// total =total -1*objtris
                                        // ratioArray[i] = ratio[0] / 100f;
                                         ratioArray.set(i, ratio[0] / 100f);
@@ -1469,30 +1537,16 @@ else{
                                         curTrisTime= SystemClock.uptimeMillis();
                                         // quality is registered
 
-                                    } else {
-
-                                        total_tris = total_tris - (ratioArray.get(i) * o_tris.get(i));// total =total -1*objtris
-                                        ratioArray.set(i, ratio[0] / 1000f);
-                                        renderArray.get(i).decimatedModelRequest(ratio[0] / 1000f, i, false);
-                                        posText.setText("Request for " + renderArray.get(i).fileName + " " + ratio[0] / 100f);
-
-                                        // update total_tris
-                                        total_tris = total_tris + (ratioArray.get(i) * o_tris.get(i));// total = total + 0.8*objtris
-                                        trisDec.put(total_tris,true);
-                                        decTris.add(total_tris);
-
-                                        curTrisTime= SystemClock.uptimeMillis();
-                                        // quality is registered
+                                   // }
 
 
-                                    }
 
                                     int finalInd = i;
                                     int indq = excelname.indexOf(renderArray.get(finalInd).fileName);// search in excel file to find the name of current object and get access to the index of current object
 //nill added
                                     float d1 = renderArray.get(finalInd).return_distance();
                                     // excel file has all information for the degredation model
-                                    float cur_degerror=calculateQuality(indq, finalInd, ratio[0],d1);
+                                    float cur_degerror=calculatenrmDeg(indq, finalInd, ratio[0],d1);// normalized deg error
                                     String lasterror = deg_error_log.get(finalInd);
                                     float curQ = ratio[0] / 100f;
                                     //lastQuality.set(finalInd,1-cur_degerror );
@@ -1509,9 +1563,12 @@ else{
 
 
                                 }///for
-                                ratio[0] -= 20;
+                            if(ratio[0]== 20)
+                                ratio[0]=5; // last ratio
+                            else
+                                ratio[0] -= 20; // 80-> 60-> 40-> 20 ->
 
-                            }// if start0 != 0
+                          //  }// if start0 != 0 // start: 1-> 2 -> 3 -> 4-> 5
 
 
                             start[0] += 1;
@@ -1570,6 +1627,7 @@ else{
                         time_log.remove(i);
                         distance_log.remove(i);
                         deg_error_log.remove(i);
+                        obj_quality.remove(i);
                         Server_reg_Freq.remove(i);
                         //  decimate_thread.remove(i);
                         renderArray.remove(i);
@@ -1600,7 +1658,9 @@ else{
 
                 //  removePreviousAnchors(); // from net wrong
                 ModelRequestManager.getInstance().clear();
-
+                totTrisList.clear();
+                predicted_distances.clear();
+                quality_log.clear();
                 orgTrisAllobj=0;
                 objectCount = 0;
                 nextID = 1;
@@ -1628,6 +1688,7 @@ else{
                 distance_log.clear();
 
                 deg_error_log.clear();
+                obj_quality.clear();
                 //  lastQuality.clear();
                 Server_reg_Freq.clear();
 
@@ -1640,6 +1701,7 @@ else{
         autoPlacementButton.setOnClickListener(view -> {
             runOnUiThread(clearButton::callOnClick);
             mList.clear();
+
             new Thread(() -> {
                 try {
 //
@@ -1657,43 +1719,49 @@ else{
 
                     BufferedReader sceneBr = new BufferedReader(sceneInputStreamReader);
                     sceneBr.readLine();  // column names
-
+                    tasks = new StringBuilder();
                     runOnUiThread(() -> {
                         final int[] i = {0};
-                        CountDownTimer taskTimer, sceneTimer, removeTimer;
+                        CountDownTimer taskTimer, sceneTimer, removeTimer; // this is to remove objects one by one
                         removeTimer = new CountDownTimer(Long.MAX_VALUE, scenarioTickLength) {
                             @Override
                             public void onTick(long millisUntilFinished) {
                                 if (objectCount == 0) {
                                     this.cancel();
-                                    runOnUiThread(() -> Toast.makeText(MainActivity.this, "Finished clearing scenario, wait for some time", Toast.LENGTH_LONG).show());
-
-                                    runOnUiThread(() -> Toast.makeText(MainActivity.this, "You can pause and save collected data now", Toast.LENGTH_LONG).show());
+                                  //switch off is for motivation- exp2
+                                    switchToggleStream.setChecked(false);
+                                   // runOnUiThread(() -> Toast.makeText(MainActivity.this, "You can pause and save collected data now", Toast.LENGTH_LONG).show());
+                                    runOnUiThread(clearButton::callOnClick);
                                     return;
                                 }
 
                                 String name = renderArray.get(objectCount-1).fileName;
                                 renderArray.get(objectCount-1).baseAnchor.select();
                                 runOnUiThread(removeButton::callOnClick);
-                                runOnUiThread(Toast.makeText(MainActivity.this, "Removed " + name, Toast.LENGTH_LONG)::show);
+                               // runOnUiThread(Toast.makeText(MainActivity.this, "Removed " + name, Toast.LENGTH_LONG)::show);
                             }
+
+
 
                             @Override
                             public void onFinish() {
                             }
                         };
 
-                        sceneTimer = new CountDownTimer(Long.MAX_VALUE, scenarioTickLength) {
+                        sceneTimer = new CountDownTimer(Long.MAX_VALUE, scenarioTickLength) { // this is to automate adding objects to the screen
                             @Override
                             public void onTick(long millisUntilFinished) {
                                 // tick per 1 second, reading new line each time
                                 try {
                                     String record = sceneBr.readLine();
                                     if (record == null) {
-                                        this.cancel();
-                                        runOnUiThread(() -> Toast.makeText(MainActivity.this, "Finished loading scenario", Toast.LENGTH_LONG).show());
 
-                                        removeTimer.start();
+
+                                        this.cancel();
+
+                                        //commented for motv-exp 1 and desing PAR-PAI experiment: commented switchToggleStream.setChecked(false);
+                                      // removeTimer.start();
+                                       // runOnUiThread(Auto_decimate_butt::callOnClick);
                                         return;
                                     }
 
@@ -1709,9 +1777,11 @@ else{
                                     float original_tris = excel_tris.get(excelname.indexOf(currentModel));
                                     renderArray.add(objectCount, new decimatedRenderable(currentModel, original_tris));
                                     addObject(Uri.parse("models/" + currentModel + ".sfb"), renderArray.get(objectCount), xOffset, yOffset);
-                                    Toast.makeText(MainActivity.this,
-                                            String.format("Model: %s\nPos: (%f, %f)",
-                                                    currentModel, xOffset, yOffset), Toast.LENGTH_LONG).show();
+
+
+
+
+                                   // Toast.makeText(MainActivity.this, String.format("Model: %s\nPos: (%f, %f)", currentModel, xOffset, yOffset), Toast.LENGTH_LONG).show();
 
                                 } catch (IOException e) {
                                     e.printStackTrace();
@@ -1729,6 +1799,8 @@ else{
 
                                 /// This is when we turned on the AI tasks and waited for 50s. Now we start the object placement
                                 if(startObject[0] ==true){
+
+
 
                                     this.cancel();
                                     sceneTimer.start();
@@ -1764,9 +1836,7 @@ else{
                                         i[0]++;
                                         textNumOfAiTasks.setText(String.format("%d", i[0]));
 //
-                                        Toast.makeText(MainActivity.this,
-                                                String.format("New AI Task %s %s %d", taskView.getClassifier().getModelName(), taskView.getClassifier().getDevice(), taskView.getClassifier().getNumThreads()),
-                                                Toast.LENGTH_SHORT).show();
+                                      //  Toast.makeText(MainActivity.this, String.format("New AI Task %s %s %d", taskView.getClassifier().getModelName(), taskView.getClassifier().getDevice(), taskView.getClassifier().getNumThreads()), Toast.LENGTH_SHORT).show();
 
                                         record = taskBr.readLine();
 
@@ -1776,6 +1846,9 @@ else{
                                         Toast.makeText(MainActivity.this, "All AI task info has been applied", Toast.LENGTH_LONG).show();
                                         switchToggleStream.setChecked(true);
                                         startObject[0] =true; // to make sure if we have ML tasks running
+//                                        for (AiItemsViewModel taskView : mList) {
+//                                            tasks.append(",").append(taskView.getModels().get(taskView.getCurrentModel()));}
+
                                     }
 
 
@@ -1800,10 +1873,10 @@ else{
         savePlacementButton.setOnClickListener(view -> {
             String curFolder = getExternalFilesDir(null).getAbsolutePath();
             int numSaved = new File(curFolder + File.separator + "saved_scenarios_configs").list().length;
-            String saveDir = curFolder + File.separator + "saved_scenarios_configs" + File.separator + "save" + numSaved;
+            String saveDir = curFolder + File.separator + "saved_scenarios_configs" + File.separator + "save" + (numSaved+1);
             new File(saveDir).mkdirs();
 
-            String sceneFilepath = saveDir + File.separator + "scenario" + numSaved + ".csv";
+            String sceneFilepath = saveDir + File.separator + "scenario" + (numSaved+1) + ".csv";
             try (PrintWriter scenePrintWriter = new PrintWriter(new FileOutputStream(sceneFilepath, false))) {
                 StringBuilder sbSceneSave = new StringBuilder();
 
@@ -1821,7 +1894,7 @@ else{
                         .append("\n");
                 }
                 scenePrintWriter.write(sbSceneSave.toString());
-                scenarioSelectAdapter.add(numSaved + File.separator + "scenario" + numSaved + ".csv");
+                scenarioSelectAdapter.add((numSaved+1) + File.separator + "scenario" + (numSaved+1) + ".csv");
 
                 Toast.makeText(MainActivity.this, String.format("Saved %d model placement(s)", objectCount), Toast.LENGTH_LONG).show();
             } catch (FileNotFoundException e) {
@@ -1829,7 +1902,7 @@ else{
                 Toast.makeText(MainActivity.this, e.toString(), Toast.LENGTH_LONG).show();
             }
 
-            String taskFilepath = saveDir + File.separator + "config" + numSaved + ".csv";
+            String taskFilepath = saveDir + File.separator + "config" + (numSaved+1) + ".csv";
             try (PrintWriter taskPrintWriter = new PrintWriter(new FileOutputStream(taskFilepath))) {
                 StringBuilder sbTaskSave = new StringBuilder();
 
@@ -1844,9 +1917,11 @@ else{
                             .append(",").append(taskView.getModels().get(taskView.getCurrentModel()))
                             .append(",").append(taskView.getDevices().get(taskView.getCurrentDevice()))
                             .append("\n");
+
+                    tasks.append(",").append(taskView.getModels().get(taskView.getCurrentModel()));
                 }
                 taskPrintWriter.write(sbTaskSave.toString());
-                taskConfigSelectAdapter.add(numSaved + File.separator + "config" + numSaved + ".csv");
+                taskConfigSelectAdapter.add((numSaved+1) + File.separator + "config" + (numSaved+1) + ".csv");
 
                 Toast.makeText(MainActivity.this, String.format("Saved %d AI task config(s)", mList.size()), Toast.LENGTH_LONG).show();
             } catch (FileNotFoundException e) {
@@ -1877,7 +1952,7 @@ else{
 
             //Nil
             @Override
-            public void onStopTrackingTouch(SeekBar seekBar) {
+            public void onStopTrackingTouch(SeekBar seekBar) { // we request for decimation in the app
                 Log.d("ServerCommunication", "Tracking Stopped, redrawing...");
                 //arFragment.getTransformationSystem().getSelectedNode()
 
@@ -1996,17 +2071,7 @@ else{
                             new dataCol(com.arcore.MixedAIAR.MainActivity.this).run(); // this is to collect mean thr, total_tris. average dis
 
                         }
-/* since we periodically run the model for thr/RE -> even if there is a wrong point before adding tris count and the model calculates wrong num, it will be adjusted based on new
 
-                         //  Camera2BasicFragment.getInstance().update((double) total_tris);// run linear reg for thrughput
-                         //  calculate_RE();// real-time RE calculation -> rE list adds the new point -> then checks if we have at least two points, we
-
-                       }*/
-
-
-
-                       // long time2= System.nanoTime()/1000000;
-                        //Log.d("Algorithm Duration",Long.toString(time2-time1));
                     }
 
                 },
@@ -2296,7 +2361,7 @@ else{
         int size = current.size();
       //  errorAnalysis2(size);
         String currentFolder = getExternalFilesDir(null).getAbsolutePath();
-        String FILEPATH = currentFolder + File.separator + "Extra_inf.csv";
+        String FILEPATH = currentFolder + File.separator + "Extra_inf"+ fileseries+".csv";
         Toast.makeText(this,"FILE PATH: " + FILEPATH, Toast.LENGTH_LONG).show();
 
         if(quality_log.size()!=0) {
@@ -3423,7 +3488,7 @@ public float delta (float a, float b , float c1,float creal,  float d, float gam
 
 
         //Nil
-        ratioArray.add(objectCount,1f);
+
         cacheArray.add(objectCount,1f);
         updatednetw.add(objectCount,0f);
 
@@ -3457,7 +3522,7 @@ public float delta (float a, float b , float c1,float creal,  float d, float gam
         time_log.add(objectCount,  dateFormat.format(new Date()).toString() );
 
 
-
+        ratioArray.add(objectCount,1f);
         objectCount++;
 
 
@@ -3473,6 +3538,7 @@ public float delta (float a, float b , float c1,float creal,  float d, float gam
 
 
         deg_error_log.add("");
+        obj_quality.add(1f);
 
         trisChanged=true;
 
@@ -3504,7 +3570,7 @@ public float delta (float a, float b , float c1,float creal,  float d, float gam
 
 
     }
-    public float calculateQuality(int indq, int finalInd , float ratio, float d1 ){
+    public float calculatenrmDeg(int indq, int finalInd , float ratio, float d1 ){
 
 
         float gamma = excel_gamma.get(indq);
@@ -3516,7 +3582,7 @@ public float delta (float a, float b , float c1,float creal,  float d, float gam
         float deg_error =
                 (float) (Math.round((float) (Calculate_deg_er(a, b, c, d1, gamma, curQ) * 10000))) / 10000;
         //Nill added
-        float maxd = max_d.get(indq);
+        //float maxd = max_d.get(indq);
         float max_nrmd = excel_maxd.get(indq);
         float cur_degerror=deg_error / max_nrmd;
         return cur_degerror;
@@ -3753,7 +3819,7 @@ public float delta (float a, float b , float c1,float creal,  float d, float gam
 
 
         String currentFolder = getExternalFilesDir(null).getAbsolutePath();
-        String FILEPATH = currentFolder + File.separator + "GPU_Usage.csv";
+        String FILEPATH = currentFolder + File.separator + "GPU_Usage_"+ fileseries+".csv";
         Timer  t = new Timer();
         final int[] count = {0}; // should be before here
         t.scheduleAtFixedRate(
@@ -3780,7 +3846,8 @@ public float delta (float a, float b , float c1,float creal,  float d, float gam
                             String[] InstallBusyBoxCmd = new String[]{
                                     "su", "-c", "cat /sys/class/kgsl/kgsl-3d0/gpu_busy_percentage"};
 
-                            process2 = Runtime.getRuntime().exec(InstallBusyBoxCmd);
+                           // process2 = Runtime.getRuntime().exec(InstallBusyBoxCmd); // this is fro oneplus phone
+                            process2 = Runtime.getRuntime().exec("cat /sys/class/kgsl/kgsl-3d0/gpu_busy_percentage"); // this is for S10 phone
                             BufferedReader stdInput = new BufferedReader(new
                                     InputStreamReader(process2.getInputStream()));
 // Read the output from the command
@@ -3810,8 +3877,42 @@ public float delta (float a, float b , float c1,float creal,  float d, float gam
                             sb.append(total_tris); sb.append(',');sb.append(mean_gpu);sb.append(',');
                             sb.append(dist);
                             //sb.append(','); sb.append(sreqs);
-                            sb.append(',');  sb.append(filname);
+                            sb.append(',');  sb.append(filname);  sb.append(',');
                             sb.append(objectCount);
+                            sb.append(',');
+                            if(objectCount>0)
+                            {
+                                int num=objectCount;
+                                String q=quality_log.get(num-1);
+                                if(q!="")
+                                    sb.append( q);
+                                else {
+                                    float r=1f;
+                                    if(ratioArray.size()==num)
+                                       r = ratioArray.get(num-1);// ratio of last object
+                                    if (currentScenario.contains("3")) // third scenario has ratio 0.6
+                                        r = 0.6f; // jsut for scenario3 objects are decimated
+                                    else if(currentScenario.contains("6")) // sixth scenario has ratio 0.3
+                                        r=0.3f;
+                                    int indq = excelname.indexOf(renderArray.get(num - 1).fileName);// search in excel file to find the name of current object and get access to the index of current object
+                                    // excel file has all information for the degredation model
+                                    float gamma = excel_gamma.get(indq);
+                                    float a = excel_alpha.get(indq);
+                                    float b = excel_betta.get(indq);
+                                    float c = excel_c.get(indq);
+                                    float d_k = renderArray.get(num - 1).return_distance();// current distance
+
+                                    float deg_error = Calculate_deg_er(a, b, c, d_k, gamma, r);
+                                    float max_nrmd = excel_maxd.get(indq);
+                                    float nrmdegerror = deg_error / max_nrmd;
+
+                                    float obj_quality = 1 - nrmdegerror;
+                                    quality_log.add(num-1,Float.toString(obj_quality));
+                                    sb.append(obj_quality);
+                                }
+                            }
+                            else
+                              sb.append( "0");
                             sb.append('\n');
 
 
@@ -3857,7 +3958,7 @@ public float delta (float a, float b , float c1,float creal,  float d, float gam
                     //  }
                 },
                 0,      // run first occurrence immediatetly
-                1000);
+                2000);
     };
 
 
