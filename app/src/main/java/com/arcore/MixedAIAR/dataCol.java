@@ -68,7 +68,7 @@ public class dataCol implements Runnable {
 
         boolean accmodel = true;// this is to check if the trained model for thr is accurate
         //boolean accRe=true;// this is to check if the trained model for re is accurate
-        boolean trainedTris = false;
+
         boolean trainedThr = false;
         boolean trainedRE = false;
         double maxTrisThreshold = mInstance.orgTrisAllobj;
@@ -77,8 +77,39 @@ public class dataCol implements Runnable {
         double meanDk = 0; // mean current dis
         double meanDkk = 0; // mean of d in the next period-> you need to cal the average of predicted d for all the objects
         double pred_meanD=mInstance.pred_meanD_cur; // for next 1 sc
-        meanThr = mInstance.getThroughput();
+
         totTris = mInstance.total_tris;
+
+        mInstance. algNxtTris = totTris;
+
+        if(mInstance.trainedTris==true) {
+            try {
+
+                long t1=System.nanoTime() / 1000000;
+
+                mInstance.trainedTris=false;
+                odraAlg((float) mInstance.nextTris);
+                long t2=System.nanoTime() / 1000000;
+                mInstance.t_loop2=t2-t1;
+
+
+                if (mInstance.nextTris != totTris) // if next tris is lower than total tris we have decimation
+                    mInstance.decTris.add(mInstance.total_tris);// add new total triangle count in the decimated list
+
+
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+
+
+            mInstance.algNxtTris = mInstance.total_tris;
+        }
+
+
+
+
+
+        meanThr = mInstance.getThroughput();// after the objects are decimated
 
         if(meanThr<100 && meanThr>1){
 
@@ -228,8 +259,8 @@ public class dataCol implements Runnable {
                         if(decCount!=0) // means that we have at least one record of decimated objects
                         {
                             int j=0;
-                            int upCount= (int) Math.ceil(0.5 * mInstance.objectCount);// we had addition up to the object count
-                            for (int i= decCount; i<upCount; i++){
+                            int upCount= (int) Math.ceil(0.7 * mInstance.objectCount);// we had addition up to the object count
+                            for (int i= decCount; i<=upCount; i++){
                                 if(j>mInstance.decTris.size()-1)
                                     j=0;
                                 double currentT=mInstance.decTris.get(j);// one of the triangles from the list of decimated-exp
@@ -373,9 +404,9 @@ public class dataCol implements Runnable {
                         if(decCount!=0) // means that we have at least one record of decimated objects
                         {
                             int j=0;
-                            int upCount= (int) Math.ceil(0.5 * mInstance.objectCount);
-                            if( mInstance.objectCount<25)
-                              upCount= (int) Math.ceil(0.7 * mInstance.objectCount);// we had addition up to the object count
+                            //int upCount= (int) Math.ceil(0.5 * mInstance.objectCount);
+                            //if( mInstance.objectCount<25)
+                            int upCount= (int) Math.ceil(0.8 * mInstance.objectCount);// we had addition up to the object count
 
                             for (int i= decCount; i<=upCount; i++){
                                 if(j>mInstance.decTris.size()-1)
@@ -432,8 +463,8 @@ public class dataCol implements Runnable {
                     predRE = (double) Math.round((double) predRE * 100) / 100;
 
                     //  if (variousTris>=3 && Math.abs(deltaRe) >= 0.2 && (PRoAR < 0.7 || PRoAI < 0.7))// test and see what is the re range
-                    double nextTris = totTris;
-                    double algNxtTris = totTris; // the accurate triangle count after running the reassignment algorithm
+                    mInstance. nextTris = totTris;
+                   // mInstance. algNxtTris = totTris; // the accurate triangle count after running the reassignment algorithm
 
                     if (variousTris >= 3 && (reMsrd >= 1.20 || (reMsrd <= 0.8 && avgq != 1)))// if re is not balances (or pAR is not close to PAI, we will change the next tris count
                         // the last cond (reMsrd <0.8 && avgq!=1) says that if the AI is working better than AR and AI has not in original quality so that we can increase tot tris
@@ -481,13 +512,13 @@ public class dataCol implements Runnable {
 
                             // temporarily inactive to not to run algo-> just wanna check nexttris values
                             if (tmpnextTris < mInstance.orgTrisAllobj && tmpnextTris >= minTrisThreshold)
-                                nextTris = tmpnextTris;
+                                mInstance.nextTris = tmpnextTris;
 
                             else if (tmpnextTris < minTrisThreshold )
-                                nextTris = minTrisThreshold + 1000;
+                                mInstance.nextTris = minTrisThreshold + 1000;
 
                             else if (tmpnextTris > mInstance.orgTrisAllobj)
-                                nextTris = mInstance.orgTrisAllobj;
+                                mInstance. nextTris = mInstance.orgTrisAllobj;
 
                             // update next tris and call algorithm if and only if the new tris is between a correct range
 
@@ -495,11 +526,12 @@ public class dataCol implements Runnable {
                             // writeNextTris(mInstance.alphaD, mInstance.alphaH, mInstance.rohD, meanDkk, mInstance.zeta, mInstance.delta, mInstance.alphaT, mInstance.rohT, nomin, denom, totTris, nextTris);// writes to the file
 
 
-                            trainedTris = true;
-
+                            mInstance.trainedTris = true;
+                            time2 = System.nanoTime() / 1000000;
+                            mInstance.t_loop1=time2-time1;
                             // call main algorithm to distribute triangles
                             // Temp cmt for motivation experiment
-
+/*
                             try {
 
 
@@ -513,16 +545,15 @@ public class dataCol implements Runnable {
                             }
 
 
-                            algNxtTris = mInstance.total_tris;
-                            // algNxtTris= (double)Math.round((double)algNxtTris * 1000) / 1000;
+                            algNxtTris = mInstance.total_tris; */
+
 
                         }
 
 
                     }//if
-                    writeRE(reMsrd, predRE, trainedRE, totTris, nextTris, algNxtTris, trainedTris, PRoAR, PRoAI, accmodel,mInstance.orgTrisAllobj, avgq, time2-time1);// writes to the file
+                    writeRE(reMsrd, predRE, trainedRE, totTris, mInstance.nextTris, mInstance.algNxtTris, mInstance.trainedTris, PRoAR, PRoAI, accmodel,mInstance.orgTrisAllobj, avgq, mInstance.t_loop1+mInstance.t_loop2);// writes to the file
 
-                    //  writeRE(reMsrd, predRE, trainedRE,totTris, nextTris,trainedTris, PRoAR, PRoAI);// writes to the file
 
 
                 }            //  RE modeling and next tris
@@ -540,6 +571,7 @@ public class dataCol implements Runnable {
 
         mInstance.pred_meanD_cur=meanDkk; // the predicted current_mean_distance for next period is saved here
 
+     //   mInstance.datacol=false;// job is done
 
     }//run
 

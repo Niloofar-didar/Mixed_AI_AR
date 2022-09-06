@@ -107,15 +107,15 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
     private ArFragment fragment;
     private PointerDrawable pointer = new PointerDrawable();
     private static final String GLTF_ASSET = "https://storage.googleapis.com/ar-answers-in-search-models/static/Tiger/model.glb";
-  //  private static MainActivity Instance = new MainActivity();
-    private static com.arcore.MixedAIAR.MainActivity Instance = new com.arcore.MixedAIAR.MainActivity();
+    private static MainActivity Instance = new MainActivity();
+    //private static MainActivity Instance = new com.arcore.MixedAIAR.MainActivity();
 
 
     //    static
 //    {
 //        Instance =
 //    }
-    public static com.arcore.MixedAIAR.MainActivity getInstance()
+    public static MainActivity getInstance()
     {
         return Instance;
     }
@@ -124,7 +124,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
     private boolean isHitting;
 
    //  baseRenderable renderArray[] = new baseRenderable[obj_count];
-    List<com.arcore.MixedAIAR.MainActivity.baseRenderable> renderArray =  new ArrayList<com.arcore.MixedAIAR.MainActivity.baseRenderable>();
+    List<baseRenderable> renderArray =  new ArrayList<baseRenderable>();
 
     List<Float>ratioArray = new ArrayList<Float>();
     List<Float>cacheArray = new ArrayList<Float>();
@@ -145,8 +145,12 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
     Map <Integer, Float> candidate_obj;
     float []coarse_Ratios=new float[]{1f,0.8f, 0.6f , 0.4f, 0.2f, 0.05f};
     //ArrayList <ArrayList<Float>> F_profit= new ArrayList<>();
-
-
+    boolean datacol=false;
+    boolean trainedTris = false;
+    double nextTris = 0;
+    double algNxtTris = 0;
+    long t_loop1=0;
+    long t_loop2=0;
     StringBuilder tasks = new StringBuilder();
 
 
@@ -203,11 +207,11 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
 
     private ArrayList<String> scenarioList = new ArrayList<>();
     private String currentScenario = null;
-    private int scenarioTickLength = 30000;
+    private int scenarioTickLength = 40000;
     //private int removalTickLength = 30000;
     private ArrayList<String> taskConfigList = new ArrayList<>();
     private String currentTaskConfig = null;
-    private int taskConfigTickLength = 30000;
+    private int taskConfigTickLength = 40000;
     private int pauseLength = 10000;
 
     List<String> mLines = new ArrayList<>();
@@ -315,7 +319,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
     int max_datapoint=25;
     double reRegRMSE= Double.POSITIVE_INFINITY;
     double alphaT = 5.14E-7, alphaD=0.19, alphaH=1.34E-5, zeta=0.29;
-    double nextTris=0; // triangles for the next period
+    //double nextTris=0; // triangles for the next period
 
     private static final int KEEP_ALIVE_TIME = 500;
     private final int CORE_THREAD_POOL_SIZE = 10;
@@ -445,7 +449,7 @@ else{
     }
 
     //reference renderables, cannot be changed when decimation percentage is selected
-    private class refRenderable extends com.arcore.MixedAIAR.MainActivity.baseRenderable {
+    private class refRenderable extends MainActivity.baseRenderable {
         refRenderable(String filename, float tris) {
             this.fileName = filename;
             this.orig_tris=tris;
@@ -506,7 +510,7 @@ else{
 
 
     //Decimated renderable -- has the ability to redraw and make model request from the manager
-    private class decimatedRenderable extends com.arcore.MixedAIAR.MainActivity.baseRenderable {
+    private class decimatedRenderable extends MainActivity.baseRenderable {
         decimatedRenderable(String filename, float tris) {
             this.fileName = filename;
             this.orig_tris=tris;
@@ -733,7 +737,7 @@ else{
                             mList.get(i).getCollector().startCollect();
                         }
                     } else {
-                        Toast toast = Toast.makeText(com.arcore.MixedAIAR.MainActivity.this,
+                        Toast toast = Toast.makeText(MainActivity.this,
                                 "Set all AI models & Devices before continuing", Toast.LENGTH_LONG);
                         toast.show();
                         switchToggleStream.setChecked(false);
@@ -1141,7 +1145,7 @@ else{
         //setup the model drop down menu
         Spinner modelSpinner = (Spinner) findViewById(R.id.modelSelect);
         modelSpinner.setOnItemSelectedListener(this);
-        ArrayAdapter<String> modelSelectAdapter = new ArrayAdapter<String>(com.arcore.MixedAIAR.MainActivity.this,
+        ArrayAdapter<String> modelSelectAdapter = new ArrayAdapter<String>(MainActivity.this,
                 android.R.layout.simple_list_item_1, assetList);
         modelSelectAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         modelSpinner.setAdapter(modelSelectAdapter);
@@ -1412,55 +1416,10 @@ else{
         placeObjectButton.setOnClickListener(new View.OnClickListener() {
             public void onClick(View view) {
 
-               // policy = policySpinner.getSelectedItem().toString();
-
-
-//                int selectedCount = (int) countSpinner.getSelectedItem();
-//
-//                if (autoPlace == true && selectedCount != 1) {
-//                    // renderArray[objectCount] = new refRenderable(modelSpinner.getSelectedItem().toString());
-//                    //addObject(Uri.parse("models/" + currentModel + ".sfb"), renderArray[objectCount]);
-//
-//
-//                    countDownTimer = new CountDownTimer(Long.MAX_VALUE, 100) {
-//
-//                        // This is called after every 3 sec interval.
-//                        public void onTick(long millisUntilFinished) {
-//
-//                            if (objectCount < selectedCount) {
-//                                float original_tris=excel_tris.get(excelname.indexOf(currentModel));
-//                                renderArray.add(objectCount, new decimatedRenderable(modelSpinner.getSelectedItem().toString(),original_tris));
-//                              //  renderArray[objectCount] = new decimatedRenderable(modelSpinner.getSelectedItem().toString(),original_tris);
-//
-//                                addObject(Uri.parse("models/" + currentModel + ".sfb"), renderArray.get(objectCount));
-//
-//                            }
-//                            if (objectCount == selectedCount)
-//                                countDownTimer.cancel();
-//
-//                        }
-//
-//                        public void onFinish() {
-//                            if (objectCount == selectedCount)
-//                                countDownTimer.cancel();
-//
-//
-//                        }
-//                    }.start();
-//
-//                    // countDownTimer.start();
-//
-//
-//                }
-
-              //  else {// define a counter 3 s to add obj ev time for gpu_model
-
-
-                    //   ImageView simpleAndy = new ImageView(this);
-                    //  simpleAndy.setImageResource(R.drawable.droid_thumb);
-                    // simpleAndy.setContentDescription("andy");
+               //     while(datacol==true);// wait until the datacollection is done and then place the object
+                   // datacol=true;// not to let datacol thread be activated
                     float original_tris=excel_tris.get(excelname.indexOf(currentModel));
-                    renderArray.add(objectCount,new com.arcore.MixedAIAR.MainActivity.decimatedRenderable(modelSpinner.getSelectedItem().toString(),original_tris));
+                    renderArray.add(objectCount,new decimatedRenderable(modelSpinner.getSelectedItem().toString(),original_tris));
                     addObject(Uri.parse("models/" + currentModel + ".sfb"), renderArray.get(objectCount));
                    
 
@@ -1487,7 +1446,7 @@ else{
 
                 TextView posText = (TextView) findViewById(R.id.dec_req);
 
-                Toast toast = Toast.makeText(com.arcore.MixedAIAR.MainActivity.this,
+                Toast toast = Toast.makeText(MainActivity.this,
                         "Please Upload the decimated objects to the Phone storage", Toast.LENGTH_LONG);
 
                 toast.show();
@@ -1760,7 +1719,7 @@ else{
                                         this.cancel();
 
                                         //commented for motv-exp 1 and desing PAR-PAI experiment: commented switchToggleStream.setChecked(false);
-                                      // removeTimer.start();
+                                       removeTimer.start();
                                        // runOnUiThread(Auto_decimate_butt::callOnClick);
                                         return;
                                     }
@@ -1773,7 +1732,7 @@ else{
 
                                   //  policy = policySpinner.getSelectedItem().toString();
 
-                                    modelSpinner.setSelection(modelSelectAdapter.getPosition(currentModel));
+                                    //modelSpinner.setSelection(modelSelectAdapter.getPosition(currentModel));
                                     float original_tris = excel_tris.get(excelname.indexOf(currentModel));
                                     renderArray.add(objectCount, new decimatedRenderable(currentModel, original_tris));
                                     addObject(Uri.parse("models/" + currentModel + ".sfb"), renderArray.get(objectCount), xOffset, yOffset);
@@ -1781,7 +1740,8 @@ else{
 
 
 
-                                   // Toast.makeText(MainActivity.this, String.format("Model: %s\nPos: (%f, %f)", currentModel, xOffset, yOffset), Toast.LENGTH_LONG).show();
+
+                                    // Toast.makeText(MainActivity.this, String.format("Model: %s\nPos: (%f, %f)", currentModel, xOffset, yOffset), Toast.LENGTH_LONG).show();
 
                                 } catch (IOException e) {
                                     e.printStackTrace();
@@ -2052,23 +2012,28 @@ else{
 
                     public void run() {
 
+
+                        //while (datacol==true);// wait till object is placed - noe need to have both jobs at the same time
+
 //@@@@@@@@@@@ This is to collect total triangle data every 500 ms @@@@@@@@@@@
                         //long time1= System.nanoTime()/1000000;
+
 
 
                        // long curTime= SystemClock.uptimeMillis();
 
                         if(switchToggleStream.isChecked()) // in the begining we collect data for zero tris
 
-
                         {
+                           // datacol=true;// don't let object placement run
                            if(!setDesTh){
                                double throughput= getThroughput();
                                des_Thr= 0.65*throughput;
                                setDesTh=true;
                            }
 
-                            new dataCol(com.arcore.MixedAIAR.MainActivity.this).run(); // this is to collect mean thr, total_tris. average dis
+
+                            new dataCol(MainActivity.this).run(); // this is to collect mean thr, total_tris. average dis
 
                         }
 
@@ -2858,7 +2823,7 @@ private float computeWidth(ArrayList<Float> point){
     }
 
 
-    public List<String> predictwindow(com.arcore.MixedAIAR.MainActivity ma, List<Boolean> cls, float fath, float qprev, float d11, int ww, int ind, int dindex, ArrayList<Float> predicted_d) {
+    public List<String> predictwindow(MainActivity ma, List<Boolean> cls, float fath, float qprev, float d11, int ww, int ind, int dindex, ArrayList<Float> predicted_d) {
 
 
         List<String> temppredict = new ArrayList<String>();
@@ -3376,7 +3341,7 @@ public float delta (float a, float b , float c1,float creal,  float d, float gam
 
     //this came with the app, it sends out a ray to a plane and wherever it hits, it makes an anchor
     //then it calls placeobject
-    private void addObject(Uri model, com.arcore.MixedAIAR.MainActivity.baseRenderable renderArrayObj) {
+    private void addObject(Uri model, baseRenderable renderArrayObj) {
         Frame frame = fragment.getArSceneView().getArFrame();
         android.graphics.Point pt = getScreenCenter();
         List<HitResult> hits;
@@ -3424,7 +3389,7 @@ public float delta (float a, float b , float c1,float creal,  float d, float gam
 
     }
 
-    private void placeObject(ArFragment fragment, Anchor anchor, Uri model, com.arcore.MixedAIAR.MainActivity.baseRenderable renderArrayObj) { ;
+    private void placeObject(ArFragment fragment, Anchor anchor, Uri model, baseRenderable renderArrayObj) { ;
 
 
     try {
@@ -3547,7 +3512,7 @@ public float delta (float a, float b , float c1,float creal,  float d, float gam
 
         File file = new File(this.getExternalFilesDir(null), "/degmodel_file.csv");
 
-        File tris = new File(com.arcore.MixedAIAR.MainActivity.this.getFilesDir(), "text");
+        File tris = new File(this.getFilesDir(), "text");
 
         Date d1 = null;
         Date d2 = null;
@@ -3564,7 +3529,7 @@ public float delta (float a, float b , float c1,float creal,  float d, float gam
 
 
         node.select();
-
+      //  datacol=false;// the object is placed to the screen
 
 
 
