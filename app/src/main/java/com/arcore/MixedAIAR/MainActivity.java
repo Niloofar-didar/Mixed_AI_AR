@@ -41,6 +41,7 @@ import android.os.CountDownTimer;
 //import android.support.v7.app.AlertDialog;
 //import android.support.v7.app.AppCompatActivity;
 //import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
@@ -107,8 +108,8 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
     private ArFragment fragment;
     private PointerDrawable pointer = new PointerDrawable();
     private static final String GLTF_ASSET = "https://storage.googleapis.com/ar-answers-in-search-models/static/Tiger/model.glb";
-    private static MainActivity Instance = new MainActivity();
-    //private static MainActivity Instance = new com.arcore.MixedAIAR.MainActivity();
+   // private static MainActivity Instance = new MainActivity();
+    private static MainActivity Instance = new com.arcore.MixedAIAR.MainActivity();
 
 
     //    static
@@ -213,6 +214,12 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
     private String currentTaskConfig = null;
     private int taskConfigTickLength = 40000;
     private int pauseLength = 10000;
+
+    double thr_factor=0.6;
+    double re_factor=0.9;
+    int thr_miss_counter=0;
+    int re_miss_counter=0;
+
 
     List<String> mLines = new ArrayList<>();
     //  List<String> time_tris = new ArrayList<>();
@@ -449,7 +456,7 @@ else{
     }
 
     //reference renderables, cannot be changed when decimation percentage is selected
-    private class refRenderable extends MainActivity.baseRenderable {
+    private class refRenderable extends baseRenderable {
         refRenderable(String filename, float tris) {
             this.fileName = filename;
             this.orig_tris=tris;
@@ -510,7 +517,7 @@ else{
 
 
     //Decimated renderable -- has the ability to redraw and make model request from the manager
-    private class decimatedRenderable extends MainActivity.baseRenderable {
+    private class decimatedRenderable extends baseRenderable {
         decimatedRenderable(String filename, float tris) {
             this.fileName = filename;
             this.orig_tris=tris;
@@ -737,9 +744,8 @@ else{
                             mList.get(i).getCollector().startCollect();
                         }
                     } else {
-                        Toast toast = Toast.makeText(MainActivity.this,
-                                "Set all AI models & Devices before continuing", Toast.LENGTH_LONG);
-                        toast.show();
+                   //     Toast toast = Toast.makeText(MainActivity.this, "Set all AI models & Devices before continuing", Toast.LENGTH_LONG);
+                     //   toast.show();
                         switchToggleStream.setChecked(false);
                     }
                 } else {
@@ -2028,7 +2034,7 @@ else{
                            // datacol=true;// don't let object placement run
                            if(!setDesTh){
                                double throughput= getThroughput();
-                               des_Thr= 0.65*throughput;
+                               des_Thr= 0.68*throughput;
                                setDesTh=true;
                            }
 

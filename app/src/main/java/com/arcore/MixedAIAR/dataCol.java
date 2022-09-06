@@ -78,9 +78,8 @@ public class dataCol implements Runnable {
         double meanDkk = 0; // mean of d in the next period-> you need to cal the average of predicted d for all the objects
         double pred_meanD=mInstance.pred_meanD_cur; // for next 1 sc
 
-        totTris = mInstance.total_tris;
 
-        mInstance. algNxtTris = totTris;
+        totTris = mInstance.total_tris;
 
         if(mInstance.trainedTris==true) {
             try {
@@ -106,7 +105,9 @@ public class dataCol implements Runnable {
         }
 
 
+        totTris = mInstance.total_tris;
 
+        mInstance. algNxtTris = totTris;
 
 
         meanThr = mInstance.getThroughput();// after the objects are decimated
@@ -259,8 +260,8 @@ public class dataCol implements Runnable {
                         if(decCount!=0) // means that we have at least one record of decimated objects
                         {
                             int j=0;
-                            int upCount= (int) Math.ceil(0.7 * mInstance.objectCount);// we had addition up to the object count
-                            for (int i= decCount; i<=upCount; i++){
+                            int upCount= (int) Math.ceil(mInstance.thr_factor * mInstance.objectCount);// we had addition up to the object count
+                            for (int i= decCount; i<upCount; i++){
                                 if(j>mInstance.decTris.size()-1)
                                     j=0;
                                 double currentT=mInstance.decTris.get(j);// one of the triangles from the list of decimated-exp
@@ -297,6 +298,7 @@ public class dataCol implements Runnable {
                         mInstance.delta = regression.beta(2);
                         mInstance.thRmse = regression.rmse;
                         trainedThr = true;
+                        mInstance.thr_miss_counter=0;
 
                         //         }// end of modeling throughput
 
@@ -307,10 +309,21 @@ public class dataCol implements Runnable {
                     predThr = (double) Math.round((double) predThr * 100) / 100;
 
                     mape = Math.abs((meanThr - predThr) / meanThr);
-                    if (mape > 0.1)
+                    if (mape > 0.1) {
                         accmodel = false;// after training we check to see if the model is accurate to then cal next triangle
 
+                        if(variousTris >= 3)
+                            mInstance.thr_miss_counter+=1;
 
+                        if( mInstance.thr_miss_counter>5 && mInstance.decTris.size()!=0){ // this is to regulate the factor of considering decimated collected data in the bins
+                            if(meanThr>predThr)
+                                mInstance.thr_factor-=0.1;// reduce the effect of decimation to increase predicted throughput
+                            else
+                                mInstance.thr_factor+=0.1;// increase the effect of decimation to decrease the calculated pred_re
+
+                        }
+
+                    }
 
                     writeThr(meanThr, predThr, trainedThr);// for the urrent period
 
@@ -405,8 +418,9 @@ public class dataCol implements Runnable {
                         {
                             int j=0;
                             //int upCount= (int) Math.ceil(0.5 * mInstance.objectCount);
-                            //if( mInstance.objectCount<25)
-                            int upCount= (int) Math.ceil(0.8 * mInstance.objectCount);// we had addition up to the object count
+
+
+                            int upCount= (int) Math.ceil(mInstance.re_factor * mInstance.objectCount);// we had addition up to the object count
 
                             for (int i= decCount; i<=upCount; i++){
                                 if(j>mInstance.decTris.size()-1)
@@ -443,6 +457,7 @@ public class dataCol implements Runnable {
                                 mInstance.alphaH = regression.beta(2);
                                 mInstance.zeta = regression.beta(3);
                                 trainedRE = true;
+                                mInstance.re_miss_counter=0;
                             }
                         }
 
@@ -456,9 +471,21 @@ public class dataCol implements Runnable {
 
 
                     mape = Math.abs((reMsrd - predRE) / reMsrd);// log this
-                    if (mape > 0.1)
+                    if (mape > 0.1) {
                         accmodel = false;// after training we check to see if the model is accurate to then cal next triangle
+                        if(variousTris >= 3) // this is to regulate throughput factor for decimated values
+                            mInstance.re_miss_counter+=1;
 
+                        if( mInstance.re_miss_counter>5 && mInstance.decTris.size()!=0){
+                            if(reMsrd>predRE)
+                                mInstance.re_factor-=0.1;// reduce the effect of decimation to increase re
+                            else
+                                mInstance.re_factor+=0.1;// increase the effect of decimation to decrease the calculated pred_re
+
+                        }
+
+
+                    }
 
                     predRE = (double) Math.round((double) predRE * 100) / 100;
 
