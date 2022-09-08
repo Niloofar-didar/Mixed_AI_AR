@@ -10,33 +10,33 @@
     <com.google.android.material.appbar.AppBarLayout
         android:id="@+id/appBarLayout"
         android:layout_width="159dp"
-        android:layout_height="102dp"
+        android:layout_height="153dp"
         android:theme="@style/AppTheme.AppBarOverlay">
 
         <androidx.appcompat.widget.Toolbar
             android:id="@+id/toolbar"
-            android:layout_width="match_parent"
-            android:layout_height="27dp"
+            android:layout_width="190dp"
+            android:layout_height="45dp"
             android:background="?attr/colorPrimary"
             app:popupTheme="@style/AppTheme.PopupOverlay" />
 
         <TextView
             android:id="@+id/dec_req"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:layout_width="match_parent"
+            android:layout_height="35dp"
             android:layout_gravity="left"
             android:text="Decimation Request" />
 
         <TextView
             android:id="@+id/objnum"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:layout_height="35dp"
             android:text="obj_num" />
 
         <TextView
             android:id="@+id/thr"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:layout_height="38dp"
             android:text="Throughput" />
 
 
@@ -51,7 +51,7 @@
         android:id="@+id/include"
         layout="@layout/content_main"
         android:layout_width="match_parent"
-        android:layout_height="742dp" />
+        android:layout_height="match_parent" />
 
     <!--    <include-->
     <!--        android:id="@+id/include"-->

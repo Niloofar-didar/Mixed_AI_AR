@@ -38,14 +38,11 @@ import android.opengl.Matrix;
 import android.os.Bundle;
 import android.os.CountDownTimer;
 
-//import android.support.v7.app.AlertDialog;
-//import android.support.v7.app.AppCompatActivity;
-//import android.support.v7.widget.Toolbar;
-import android.util.Log;
+
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
-import androidx.constraintlayout.widget.ConstraintLayout;
+  import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -107,19 +104,19 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
 
     private ArFragment fragment;
     private PointerDrawable pointer = new PointerDrawable();
-    private static final String GLTF_ASSET = "https://storage.googleapis.com/ar-answers-in-search-models/static/Tiger/model.glb";
+    //private static final String GLTF_ASSET = "https://storage.googleapis.com/ar-answers-in-search-models/static/Tiger/model.glb";
    // private static MainActivity Instance = new MainActivity();
-    private static MainActivity Instance = new com.arcore.MixedAIAR.MainActivity();
+    //private static MainActivity Instance = new com.arcore.MixedAIAR.MainActivity();
 
 
     //    static
 //    {
 //        Instance =
 //    }
-    public static MainActivity getInstance()
-    {
-        return Instance;
-    }
+//    public static MainActivity getInstance()
+//    {
+//        return Instance;
+//    }
 
     private boolean isTracking;
     private boolean isHitting;
@@ -146,12 +143,12 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
     Map <Integer, Float> candidate_obj;
     float []coarse_Ratios=new float[]{1f,0.8f, 0.6f , 0.4f, 0.2f, 0.05f};
     //ArrayList <ArrayList<Float>> F_profit= new ArrayList<>();
-    boolean datacol=false;
+  //  boolean datacol=false;
     boolean trainedTris = false;
     double nextTris = 0;
     double algNxtTris = 0;
     long t_loop1=0;
-    long t_loop2=0;
+    //long t_loop2=0;
     StringBuilder tasks = new StringBuilder();
 
 
@@ -161,17 +158,17 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
     ListMultimap<Double, List<Double>> thParamList = ArrayListMultimap.create();//  a map from tot tris to measured RE
 
 
-    ListMultimap<Float, Boolean> trisDec = ArrayListMultimap.create();//  a map from tot tris to decimated flag -> if this tris comes from decimation
+  //  ListMultimap<Float, Boolean> trisDec = ArrayListMultimap.create();//  a map from tot tris to decimated flag -> if this tris comes from decimation
 
     ListMultimap<Double, Double> trisMeanThr = ArrayListMultimap.create();//  a map from tot tris to mean throughput
 
-    List<Double> totTrisList= new LinkedList<>();
+  //  List<Double> totTrisList= new LinkedList<>();
 
     ListMultimap<Double, Double> trisMeanDisk = ArrayListMultimap.create();//  a map from tot tris to mean dis at current period
-    Double[] meanDisk =  trisMeanDisk.values().toArray(new Double[0]);
+    //Double[] meanDisk =  trisMeanDisk.values().toArray(new Double[0]);
 
-    ListMultimap<Double, Double> trisMeanDiskk = ArrayListMultimap.create();//  a map from tot tris to mean dis at next period
-    Double[] meanDiskk =  trisMeanDiskk.values().toArray(new Double[0]);
+    //ListMultimap<Double, Double> trisMeanDiskk = ArrayListMultimap.create();//  a map from tot tris to mean dis at next period
+ //   Double[] meanDiskk =  trisMeanDiskk.values().toArray(new Double[0]);
 
     ListMultimap<Double, Double> trisRe = ArrayListMultimap.create();//  a map from tot tris to measured RE
     ListMultimap<Double, List<Double>> reParamList = ArrayListMultimap.create();//  a map from tot tris to measured RE
@@ -192,7 +189,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
     private Integer[] objcount = new Integer[]{1, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120, 130, 140, 160, 170, 180, 190, 200, 220, 240, 260, 300, 340, 380, 430, 500};
     //private float[] distance_log = new float[]{2.24f,2.0f, 2.24f, 2.83f, 3.61f, 4.47f, 5.39f, 6.32f, 7.28f, 8.25f, 9.22f, 10.2f, 11.18f, 12.17f, 13.15f };
     private String currentModel = null;
-     boolean decAll  = false; // older name :referenceObjectSwitchCheck
+     boolean decAll  = true; // older name :referenceObjectSwitchCheck
     private boolean autoPlace = false;// older name multipleSwitchCheck
     private boolean askedbefore = false;
      int nextID = 1;
@@ -208,7 +205,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
 
     private ArrayList<String> scenarioList = new ArrayList<>();
     private String currentScenario = null;
-    private int scenarioTickLength = 40000;
+    private int scenarioTickLength = 30000;
     //private int removalTickLength = 30000;
     private ArrayList<String> taskConfigList = new ArrayList<>();
     private String currentTaskConfig = null;
@@ -223,8 +220,8 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
 
     List<String> mLines = new ArrayList<>();
     //  List<String> time_tris = new ArrayList<>();
-    Map<String, Integer> time_tris = new HashMap<>();
-    Map<String, Integer> time_gpu = new HashMap<>();
+ //   Map<String, Integer> time_tris = new HashMap<>();
+  //  Map<String, Integer> time_gpu = new HashMap<>();
 
 
     ArFragment arFragment = (ArFragment)
@@ -234,7 +231,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
     private DecimalFormat posFormat = new DecimalFormat("###.##");
     private final int SEEKBAR_INCREMENT = 10;
     File dateFile;
-    File Nil;
+   // File Nil;
     File obj;
     File tris_num;
     File GPU_usage;
@@ -257,8 +254,8 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
     List<Float> excel_mindis = new ArrayList<>();
     List<Boolean> closer = new ArrayList<>();
     List<Float> max_d = new ArrayList<>();
-    List<String> temppredict = new ArrayList<>();
-    List<String> tempquality = new ArrayList<>();
+   // List<String> temppredict = new ArrayList<>();
+  //  List<String> tempquality = new ArrayList<>();
     List<Float> best_cur_eb = new ArrayList<>();
     List<Float> gpusaving = new ArrayList<>();
     List<String> eng_dec = new ArrayList<>();
@@ -269,21 +266,21 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
     List<String> distance_log = new ArrayList<>();
     List<String> deg_error_log = new ArrayList<>();
     List<Float> obj_quality = new ArrayList<>();
-    Double prevTris=0d;
+  //  Double prevTris=0d;
     List<Integer> Server_reg_Freq = new ArrayList<>();
 
     List<Thread> decimate_thread = new ArrayList<>(); //@@ it is needed for server requests
     int decimate_count=0;
     int AI_tasks=0;
     String policy= "Mean";
-    private String[] Policy_Selection = new String[]{"Aggressive", "Mean", "Conservative"};
+  //  private String[] Policy_Selection = new String[]{"Aggressive", "Mean", "Conservative"};
 
     int temp_ww = (((maxtime/2)-1) - (decision_p-1))/ decision_p;
    // private int[] W_Selection = IntStream.range(1, temp_ww).toArray();
    private Integer[] W_Selection= new Integer[temp_ww];
 
-    private Integer[] BW_Selection= new Integer[]{100, 200, 303, 400, 500,600,700,800,900,1000,1100,1200,1300,1400,1500,1600};
-    private Integer[] MDE_Selection= new Integer []{2,6};
+//    private Integer[] BW_Selection= new Integer[]{100, 200, 303, 400, 500,600,700,800,900,1000,1100,1200,1300,1400,1500,1600};
+ //   private Integer[] MDE_Selection= new Integer []{2,6};
     int finalw=4;
     float max_d_parameter=0.2f;
 
@@ -311,7 +308,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
     private HashMap<Integer, ArrayList<ArrayList<Float>>> errormap=new HashMap<Integer, ArrayList<ArrayList<Float>>>();
     private HashMap<Integer, ArrayList<ArrayList<Float>>> booleanmap=new HashMap<Integer, ArrayList<ArrayList<Float>>>();
 
-    private LinkedList<LinkedList<Float> > last_errors = new LinkedList<LinkedList<Float> >();
+   // private LinkedList<LinkedList<Float> > last_errors = new LinkedList<LinkedList<Float> >();
     private LinkedList<Float>  last_errors_x = new LinkedList<Float> ();
     private LinkedList<Float>  last_errors_z = new LinkedList<Float> ();
      HashMap<Integer, ArrayList<Float> >predicted_distances=new HashMap<Integer, ArrayList<Float>>();
@@ -324,20 +321,19 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
 
     private float alpha = 0.7f;
     int max_datapoint=25;
-    double reRegRMSE= Double.POSITIVE_INFINITY;
+   // double reRegRMSE= Double.POSITIVE_INFINITY;
     double alphaT = 5.14E-7, alphaD=0.19, alphaH=1.34E-5, zeta=0.29;
     //double nextTris=0; // triangles for the next period
 
-    private static final int KEEP_ALIVE_TIME = 500;
-    private final int CORE_THREAD_POOL_SIZE = 10;
+  //  private static final int KEEP_ALIVE_TIME = 500;
+  //  private final int CORE_THREAD_POOL_SIZE = 10;
     SimpleDateFormat dateFormat = new SimpleDateFormat("HH:mm");
     String fileseries=dateFormat.format(new Date());
     private final int MAX_THREAD_POOL_SIZE = 10;
     //KEEP_ALIVE_TIME_UNIT  =
     private final TimeUnit KEEP_ALIVE_TIME_UNIT= TimeUnit.MILLISECONDS;
     private final BlockingQueue<Runnable> mWorkQueue= new LinkedBlockingQueue<Runnable>();
-    private final ThreadPoolExecutor algoThreadPool=new ThreadPoolExecutor(CORE_THREAD_POOL_SIZE, MAX_THREAD_POOL_SIZE,
-                                                 KEEP_ALIVE_TIME, KEEP_ALIVE_TIME_UNIT, mWorkQueue);
+  //  private final ThreadPoolExecutor algoThreadPool=new ThreadPoolExecutor(CORE_THREAD_POOL_SIZE, MAX_THREAD_POOL_SIZE, KEEP_ALIVE_TIME, KEEP_ALIVE_TIME_UNIT, mWorkQueue);
 
 
     //Eric code recieves messages from modelrequest manager
@@ -420,7 +416,7 @@ else{
         public abstract void indirect_redraw(float percentageReduction, int i);
         //public abstract void print(AdapterView<?> parent, int pos);
 
-        public abstract void distance();
+       // public abstract void distance();
 
         public abstract float return_distance();
 
@@ -480,22 +476,29 @@ else{
 
 
         //public void distance(AdapterView<?> parent, int pos)
-        public void distance() {
-            {
-                Frame frame = fragment.getArSceneView().getArFrame();
-
-                float dist = ((float) Math.sqrt(Math.pow((baseAnchor.getWorldPosition().x - frame.getCamera().getPose().tx()), 2) + Math.pow((baseAnchor.getWorldPosition().y - frame.getCamera().getPose().ty()), 2) + Math.pow((baseAnchor.getWorldPosition().z - frame.getCamera().getPose().tz()), 2)));
-
-
-            }
-        }
+/*//        public void distance() {
+//            {
+//                float dist=1;
+//                Frame frame = fragment.getArSceneView().getArFrame();
+//
+//                if(frame!=null)
+//                   dist = ((float) Math.sqrt(Math.pow((baseAnchor.getWorldPosition().x - frame.getCamera().getPose().tx()), 2) + Math.pow((baseAnchor.getWorldPosition().y - frame.getCamera().getPose().ty()), 2) + Math.pow((baseAnchor.getWorldPosition().z - frame.getCamera().getPose().tz()), 2)));
+//
+//
+//            }
+//        }*/
 
         public float return_distance() {
 
+            float dist=0;
             Frame frame = fragment.getArSceneView().getArFrame();
+            while( frame==null)
+                frame = fragment.getArSceneView().getArFrame();
+           // if(frame!=null) {
+                dist = ((float) Math.sqrt(Math.pow((baseAnchor.getWorldPosition().x - frame.getCamera().getPose().tx()), 2) + Math.pow((baseAnchor.getWorldPosition().y - frame.getCamera().getPose().ty()), 2) + Math.pow((baseAnchor.getWorldPosition().z - frame.getCamera().getPose().tz()), 2)));
+                dist = (float) (Math.round((float) (dist * 100))) / 100;
+         //   }
 
-            float dist = ((float) Math.sqrt(Math.pow((baseAnchor.getWorldPosition().x - frame.getCamera().getPose().tx()), 2) + Math.pow((baseAnchor.getWorldPosition().y - frame.getCamera().getPose().ty()), 2) + Math.pow((baseAnchor.getWorldPosition().z - frame.getCamera().getPose().tz()), 2)));
-            dist = (float)(Math.round((float)(dist * 100))) / 100;
             return dist;
 
         }
@@ -504,7 +507,7 @@ else{
 
         public float return_distance_predicted(float px,float pz) {
 
-            Frame frame = fragment.getArSceneView().getArFrame();
+            //Frame frame = fragment.getArSceneView().getArFrame();
 
             float dist = ((float) Math.sqrt(Math.pow((baseAnchor.getWorldPosition().x - px), 2)  + Math.pow((baseAnchor.getWorldPosition().z - pz), 2)));
 
@@ -560,30 +563,39 @@ else{
             //Nil
         }
 
-        public void distance() {
-            {
-                Frame frame = fragment.getArSceneView().getArFrame();
-
-                float dist = ((float) Math.sqrt(Math.pow((baseAnchor.getWorldPosition().x - frame.getCamera().getPose().tx()), 2) + Math.pow((baseAnchor.getWorldPosition().y - frame.getCamera().getPose().ty()), 2) + Math.pow((baseAnchor.getWorldPosition().z - frame.getCamera().getPose().tz()), 2)));
-
-
-            }
-        }
+//        public void distance() {
+//            {
+//                Frame frame = fragment.getArSceneView().getArFrame();
+//
+//                float dist = ((float) Math.sqrt(Math.pow((baseAnchor.getWorldPosition().x - frame.getCamera().getPose().tx()), 2) + Math.pow((baseAnchor.getWorldPosition().y - frame.getCamera().getPose().ty()), 2) + Math.pow((baseAnchor.getWorldPosition().z - frame.getCamera().getPose().tz()), 2)));
+//
+//
+//            }
+//        }
 
         public float return_distance() {
 
-            Frame frame = fragment.getArSceneView().getArFrame();
 
-            float dist = ((float) Math.sqrt(Math.pow((baseAnchor.getWorldPosition().x - frame.getCamera().getPose().tx()), 2) + Math.pow((baseAnchor.getWorldPosition().y - frame.getCamera().getPose().ty()), 2) + Math.pow((baseAnchor.getWorldPosition().z - frame.getCamera().getPose().tz()), 2)));
-            dist = (float)(Math.round((float)(dist * 100))) / 100;
+            float dist=0;
+            Frame frame = fragment.getArSceneView().getArFrame();
+            if(frame!=null) {
+
+                 dist = ((float) Math.sqrt(Math.pow((baseAnchor.getWorldPosition().x - frame.getCamera().getPose().tx()), 2) + Math.pow((baseAnchor.getWorldPosition().y - frame.getCamera().getPose().ty()), 2) + Math.pow((baseAnchor.getWorldPosition().z - frame.getCamera().getPose().tz()), 2)));
+                dist = (float) (Math.round((float) (dist * 100))) / 100;
+            }
+
             return dist;
+
+
+
+
 
         }
 
 
         public float return_distance_predicted(float px,float pz) {
 
-            Frame frame = fragment.getArSceneView().getArFrame();
+           // Frame frame = fragment.getArSceneView().getArFrame();
 
             float dist = ((float) Math.sqrt(Math.pow((baseAnchor.getWorldPosition().x - px), 2)  + Math.pow((baseAnchor.getWorldPosition().z - pz), 2)));
 
@@ -599,24 +611,25 @@ else{
 
             Log.d("ServerCommunication", "Redraw waiting is done");
 //Nil april 21
-     try {
-                    Frame frame = fragment.getArSceneView().getArFrame();
-                    while(frame==null)
-                        frame = fragment.getArSceneView().getArFrame();
-
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
+//     try {
+//                    Frame frame = fragment.getArSceneView().getArFrame();
+//                  //  while(frame==null)
+//                     //   frame = fragment.getArSceneView().getArFrame();
+//
+//                } catch (Exception e) {
+//                    e.printStackTrace();
+//                }
             Uri objUri =Uri.fromFile(new File(getExternalFilesDir(null), "/decimated" +  renderArray.get(j).fileName + ratioArray.get(j) + ".sfb"));
 
 
-            if (  ratioArray.get(j)==1)// for the times when perc_reduc is 1, we show the original object
+            if (  ratioArray.get(j)==1f)// for the times when perc_reduc is 1, we show the original object
                 objUri=  Uri.parse("models/"+ renderArray.get(j).fileName+".sfb" );
 
-                if (fragment.getContext()!=null){
+            android.content.Context context= fragment.getContext();
+            if (context!=null){
                 CompletableFuture<Void> renderableFuture =
-                        ModelRenderable.builder()
-                                .setSource(fragment.getContext(),objUri )
+                        ModelRenderable.builder().setSource(context,objUri )
+                               // .setSource(fragment.getContext(),objUri )
                                 //.setIsFilamentGltf(true)
                                 .build()
                                 .thenAccept(renderable -> baseAnchor.setRenderable(renderable))
@@ -636,7 +649,7 @@ else{
 // update tris and gu log
             }
 
-
+            context=null;
 
 
         }
@@ -797,10 +810,10 @@ else{
         dateFile = new File(getExternalFilesDir(null),
                 (new SimpleDateFormat("yyyy_MM_dd_HH:mm:ss", java.util.Locale.getDefault()).format(new Date())) + ".txt");
 
-        Nil = new File(getExternalFilesDir(null), "Nil.txt");
-        obj = new File(getExternalFilesDir(null), "obj.txt");
-        tris_num = new File(getExternalFilesDir(null), "tris_num.txt");
-        GPU_usage = new File(getExternalFilesDir(null), "GPU_usage.txt");
+       // Nil = new File(getExternalFilesDir(null), "Nil.txt");
+      //  obj = new File(getExternalFilesDir(null), "obj.txt");
+        //tris_num = new File(getExternalFilesDir(null), "tris_num.txt");
+       // GPU_usage = new File(getExternalFilesDir(null), "GPU_usage.txt");
 //        //user score setup
 //        Spinner ratingSpinner = (Spinner) findViewById(R.id.userScoreSpinner);
 //        ratingSpinner.setOnItemSelectedListener(this);
@@ -973,7 +986,7 @@ else{
 
 
 
-
+/*
         currentFolder = getExternalFilesDir(null).getAbsolutePath();
         FILEPATH = currentFolder + File.separator + "NextTrisParameters.csv";
         try (PrintWriter writer = new PrintWriter(new FileOutputStream(FILEPATH, false))) {
@@ -1011,7 +1024,7 @@ else{
             System.out.println(e.getMessage());
         }
 
-
+*/
 
         try (PrintWriter writer = new PrintWriter(new FileOutputStream(currentFolder + File.separator + "Response_t.csv", false))) {
 
@@ -1121,6 +1134,7 @@ else{
         // set up scenario and asset list
         try {
             String curFolder = getExternalFilesDir(null).getAbsolutePath();
+
             File saveDir = new File(curFolder + File.separator + "saved_scenarios_configs");
             saveDir.mkdirs();
             String[] saves = saveDir.list();
@@ -1496,7 +1510,8 @@ else{
 
                                         // update total_tris
                                         total_tris = total_tris + (ratioArray.get(i) * o_tris.get(i));// total = total + 0.8*objtris
-                                        trisDec.put(total_tris,true);
+                                    //    trisDec.put(total_tris,true);
+                                    if (!decTris.contains(total_tris))
                                         decTris.add(total_tris);
 
                                         curTrisTime= SystemClock.uptimeMillis();
@@ -1569,6 +1584,9 @@ else{
 
                     if (renderArray.get(i).baseAnchor.isSelected()) {
 
+
+
+
                         total_tris = total_tris - (ratioArray.get(i) * o_tris.get(i));// total =total -1*objtris
                         orgTrisAllobj -= (ratioArray.get(i) * o_tris.get(i));
                         objectCount -= 1;
@@ -1597,6 +1615,8 @@ else{
                         //  decimate_thread.remove(i);
                         renderArray.remove(i);
                         trisChanged=true;
+
+
                     }// if the item is selected
                 }
 
@@ -1623,7 +1643,7 @@ else{
 
                 //  removePreviousAnchors(); // from net wrong
                 ModelRequestManager.getInstance().clear();
-                totTrisList.clear();
+               // totTrisList.clear();
                 predicted_distances.clear();
                 quality_log.clear();
                 orgTrisAllobj=0;
@@ -1741,9 +1761,10 @@ else{
                                     //modelSpinner.setSelection(modelSelectAdapter.getPosition(currentModel));
                                     float original_tris = excel_tris.get(excelname.indexOf(currentModel));
                                     renderArray.add(objectCount, new decimatedRenderable(currentModel, original_tris));
-                                    addObject(Uri.parse("models/" + currentModel + ".sfb"), renderArray.get(objectCount), xOffset, yOffset);
+                                   // commented temp sep
+                                     addObject(Uri.parse("models/" + currentModel + ".sfb"), renderArray.get(objectCount), xOffset, yOffset);//
 
-
+                                   // addObject(Uri.parse("models/" + currentModel + ".sfb"), renderArray.get(objectCount));
 
 
 
@@ -1809,7 +1830,7 @@ else{
                                     }
 
                                     if (record == null) {// this is to immidiately start the AI tasks
-                                        Toast.makeText(MainActivity.this, "All AI task info has been applied", Toast.LENGTH_LONG).show();
+                                   //     Toast.makeText(MainActivity.this, "All AI task info has been applied", Toast.LENGTH_LONG).show();
                                         switchToggleStream.setChecked(true);
                                         startObject[0] =true; // to make sure if we have ML tasks running
 //                                        for (AiItemsViewModel taskView : mList) {
@@ -1830,7 +1851,7 @@ else{
                     });
                 } catch (IOException e) {
                     e.printStackTrace();
-                    runOnUiThread(() -> Toast.makeText(MainActivity.this, e.toString(), Toast.LENGTH_LONG).show());
+                  //  runOnUiThread(() -> Toast.makeText(MainActivity.this, e.toString(), Toast.LENGTH_LONG).show());
                 }
             }).start();
         });
@@ -1950,8 +1971,9 @@ else{
 
                                 // update total_tris
                                 total_tris = total_tris + (ratioArray.get(i) * o_tris.get(i));// total = total + 0.8*objtris
-                                trisDec.put(total_tris,true);
-                                decTris.add(total_tris);
+                          //      trisDec.put(total_tris,true);
+                                if (!decTris.contains(total_tris))
+                                   decTris.add(total_tris);
                                 curTrisTime= SystemClock.uptimeMillis();
                                 // quality is registered
                             } else {
@@ -1962,8 +1984,9 @@ else{
 
                                 // update total_tris
                                 total_tris = total_tris + (ratioArray.get(i) * o_tris.get(i));// total = total + 0.8*objtris
-                                trisDec.put(total_tris,true);
-                                decTris.add(total_tris);
+                             //   trisDec.put(total_tris,true);
+                                if (!decTris.contains(total_tris))
+                                    decTris.add(total_tris);
                                 curTrisTime= SystemClock.uptimeMillis();
                                 // quality is registered
                             }
@@ -2066,7 +2089,7 @@ else{
 //
 //   }
 
-    static double getThroughput(){
+     double getThroughput(){
         Log.d("size", String.valueOf(mList.size()));
         double[] meanthr = new double[mList.size()];// up to the count of different AI models
         BitmapCollector tempCollector;
@@ -2320,7 +2343,7 @@ else{
     public void onPause() {
         super.onPause();
 
-
+/*
         String currentFolder2 = getExternalFilesDir(null).getAbsolutePath();
         String FILEPATH2 = currentFolder2 + File.separator + "extra_inf.txt";
 
@@ -2374,9 +2397,7 @@ else{
                 for (int ind = 0; ind < objectCount; ind++) {
 
 
-                  /*  fileOut2.println(renderArray[ind].fileName + " Time_log " + time_log.get(ind) + " QualityLog " + quality_log.get(ind) + " DistanceLog " + distance_log.get(ind) + " DEGlog " + deg_error_log.get(ind)
-                            + " calculated_GPU_eng_log " + GPU_Ut_log.get(ind) + " Engnetw " + eng_dec.get(ind));
-*/
+
 
                     // for csv file, nill added
                     try (PrintWriter writer = new PrintWriter(new FileOutputStream(FILEPATH, true))) {
@@ -2412,7 +2433,7 @@ else{
                 e.printStackTrace();
             }
         }
-
+*/
 
      //   t2.cancel();
         //process2.destroy();
@@ -2422,104 +2443,104 @@ else{
 
 
 
-    public ArrayList<ArrayList<Float>> findW (int ind)
-    {
-
-
-        int size = current.size();
-        float upos_x= current.get(size-1).get(0);
-        float upos_z=current.get(size-1).get(2);
-        float obj_x= renderArray.get(ind).baseAnchor.getWorldPosition().x;
-        float obj_z= renderArray.get(ind).baseAnchor.getWorldPosition().z;
-        float w = 1;
-        float u_x = upos_x;
-        float u_y = upos_z;
-        boolean userfarther = false;
-        ArrayList<Float>newdistance= new ArrayList<Float>();
-        int counter=1;
-        //boolean flag=false;
-
-        // just onetime order is d0, 0 , for p=2
-        newdistance.add(renderArray.get(ind).return_distance_predicted(upos_x, upos_z) ); // add current dis
-        for (int i=1; i< decision_p; i++)
-                newdistance.add(0f);
-
-        while (userfarther == false &&  ((2*counter* decision_p)-1 <maxtime)  &&  counter< finalw ){
-            float unext_x = prmap.get ( (2*counter* decision_p)-1).get(size-1).get(0);// middle point of c_area
-            float unext_z = prmap.get( (2*counter* decision_p)-1).get(size-1).get(1);;//(uspeedy * decision_p) + u_y;
-
-            if (upos_x <= obj_x && upos_z<=obj_z)
-                 if (unext_x <= obj_x && unext_z<=obj_z && upos_x<=unext_x && upos_z<= unext_z )
-                 {
-                     w += 1;
-                     newdistance.add(renderArray.get(ind).return_distance_predicted(unext_x, unext_z) );
-                     for (int i=1; i< decision_p; i++)
-                         newdistance.add(0f);
-
-
-                 }
-                 else
-                     {userfarther = true;
-                        break; }
-
-
-            else if (upos_x <= obj_x && upos_z>=obj_z)
-                if (unext_x <= obj_x && unext_z>=obj_z && upos_x<=unext_x && upos_z>= unext_z )
-                {
-                    w += 1;
-                    newdistance.add(renderArray.get(ind).return_distance_predicted(unext_x, unext_z) );
-                    for (int i=1; i< decision_p; i++)
-                        newdistance.add(0f);
-
-
-                }
-                else
-                     { userfarther = true;
-                       break; }
-
-             else if (upos_x >= obj_x && upos_z>=obj_z)
-                    if (unext_x >= obj_x && unext_z>=obj_z && upos_x>= unext_x && upos_z>= unext_z)
-                    {
-                        w += 1;
-                        newdistance.add(renderArray.get(ind).return_distance_predicted(unext_x, unext_z) );
-
-                        for (int i=1; i< decision_p; i++)
-                            newdistance.add(0f);
-
-
-                    }
-                     else
-                     {userfarther = true;
-                          break;}
-
-              else if(upos_x >= obj_x && upos_z<=obj_z)
-                  if (unext_x >= obj_x && unext_z<=obj_z && upos_x>= unext_x && upos_z<= unext_z)
-                  {
-                      w += 1;
-                      newdistance.add(renderArray.get(ind).return_distance_predicted(unext_x, unext_z) );
-
-                      for (int i=1; i< decision_p; i++)
-                          newdistance.add(0f);
-
-
-                  }
-                  else
-                      {  userfarther = true;
-                     break;}
-
-            u_x=unext_x;
-            u_y = unext_z;
-            counter++;
-        }
-        ArrayList<ArrayList<Float> > temp1 = new ArrayList<ArrayList<Float> >();
-        for (int i=0;i<3; i++)
-             temp1.add(new ArrayList<>());
-
-        temp1.get(0).add(u_x);
-        temp1.get(1).add(u_y);
-        temp1.set(2,newdistance);
-        return temp1;
-    }
+//    public ArrayList<ArrayList<Float>> findW (int ind)
+//    {
+//
+//
+//        int size = current.size();
+//        float upos_x= current.get(size-1).get(0);
+//        float upos_z=current.get(size-1).get(2);
+//        float obj_x= renderArray.get(ind).baseAnchor.getWorldPosition().x;
+//        float obj_z= renderArray.get(ind).baseAnchor.getWorldPosition().z;
+//        float w = 1;
+//        float u_x = upos_x;
+//        float u_y = upos_z;
+//        boolean userfarther = false;
+//        ArrayList<Float>newdistance= new ArrayList<Float>();
+//        int counter=1;
+//        //boolean flag=false;
+//
+//        // just onetime order is d0, 0 , for p=2
+//        newdistance.add(renderArray.get(ind).return_distance_predicted(upos_x, upos_z) ); // add current dis
+//        for (int i=1; i< decision_p; i++)
+//                newdistance.add(0f);
+//
+//        while (userfarther == false &&  ((2*counter* decision_p)-1 <maxtime)  &&  counter< finalw ){
+//            float unext_x = prmap.get ( (2*counter* decision_p)-1).get(size-1).get(0);// middle point of c_area
+//            float unext_z = prmap.get( (2*counter* decision_p)-1).get(size-1).get(1);;//(uspeedy * decision_p) + u_y;
+//
+//            if (upos_x <= obj_x && upos_z<=obj_z)
+//                 if (unext_x <= obj_x && unext_z<=obj_z && upos_x<=unext_x && upos_z<= unext_z )
+//                 {
+//                     w += 1;
+//                     newdistance.add(renderArray.get(ind).return_distance_predicted(unext_x, unext_z) );
+//                     for (int i=1; i< decision_p; i++)
+//                         newdistance.add(0f);
+//
+//
+//                 }
+//                 else
+//                     {userfarther = true;
+//                        break; }
+//
+//
+//            else if (upos_x <= obj_x && upos_z>=obj_z)
+//                if (unext_x <= obj_x && unext_z>=obj_z && upos_x<=unext_x && upos_z>= unext_z )
+//                {
+//                    w += 1;
+//                    newdistance.add(renderArray.get(ind).return_distance_predicted(unext_x, unext_z) );
+//                    for (int i=1; i< decision_p; i++)
+//                        newdistance.add(0f);
+//
+//
+//                }
+//                else
+//                     { userfarther = true;
+//                       break; }
+//
+//             else if (upos_x >= obj_x && upos_z>=obj_z)
+//                    if (unext_x >= obj_x && unext_z>=obj_z && upos_x>= unext_x && upos_z>= unext_z)
+//                    {
+//                        w += 1;
+//                        newdistance.add(renderArray.get(ind).return_distance_predicted(unext_x, unext_z) );
+//
+//                        for (int i=1; i< decision_p; i++)
+//                            newdistance.add(0f);
+//
+//
+//                    }
+//                     else
+//                     {userfarther = true;
+//                          break;}
+//
+//              else if(upos_x >= obj_x && upos_z<=obj_z)
+//                  if (unext_x >= obj_x && unext_z<=obj_z && upos_x>= unext_x && upos_z<= unext_z)
+//                  {
+//                      w += 1;
+//                      newdistance.add(renderArray.get(ind).return_distance_predicted(unext_x, unext_z) );
+//
+//                      for (int i=1; i< decision_p; i++)
+//                          newdistance.add(0f);
+//
+//
+//                  }
+//                  else
+//                      {  userfarther = true;
+//                     break;}
+//
+//            u_x=unext_x;
+//            u_y = unext_z;
+//            counter++;
+//        }
+//        ArrayList<ArrayList<Float> > temp1 = new ArrayList<ArrayList<Float> >();
+//        for (int i=0;i<3; i++)
+//             temp1.add(new ArrayList<>());
+//
+//        temp1.get(0).add(u_x);
+//        temp1.get(1).add(u_y);
+//        temp1.set(2,newdistance);
+//        return temp1;
+//    }
 
 
 
@@ -3305,7 +3326,11 @@ public float delta (float a, float b , float c1,float creal,  float d, float gam
 
 
     private boolean updateHitTest() {
+
         Frame frame = fragment.getArSceneView().getArFrame();
+
+
+
         android.graphics.Point pt = getScreenCenter();
         List<HitResult> hits;
         boolean wasHitting = isHitting;
@@ -3322,6 +3347,8 @@ public float delta (float a, float b , float c1,float creal,  float d, float gam
             }
         }
         return wasHitting != isHitting;
+
+
     }
 
     private android.graphics.Point getScreenCenter() {
@@ -3338,7 +3365,7 @@ public float delta (float a, float b , float c1,float creal,  float d, float gam
 
         //row 1
 
-        File file = new File(this.getExternalFilesDir(null), "/andy1k.glb");
+       // File file = new File(this.getExternalFilesDir(null), "/andy1k.glb");
 
 
 
@@ -3349,6 +3376,10 @@ public float delta (float a, float b , float c1,float creal,  float d, float gam
     //then it calls placeobject
     private void addObject(Uri model, baseRenderable renderArrayObj) {
         Frame frame = fragment.getArSceneView().getArFrame();
+       // while(frame==null)
+           // frame = fragment.getArSceneView().getArFrame();
+
+
         android.graphics.Point pt = getScreenCenter();
         List<HitResult> hits;
         if (frame != null) {
@@ -3357,8 +3388,17 @@ public float delta (float a, float b , float c1,float creal,  float d, float gam
                 Trackable trackable = hit.getTrackable();
                 if (trackable instanceof Plane &&
                         ((Plane) trackable).isPoseInPolygon(hit.getHitPose())) {
-                    Anchor newAnchor = hit.createAnchor();
-                    placeObject(fragment, newAnchor, model, renderArrayObj);
+
+
+                    try {
+                        Anchor newAnchor = hit.createAnchor();
+                        placeObject(fragment, newAnchor, model, renderArrayObj);
+                    }
+
+                    catch (Exception e) {
+                        e.printStackTrace();
+                    }
+
 
                     break;
                 }
@@ -3373,6 +3413,7 @@ public float delta (float a, float b , float c1,float creal,  float d, float gam
 
     private void addObject(Uri model, baseRenderable renderArrayObj, float xOffset, float yOffset) {
         Frame frame = fragment.getArSceneView().getArFrame();
+
         android.graphics.Point pt = getScreenCenter();
         List<HitResult> hits;
         if (frame != null) {
@@ -3381,8 +3422,14 @@ public float delta (float a, float b , float c1,float creal,  float d, float gam
                 Trackable trackable = hit.getTrackable();
                 if (trackable instanceof Plane &&
                         ((Plane) trackable).isPoseInPolygon(hit.getHitPose())) {
-                    Anchor newAnchor = hit.createAnchor();
-                    placeObject(fragment, newAnchor, model, renderArrayObj);
+                    try {
+                        Anchor newAnchor = hit.createAnchor();
+                        placeObject(fragment, newAnchor, model, renderArrayObj);
+                    }
+
+                    catch (Exception e) {
+                        e.printStackTrace();
+                    }
 
                     break;
                 }
@@ -3477,7 +3524,7 @@ public float delta (float a, float b , float c1,float creal,  float d, float gam
         d1_prev.add(objectCount, 0f);
         // update total_tris
         total_tris+= o_tris.get(objectCount);
-        trisDec.put(total_tris,false);
+       // trisDec.put(total_tris,false);
 
         curTrisTime= SystemClock.uptimeMillis();
         //lastQuality.add(1f);// initialize
@@ -3513,12 +3560,13 @@ public float delta (float a, float b , float c1,float creal,  float d, float gam
 
         trisChanged=true;
 
+
         TextView posText = (TextView) findViewById(R.id.objnum);
         posText.setText( "obj_num: " +objectCount);
 
-        File file = new File(this.getExternalFilesDir(null), "/degmodel_file.csv");
+       // File file = new File(this.getExternalFilesDir(null), "/degmodel_file.csv");
 
-        File tris = new File(this.getFilesDir(), "text");
+        File tris = new File(MainActivity.this.getFilesDir(), "text");
 
         Date d1 = null;
         Date d2 = null;
@@ -3530,7 +3578,7 @@ public float delta (float a, float b , float c1,float creal,  float d, float gam
 
 
 
-        renderArray.get(objectCount-1).distance();
+       // renderArray.get(objectCount-1).distance();
 
 
 
@@ -3811,6 +3859,7 @@ public float delta (float a, float b , float c1,float creal,  float d, float gam
 
                         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss:SSS");
                         dateFormat.format(new Date());
+                        /*
                         String current_gpu = null;
                         try {
 
@@ -3833,12 +3882,12 @@ public float delta (float a, float b , float c1,float creal,  float d, float gam
                         } catch (IOException e) {
                             e.printStackTrace();
                         }
-
+*/
                         int sreqs = 0;
                         for (int value : Server_reg_Freq)
                             sreqs += value;
 
-                        String item2 = dateFormat.format(new Date()) + " num_of_tris: " + total_tris + " current_gpu " + mean_gpu + " dis " + dist +  " lastobj "+ filname + objectCount+ "\n";
+                      //  String item2 = dateFormat.format(new Date()) + " num_of_tris: " + total_tris + " current_gpu " + mean_gpu + " dis " + dist +  " lastobj "+ filname + objectCount+ "\n";
 
 
                         try (PrintWriter writer = new PrintWriter(new FileOutputStream(FILEPATH, true))) {
@@ -3898,10 +3947,15 @@ public float delta (float a, float b , float c1,float creal,  float d, float gam
 
 
                         // This is to collect position prediction every 500 ms
-
+/* nill temporaraly deactivated this
                         if (objectCount >= 1) { // Nil april 21 -> fixed
 
                             Frame frame = fragment.getArSceneView().getArFrame();//OK
+                            while(frame==null)
+                                frame = fragment.getArSceneView().getArFrame();//OK
+
+                           // if (frame != null){
+
                             current.add(new ArrayList<Float>(Arrays.asList(frame.getCamera().getPose().tx(), frame.getCamera().getPose().ty(), frame.getCamera().getPose().tz())));
                             timeLog.add(timeInSec);
                             timeInSec = timeInSec + 0.5f;
@@ -3915,18 +3969,19 @@ public float delta (float a, float b , float c1,float creal,  float d, float gam
                             for (int i = 0; i < maxtime / 2; i++) // for next 5 sec if maxtime = 10
                                 nextfivesec.set(i, prmap.get(2 * i + 1).get(count[0]));
 
-                            FindMiniCenters(area_percentage);
-                            Findpredicted_distances();
-                            // }
+                         //nill sep   FindMiniCenters(area_percentage);
+                         //    Findpredicted_distances();
+
                             count[0]++;
 
-                        }
+
+                        }*/
 
 
 
                     }
 
-                    //  }
+
                 },
                 0,      // run first occurrence immediatetly
                 2000);
@@ -3934,9 +3989,9 @@ public float delta (float a, float b , float c1,float creal,  float d, float gam
 
 
 
-    float a_t=-8.825245622870156e-06f, b_t=-0.5743863744426319f, c_t= 55.801f;
-
-    float a_re=5.18208816882466E-07f, b_re=0.111009877415992f, c_re=0.00213110940797337f, d_re=0.00118086288001582f;
+//    float a_t=-8.825245622870156e-06f, b_t=-0.5743863744426319f, c_t= 55.801f;
+//
+//    float a_re=5.18208816882466E-07f, b_re=0.111009877415992f, c_re=0.00213110940797337f, d_re=0.00118086288001582f;
 
 
 
