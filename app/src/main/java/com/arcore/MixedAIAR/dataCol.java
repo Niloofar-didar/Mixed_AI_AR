@@ -276,7 +276,12 @@ public class dataCol implements Runnable {
                         double[] y = Arrays.copyOfRange(throughput, 0, throughput.length); // should be real throughput
                         double[][] thRegParameters = copythParamList.values().stream()
                                 .map(l -> l.stream().mapToDouble(Double::doubleValue).toArray())
-                                .toArray(double[][]::new);                                         // should have predicted distance
+                                .toArray(double[][]::new);
+
+                        copytrisMeanThr=null;
+                        copythParamList=null;
+
+                        // should have predicted distance
 
                         mLinearRegression regression = new mLinearRegression(thRegParameters, y);
                         if (!Double.isNaN(regression.beta(0))) {
@@ -289,8 +294,8 @@ public class dataCol implements Runnable {
 
 
                         }
-
-
+                        thRegParameters=null; // free the storage
+                        y=null;
 
 
 
@@ -446,9 +451,17 @@ public class dataCol implements Runnable {
                                 .mapToDouble(Double::doubleValue)
                                 .toArray();
 
+
+
                         double[][] reRegParameters = copyreParamList.values().stream()
                                 .map(l -> l.stream().mapToDouble(Double::doubleValue).toArray())
                                 .toArray(double[][]::new);
+
+
+                        copytrisRe=null;
+                        copyreParamList=null;
+
+
                         if (variousTris >= 3) {
                             mLinearRegression regression = new mLinearRegression(reRegParameters, RE);
                             if (!Double.isNaN(regression.beta(0))) {
@@ -459,7 +472,13 @@ public class dataCol implements Runnable {
                                 trainedRE = true;
 
                             }
+
+
                         }
+
+                        reRegParameters=null;
+                        RE=null;
+
 
                     }
 
@@ -601,6 +620,7 @@ public class dataCol implements Runnable {
             }// if we have objs on the screen, we start RE model & training
 
 
+
         }   // if Nan
 
         else
@@ -616,6 +636,9 @@ public class dataCol implements Runnable {
             mInstance=null;  // to force it for garbage collection and avoid heap storage limitation
         else // we have our algorithm running
         mInstance.trainedTris = false;
+
+
+
 
 
 

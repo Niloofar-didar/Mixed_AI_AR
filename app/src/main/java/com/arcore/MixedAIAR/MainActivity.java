@@ -86,6 +86,7 @@ import java.lang.Math;
 import java.io.InputStream;
 
 import static java.lang.Math.abs;
+import static java.lang.Math.min;
 
 
 /*TODO: constant update distance to file
@@ -200,16 +201,17 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
     float gpu_min_tres=35000;
     float bgpu=44.82908722f;
     float bwidth= 600;
+    boolean removePhase=false; // this is for the mixed adding and after that removing scnario
     boolean setDesTh=false;// used just for the first time when we run AI models and get the highest baseline throughput
     List<Float> decTris= new ArrayList<>();// create a list of decimated
 
     private ArrayList<String> scenarioList = new ArrayList<>();
     private String currentScenario = null;
-    private int scenarioTickLength = 30000;
+    private int scenarioTickLength = 20000;
     //private int removalTickLength = 30000;
     private ArrayList<String> taskConfigList = new ArrayList<>();
     private String currentTaskConfig = null;
-    private int taskConfigTickLength = 40000;
+    private int taskConfigTickLength = 30000;
     private int pauseLength = 10000;
 
     double thr_factor=0.6;
@@ -1698,7 +1700,7 @@ else{
                     BufferedReader taskBr = new BufferedReader(taskInputStreamReader);
                     taskBr.readLine();  // column names
 
-
+                  //  final List<Float>[] sortedlist = new List<Float>[1];
                         String sceneFilepath = curFolder + File.separator + "saved_scenarios_configs" + File.separator + "save" + currentScenario;
                         InputStreamReader sceneInputStreamReader = new InputStreamReader(new BufferedInputStream(new FileInputStream(sceneFilepath)));
 
@@ -1719,10 +1721,16 @@ else{
                                     runOnUiThread(clearButton::callOnClick);
                                     return;
                                 }
+                               // removePhase=true;
+
+
+                                // last element in the sorted list would be maximum
+                             //int index=   sortedlist[0].get(sortedlist[0].size() - 1);
 
                                 String name = renderArray.get(objectCount-1).fileName;
                                 renderArray.get(objectCount-1).baseAnchor.select();
                                 runOnUiThread(removeButton::callOnClick);
+
                                // runOnUiThread(Toast.makeText(MainActivity.this, "Removed " + name, Toast.LENGTH_LONG)::show);
                             }
 
@@ -1740,9 +1748,35 @@ else{
                                 try {
                                     String record = sceneBr.readLine();
                                     if (record == null) {
+                                        reParamList.clear();
+                                        trisMeanDisk.clear();
+                                        trisMeanThr.clear();
+                                        thParamList.clear();
+                                        trisRe.clear();
+                                        reParamList.clear();
+                                        // to start over data collection
 
+                                        decTris.clear();
 
                                         this.cancel();
+
+                                     /*   for (double curT : trisMeanThr.keySet()) // to have aleast one data in the list
+                                            if(curT!= total_tris){
+                                            trisMeanDisk.get(curT).clear();
+                                            trisMeanThr.get(curT).clear();
+                                            thParamList.get(curT).clear();
+                                            trisRe.get(curT).clear();
+
+                                            }*/
+
+
+                                       // sortedlist[0] = new ArrayList<>(ratioArray);
+
+                                        // sort list in natural order
+                                       // Collections.sort(sortedlist[0]);
+
+
+
 
                                         //commented for motv-exp 1 and desing PAR-PAI experiment: commented switchToggleStream.setChecked(false);
                                        removeTimer.start();
@@ -3947,7 +3981,7 @@ public float delta (float a, float b , float c1,float creal,  float d, float gam
 
 
                         // This is to collect position prediction every 500 ms
-/* nill temporaraly deactivated this
+///* nill temporaraly deactivated this
                         if (objectCount >= 1) { // Nil april 21 -> fixed
 
                             Frame frame = fragment.getArSceneView().getArFrame();//OK
@@ -3975,7 +4009,8 @@ public float delta (float a, float b , float c1,float creal,  float d, float gam
                             count[0]++;
 
 
-                        }*/
+                        }
+                        //*/
 
 
 
