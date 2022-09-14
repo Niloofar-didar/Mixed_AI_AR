@@ -28,7 +28,7 @@ import static java.lang.Math.abs;
 public class dataCol implements Runnable {
 
     int binCap=5;
-    private MainActivity mInstance;
+    private final MainActivity mInstance;
     float ref_ratio=0.5f;
     int objC;
     float sensitivity[] ;
@@ -40,7 +40,7 @@ public class dataCol implements Runnable {
     float [][]fProfit;
     float [][] tRemainder;
     int [][] track_obj;
-    int sleepTime=80;
+    int sleepTime=60;
     //float candidate_obj[] = new float[total_obj];
     float tMin[] ;
 
@@ -69,8 +69,7 @@ public class dataCol implements Runnable {
 
         boolean accmodel = true;// this is to check if the trained model for thr is accurate
         //boolean accRe=true;// this is to check if the trained model for re is accurate
-
-
+        boolean trainedTris = false;
         boolean trainedThr = false;
         boolean trainedRE = false;
         double maxTrisThreshold = mInstance.orgTrisAllobj;
@@ -92,21 +91,22 @@ public class dataCol implements Runnable {
            // }
         }
 
+        int objc= mInstance.objectCount;
+        if(objc>0) {
+            meanDk /= objc;
+            meanDkk /= objc;
 
-        meanDk /=  mInstance.objectCount;
-        meanDkk /=  mInstance.objectCount;
-
-        meanDk = (double) (Math.round((double) (100 * meanDk))) / 100;
-        meanDkk = (double) (Math.round((double) (100 * meanDkk))) / 100;
+            meanDk = (double) (Math.round((double) (100 * meanDk))) / 100;
+            meanDkk = (double) (Math.round((double) (100 * meanDkk))) / 100;
 
 
-        if (meanDkk == 0)
-            meanDkk = meanDk;
-        if (pred_meanD == 0)
-            pred_meanD = meanDk; // for the first objects
+            if (meanDkk == 0)
+                meanDkk = meanDk;
+            if (pred_meanD == 0)
+                pred_meanD = meanDk; // for the first objects
 
-        //totTris = mInstance.total_tris; // hold tris before running the algorithm
-
+            //totTris = mInstance.total_tris; // hold tris before running the algorithm
+        }
 
 
 
@@ -116,7 +116,7 @@ public class dataCol implements Runnable {
 
         totTris = mInstance.total_tris;
 
-      //  mInstance.algNxtTris = totTris;
+
 
 
         meanThr = mInstance.getThroughput();// after the objects are decimated
@@ -130,13 +130,13 @@ public class dataCol implements Runnable {
 
 
 
-            if (mInstance.nextTris == 0)
-                mInstance.nextTris = totTris;
+         //   if (mInstance.nextTris == 0)
+              //  mInstance.nextTris = totTris;
 
             int variousTris = mInstance.trisMeanThr.keySet().size();
 
 // this is thr calculated using the modeling
-            double predThr = mInstance.rohT * mInstance.nextTris + mInstance.rohD * pred_meanD + mInstance.delta;// use predicted distance for almost current period (predicted distance for next 1 sec is the closest one we have)
+            double predThr = (mInstance.rohT *  totTris) + (mInstance.rohD * pred_meanD) + mInstance.delta;// use predicted distance for almost current period (predicted distance for next 1 sec is the closest one we have)
             predThr = (double) Math.round((double) predThr * 100) / 100;
 
 
@@ -179,7 +179,7 @@ public class dataCol implements Runnable {
 
 // checks error of the model after new added model
                     double mape = 0.0; // mean of absolute error
-                    double fit = mInstance.rohT * mInstance.nextTris + mInstance.rohD * pred_meanD + mInstance.delta; // fit is predicted current throughput should be predicted distance (we have next 1 sec but ok since we don't move)  for current period
+                    double fit = (mInstance.rohT * totTris) + (mInstance.rohD * pred_meanD )+ mInstance.delta; // fit is predicted current throughput should be predicted distance (we have next 1 sec but ok since we don't move)  for current period
                     //double fit = mInstance.thSlope * totTris + mInstance.thIntercept;;
                     mape = Math.abs((meanThr - fit) / meanThr);// this is correct to calculate error coming from real throughput vs model
 
@@ -278,8 +278,7 @@ public class dataCol implements Runnable {
                                 .map(l -> l.stream().mapToDouble(Double::doubleValue).toArray())
                                 .toArray(double[][]::new);
 
-                        copytrisMeanThr=null;
-                        copythParamList=null;
+
 
                         // should have predicted distance
 
@@ -296,6 +295,8 @@ public class dataCol implements Runnable {
                         }
                         thRegParameters=null; // free the storage
                         y=null;
+                        copytrisMeanThr.clear();
+                        copythParamList.clear();
 
 
 
@@ -306,7 +307,7 @@ public class dataCol implements Runnable {
 
 
 //                  get the right throughput after remodeling
-                    predThr = mInstance.rohT * mInstance.nextTris + mInstance.rohD * pred_meanD + mInstance.delta;// use predicted distance for almost current period (predicted distance for next 1 sec is the closest one we have)
+                    predThr = (mInstance.rohT * totTris )+ (mInstance.rohD * pred_meanD) + mInstance.delta;// use predicted distance for almost current period (predicted distance for next 1 sec is the closest one we have)
                     predThr = (double) Math.round((double) predThr * 100) / 100;
 
                     mape = Math.abs((meanThr - predThr) / meanThr);
@@ -358,7 +359,7 @@ public class dataCol implements Runnable {
                     cleanOutArraysRE(totTris, pred_meanD, mInstance);// check to remove extra value in the RE parameters list , substitue the newer one
                     mInstance.trisRe.put(totTris, reMsrd);//correct:  has real re should have real throughout
                     // use predicted current dis and predicted current throughput in the modeling
-                    mInstance.reParamList.put(totTris, Arrays.asList(totTris, pred_meanD, predThr, 1.0));
+                    mInstance.reParamList.put(totTris, Arrays.asList(totTris, pred_meanD, predThr, 1.0)); // the two pred are coming from prev period (that were predicted for current period)
                 }
 
 
@@ -366,7 +367,7 @@ public class dataCol implements Runnable {
 //@@ niloo please add test the trained data and check rmse, if it is above 20% , then retrain
 
                     double mape = 0.0;      //  sum of square error
-                    double fit = mInstance.alphaT * mInstance.nextTris + mInstance.alphaD * pred_meanD + mInstance.alphaH * predThr + mInstance.zeta;// uses predicted modeling  for current period
+                    double fit =( mInstance.alphaT *totTris) + (mInstance.alphaD * pred_meanD) + (mInstance.alphaH * predThr )+ mInstance.zeta;// uses predicted modeling  for current period
                     mape = Math.abs((reMsrd - fit) / reMsrd);
 
 
@@ -458,8 +459,6 @@ public class dataCol implements Runnable {
                                 .toArray(double[][]::new);
 
 
-                        copytrisRe=null;
-                        copyreParamList=null;
 
 
                         if (variousTris >= 3) {
@@ -479,13 +478,15 @@ public class dataCol implements Runnable {
                         reRegParameters=null;
                         RE=null;
 
+                        copytrisRe.clear();
+                        copyreParamList.clear();
 
                     }
 
            //   nil   commented  sep 7
 
                     // current period
-                    double predRE = mInstance.alphaT * mInstance.nextTris + mInstance.alphaD * pred_meanD + mInstance.alphaH * predThr + mInstance.zeta; // for almost current period
+                    double predRE = mInstance.alphaT *totTris + mInstance.alphaD * pred_meanD + mInstance.alphaH * predThr + mInstance.zeta; // for almost current period
 
 
 // nill added temp
@@ -516,8 +517,8 @@ public class dataCol implements Runnable {
                     predRE = (double) Math.round((double) predRE * 100) / 100;
 
                     //  if (variousTris>=3 && Math.abs(deltaRe) >= 0.2 && (PRoAR < 0.7 || PRoAI < 0.7))// test and see what is the re range
-                    mInstance.nextTris = totTris;
-                    // mInstance. algNxtTris = totTris; // the accurate triangle count after running the reassignment algorithm
+                    double nextTris = totTris;
+                    double algNxtTris = totTris;
 
                     if (variousTris >= 3 && (reMsrd >= 1.20 || (reMsrd <= 0.8 && avgq != 1)))// if re is not balances (or pAR is not close to PAI, we will change the next tris count
                         // the last cond (reMsrd <0.8 && avgq!=1) says that if the AI is working better than AR and AI has not in original quality so that we can increase tot tris
@@ -565,18 +566,18 @@ public class dataCol implements Runnable {
 
                             // temporarily inactive to not to run algo-> just wanna check nexttris values
                             if (tmpnextTris < mInstance.orgTrisAllobj && tmpnextTris >= minTrisThreshold)
-                                mInstance.nextTris = tmpnextTris;
+                                nextTris = tmpnextTris;
 
                             else if (tmpnextTris < minTrisThreshold)
-                                mInstance.nextTris = minTrisThreshold + 1000;
+                                nextTris = minTrisThreshold + 1000;
 
                             else if (tmpnextTris > mInstance.orgTrisAllobj)
-                                mInstance.nextTris = mInstance.orgTrisAllobj;
+                                nextTris = mInstance.orgTrisAllobj;
 
 
 
-                            mInstance.nextTris =  Math.round(mInstance.nextTris * 100) / 100;
-                            mInstance.trainedTris = true;
+                            nextTris =  Math.round(nextTris * 100) / 100;
+                            trainedTris = true;
 
 
 
@@ -585,14 +586,14 @@ public class dataCol implements Runnable {
 
 
 
-                                    odraAlg((float) mInstance.nextTris);
+                                    odraAlg((float) nextTris);
                                     time2= System.nanoTime()/1000000;
                                    // long t2 = System.nanoTime() / 1000000;
                                     mInstance.t_loop1 = time2 - time1 - (sleepTime * (objC-1) );
                                    // mInstance.t_loop2 = t2 - t1;
                                     mInstance.lastConscCounter = 0;// we let the effect of change in triangle count stand for at least 4 times by reseting this counter. if you don't reset, by any chance new re might be <08 and then the orda happens again
 
-                                    if (mInstance.nextTris != totTris && !mInstance.decTris.contains(mInstance.total_tris) ) // if next tris is lower than total tris we have decimation
+                                    if (nextTris != totTris && !mInstance.decTris.contains(mInstance.total_tris) ) // if next tris is lower than total tris we have decimation
                                         mInstance.decTris.add(mInstance.total_tris);// add new total triangle count in the decimated list
 
 
@@ -601,7 +602,7 @@ public class dataCol implements Runnable {
                                 }
 
 
-                                mInstance.algNxtTris = mInstance.total_tris;
+                                algNxtTris = mInstance.total_tris;
 
 
 
@@ -613,7 +614,7 @@ public class dataCol implements Runnable {
 
 
                     }//if
-                    writeRE(reMsrd, predRE, trainedRE, totTris, mInstance.nextTris, mInstance.algNxtTris, mInstance.trainedTris, PRoAR, PRoAI, accmodel, mInstance.orgTrisAllobj, avgq, mInstance.t_loop1);// writes to the file
+                    writeRE(reMsrd, predRE, trainedRE, totTris, nextTris,algNxtTris, trainedTris, PRoAR, PRoAI, accmodel, mInstance.orgTrisAllobj, avgq, mInstance.t_loop1);// writes to the file
 
 
                 }            //  RE modeling and next tris
@@ -632,10 +633,10 @@ public class dataCol implements Runnable {
 
         mInstance.pred_meanD_cur = meanDkk; // the predicted current_mean_distance for next period is saved here
         mInstance.prevtotTris = totTris;
-        if(mInstance.trainedTris==false) // we do this if we don't want to run the odra algoritm. this will be done while alg is running otherwise, we won't able to access mainactivity instance in the algorithm
-            mInstance=null;  // to force it for garbage collection and avoid heap storage limitation
-        else // we have our algorithm running
-        mInstance.trainedTris = false;
+       // if(mInstance.trainedTris==false) // we do this if we don't want to run the odra algoritm. this will be done while alg is running otherwise, we won't able to access mainactivity instance in the algorithm
+           // mInstance=null;  // to force it for garbage collection and avoid heap storage limitation
+       // else // we have our algorithm running
+      //  mInstance.trainedTris = false;
 
 
 
@@ -658,8 +659,11 @@ public class dataCol implements Runnable {
                     .toArray();
             index= findClosest(disArray , predDis);// the index of value needed to be deleted
             // since we add if objcount != zero to avoid wrong inf from tris=0 -> we won't have re or distance at this situation
-            mInstance.trisRe.get(totTris).remove(index);
+           if(index<mInstance.trisRe.get(totTris).size() &&  index<mInstance.reParamList.get(totTris).size())
+            {
+                mInstance.trisRe.get(totTris).remove(index);
             mInstance.reParamList.get(totTris).remove(index);
+            }
         }
 
         // return index;
@@ -745,7 +749,7 @@ public class dataCol implements Runnable {
                 StringBuilder sb = new StringBuilder();
                 sb.append(dateFormat.format(new Date()));
                 sb.append(',');
-                sb.append(mInstance.renderArray.get(i).fileName+""+(i+1));
+                sb.append(mInstance.renderArray.get(i).fileName+"_d"+(d_k));
                 sb.append(',');
                 sb.append(sensitivity[i]);
                 sb.append(',');

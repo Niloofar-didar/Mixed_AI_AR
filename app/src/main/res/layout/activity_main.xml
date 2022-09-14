@@ -9,8 +9,8 @@
 
     <com.google.android.material.appbar.AppBarLayout
         android:id="@+id/appBarLayout"
-        android:layout_width="159dp"
-        android:layout_height="153dp"
+        android:layout_width="158dp"
+        android:layout_height="wrap_content"
         android:theme="@style/AppTheme.AppBarOverlay">
 
         <androidx.appcompat.widget.Toolbar
@@ -36,8 +36,7 @@
         <TextView
             android:id="@+id/thr"
             android:layout_width="match_parent"
-            android:layout_height="38dp"
-            android:text="Throughput" />
+            android:layout_height="3dp" />
 
 
     </com.google.android.material.appbar.AppBarLayout>

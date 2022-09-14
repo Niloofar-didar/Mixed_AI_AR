@@ -146,8 +146,8 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
     //ArrayList <ArrayList<Float>> F_profit= new ArrayList<>();
   //  boolean datacol=false;
     boolean trainedTris = false;
-    double nextTris = 0;
-    double algNxtTris = 0;
+    //double nextTris = 0;
+    //double algNxtTris = 0;
     long t_loop1=0;
     //long t_loop2=0;
     StringBuilder tasks = new StringBuilder();
@@ -207,8 +207,8 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
 
     private ArrayList<String> scenarioList = new ArrayList<>();
     private String currentScenario = null;
-    private int scenarioTickLength = 20000;
-    //private int removalTickLength = 30000;
+    private int scenarioTickLength = 12000;
+    //private int removalTickLength = 25000;
     private ArrayList<String> taskConfigList = new ArrayList<>();
     private String currentTaskConfig = null;
     private int taskConfigTickLength = 30000;
@@ -322,7 +322,8 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
     // RE regression parameters
 
     private float alpha = 0.7f;
-    int max_datapoint=25;
+   // int max_datapoint=25;
+   int max_datapoint=28;
    // double reRegRMSE= Double.POSITIVE_INFINITY;
     double alphaT = 5.14E-7, alphaD=0.19, alphaH=1.34E-5, zeta=0.29;
     //double nextTris=0; // triangles for the next period
@@ -843,7 +844,7 @@ else{
         }
 
 
-//14 sep
+
         givenUsingTimer_whenSchedulingTaskOnce_thenCorrect();
         //new filewrite(MainActivity.this).run();
 
@@ -1684,6 +1685,33 @@ else{
             }
         });
 
+        Button gc = (Button) findViewById(R.id.gc);
+        gc.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View view) {
+
+                reParamList.clear();
+                trisMeanDisk.clear();
+                trisMeanThr.clear();
+                thParamList.clear();
+                trisRe.clear();
+                reParamList.clear();
+                // to start over data collection
+
+                decTris.clear();
+            }
+            });
+
+
+
+
+
+
+
+
+
+
+
+
         Button autoPlacementButton = (Button) findViewById(R.id.autoPlacement);
         autoPlacementButton.setOnClickListener(view -> {
             runOnUiThread(clearButton::callOnClick);
@@ -1748,6 +1776,8 @@ else{
                                 try {
                                     String record = sceneBr.readLine();
                                     if (record == null) {
+
+
                                         reParamList.clear();
                                         trisMeanDisk.clear();
                                         trisMeanThr.clear();
@@ -1770,17 +1800,9 @@ else{
                                             }*/
 
 
-                                       // sortedlist[0] = new ArrayList<>(ratioArray);
-
-                                        // sort list in natural order
-                                       // Collections.sort(sortedlist[0]);
-
-
-
-
                                         //commented for motv-exp 1 and desing PAR-PAI experiment: commented switchToggleStream.setChecked(false);
-                                       removeTimer.start();
-                                       // runOnUiThread(Auto_decimate_butt::callOnClick);
+                                   //   removeTimer.start();
+
                                         return;
                                     }
 
@@ -1798,7 +1820,7 @@ else{
                                    // commented temp sep
                                      addObject(Uri.parse("models/" + currentModel + ".sfb"), renderArray.get(objectCount), xOffset, yOffset);//
 
-                                   // addObject(Uri.parse("models/" + currentModel + ".sfb"), renderArray.get(objectCount));
+
 
 
 
@@ -2091,8 +2113,9 @@ else{
                            // datacol=true;// don't let object placement run
                            if(!setDesTh){
                                double throughput= getThroughput();
-                               des_Thr= 0.68*throughput;
-                               setDesTh=true;
+                               if(throughput <80 && throughput>20)
+                               { des_Thr= 0.72*throughput;
+                               setDesTh=true;}
                            }
 
 
@@ -3602,8 +3625,6 @@ public float delta (float a, float b , float c1,float creal,  float d, float gam
 
         File tris = new File(MainActivity.this.getFilesDir(), "text");
 
-        Date d1 = null;
-        Date d2 = null;
         //SimpleDateFormat start= new SimpleDateFormat("yyyy/MM/dd/ HH:mm:ss:SSS", java.util.Locale.getDefault());
         //String st= start.format(new Date());
 
@@ -3756,11 +3777,22 @@ public float delta (float a, float b , float c1,float creal,  float d, float gam
 
             margin.add(marginx);
             margin.add(marginz);
+
+            // nill added sep 12 2022 to minimize storage usage
+            if(marginmap.get(ind).size()==30) {
+                marginmap.get(ind).remove(0);
+                errormap.get(ind).remove(0);
+
+            }
+
+
             marginmap.get(ind).add(margin);
             error.add(actual_errorX);
             error.add(actual_errorZ);
             errormap.get(ind).add(error);
 
+
+            // last error is not needed
             if (last_errors_x.size()<max_datapoint) {
 
                 //int size=last_errors_x.size();
@@ -3853,19 +3885,19 @@ public float delta (float a, float b , float c1,float creal,  float d, float gam
 
 
 
-    private void errorAnalysis2(int size)
-    {
-        float area = 0f;
-        for(int i = 0; i < size - maxtime; i++) {
-            for (int k = 0; k < maxtime ; k++) {
-
-                booleanmap.get(k).add(check_rect(prmap.get(k).get(i).get(2), prmap.get(k).get(i).get(3), prmap.get(k).get(i).get(4), prmap.get(k).get(i).get(5),
-                        prmap.get(k).get(i).get(6), prmap.get(k).get(i).get(7), prmap.get(k).get(i).get(8), prmap.get(k).get(i).get(9),
-                        current.get(i + 1 + k).get(0), current.get(i + 1+ k).get(2)));
-
-            }
-        }
-    }
+//    private void errorAnalysis2(int size)
+//    {
+//        float area = 0f;
+//        for(int i = 0; i < size - maxtime; i++) {
+//            for (int k = 0; k < maxtime ; k++) {
+//
+//                booleanmap.get(k).add(check_rect(prmap.get(k).get(i).get(2), prmap.get(k).get(i).get(3), prmap.get(k).get(i).get(4), prmap.get(k).get(i).get(5),
+//                        prmap.get(k).get(i).get(6), prmap.get(k).get(i).get(7), prmap.get(k).get(i).get(8), prmap.get(k).get(i).get(9),
+//                        current.get(i + 1 + k).get(0), current.get(i + 1+ k).get(2)));
+//
+//            }
+//        }
+//    }
 
 
     public void givenUsingTimer_whenSchedulingTaskOnce_thenCorrect() {
@@ -3874,7 +3906,7 @@ public float delta (float a, float b , float c1,float creal,  float d, float gam
         String currentFolder = getExternalFilesDir(null).getAbsolutePath();
         String FILEPATH = currentFolder + File.separator + "GPU_Usage_"+ fileseries+".csv";
         Timer  t = new Timer();
-        final int[] count = {0}; // should be before here
+       // final int[] count = {0}; // should be before here
         t.scheduleAtFixedRate(
 
                 new TimerTask() {
@@ -3883,14 +3915,15 @@ public float delta (float a, float b , float c1,float creal,  float d, float gam
                         //    if(objectCount>=0) { // remove- ni april 21 temperory
                         Float mean_gpu = 0f;
                         float dist = 0;
-                        if (renderArray.size()>=2)
-                            dist = renderArray.get(0).return_distance();
+                       // if (renderArray.size()>=2)
 
                         String filname=" ";
 
-                        if(objectCount>0)
-                            filname= renderArray.get(objectCount-1).fileName;
+                        if(objectCount>0) {
+                            filname = renderArray.get(objectCount - 1).fileName;
+                            dist = renderArray.get(objectCount-1).return_distance();
 
+                        }
                         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss:SSS");
                         dateFormat.format(new Date());
                         /*
@@ -3989,24 +4022,51 @@ public float delta (float a, float b , float c1,float creal,  float d, float gam
                                 frame = fragment.getArSceneView().getArFrame();//OK
 
                            // if (frame != null){
+                            ///nill added sep 12 to limit the size of current
+                            if(current.size()==30)
+                                current.remove(0);// removes from the first element
 
+                            // adds as the last element
                             current.add(new ArrayList<Float>(Arrays.asList(frame.getCamera().getPose().tx(), frame.getCamera().getPose().ty(), frame.getCamera().getPose().tz())));
+
+                            // nill added sep 12
+                            if(timeLog.size()==30)
+                                timeLog.remove(0);
+
+
                             timeLog.add(timeInSec);
+
+
                             timeInSec = timeInSec + 0.5f;
                             float j = 0.5f;
                             for (int i = 0; i < maxtime; i++) {
+                                //nill sep 12 added to limit the size for prmap and current map/arrays
+                                if(prmap.get(i).size()==30)
+                                    prmap.get(i).remove(0); // removes first element
+
                                 prmap.get(i).add(predictNextError2(j, i));
+                               // prmap.get(i).add(predictNextError2(j, i));
                                 j += 0.5f;
                             }
                             // nil cmt april 28 if (count[0] % 2 == 0) { // means that we are ignoring 0.5 time data, 0-> next 1s, 2 is for next 2sec , 4 is for row fifth which is 4s in array of next1sec
 
                             for (int i = 0; i < maxtime / 2; i++) // for next 5 sec if maxtime = 10
-                                nextfivesec.set(i, prmap.get(2 * i + 1).get(count[0]));
+                            {
+                                // nill added sep 12 - keep list restricted to 30 count
+                                if(nextfivesec.get(i).size()==30)
+                                    nextfivesec.get(i).remove(0);
 
-                         //nill sep   FindMiniCenters(area_percentage);
-                         //    Findpredicted_distances();
+                               // nextfivesec.set(i, prmap.get(2 * i + 1).get(count[0]));
 
-                            count[0]++;
+                                nextfivesec.set(i, prmap.get(2 * i + 1).get( prmap.get(2 * i + 1).size()-1  )); // get the last value
+
+                            }
+
+                         //nill sep
+                             FindMiniCenters(area_percentage);
+                            Findpredicted_distances();
+
+                           // count[0]++;
 
 
                         }
