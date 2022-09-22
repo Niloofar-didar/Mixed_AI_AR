@@ -342,6 +342,7 @@ public class dataCol implements Runnable {
                 writequality();
 
 
+
                 double PRoAR = (double) Math.round((avgq / mInstance.des_Q) * 100) / 100;
                 double PRoAI = (double) Math.round((meanThr / mInstance.des_Thr) * 100) / 100;// should be real
                 double reMsrd = PRoAR / PRoAI;
@@ -719,10 +720,10 @@ public class dataCol implements Runnable {
            for (int i=0; i<objC-1; i++) {
                float curtris = mInstance.renderArray.get(i).orig_tris * mInstance.ratioArray.get(i);
                float r1 = mInstance.ratioArray.get(i); // current object decimation ratio
-               if (mInstance.renderArray.get(i).fileName.contains("0.6")) // third scenario has ratio 0.6
-                   r1 = 0.6f; // jsut for scenario3 objects are decimated
-               else if(mInstance.renderArray.get(i).fileName.contains("0.3")) // sixth scenario has ratio 0.3
-                   r1=0.3f;
+//               if (mInstance.renderArray.get(i).fileName.contains("0.6")) // third scenario has ratio 0.6
+//                   r1 = 0.6f; // jsut for scenario3 objects are decimated
+//               else if(mInstance.renderArray.get(i).fileName.contains("0.3")) // sixth scenario has ratio 0.3
+//                   r1=0.3f;
 
 
                float r2 = ref_ratio * r1; // wanna compare obj level of sensitivity to see if we decimate object more -> to (ref *curr) ratio, would the current object hurt more than the other ones?
@@ -736,6 +737,11 @@ public class dataCol implements Runnable {
 
                float tmper1 = Calculate_deg_er(a, b, c, d_k, gamma, r1); // deg error for current sit
                float tmper2 = Calculate_deg_er(a, b, c, d_k, gamma, r2); // deg error for more decimated obj
+
+
+
+
+
                float max_nrmd = mInstance.excel_maxd.get(indq);
                tmper1 = tmper1 / max_nrmd; // normalized
                tmper2= tmper2 /max_nrmd;
@@ -745,17 +751,18 @@ public class dataCol implements Runnable {
 
                //Qi−Qi,r divided by Ti(1−Rr) = (1-er1) - (1-er2) / ....
                sensitivity[i] = (abs(tmper2 - tmper1) / (curtris - (ref_ratio * curtris)));
+               tmper1 = (float) (Math.round((float) (tmper1 * 1000))) / 1000;
 
                 StringBuilder sb = new StringBuilder();
                 sb.append(dateFormat.format(new Date()));
                 sb.append(',');
-                sb.append(mInstance.renderArray.get(i).fileName+"_d"+(d_k));
+                sb.append(mInstance.renderArray.get(i).fileName+"_n"+(i+1)+"_d"+(d_k));
                 sb.append(',');
                 sb.append(sensitivity[i]);
                 sb.append(',');
                 sb.append(r1);
                 sb.append(',');
-                sb.append(objquality[i]);
+                sb.append(1-tmper1);
               //  sb.append(mInstance.tasks.toString());
 
                 sb.append('\n');
@@ -794,7 +801,8 @@ public class dataCol implements Runnable {
             sb.append(',');  sb.append(trainedFlag);
             sb.append(','); sb.append(mInstance.total_tris);
             sb.append(mInstance.tasks.toString());
-
+            sb.append(','); sb.append(mInstance.des_Thr);
+            sb.append(','); sb.append(mInstance.des_Q);
             sb.append('\n');
             writer.write(sb.toString());
             System.out.println("done!");
@@ -881,17 +889,14 @@ public class dataCol implements Runnable {
             float d = mInstance.renderArray.get(ind).return_distance();
             float curQ = mInstance.ratioArray.get(ind);
 
-            if (mInstance.renderArray.get(ind).fileName.contains("0.6")) // third scenario has ratio 0.6
-                curQ = 0.6f; // jsut for scenario3 objects are decimated
-            else if(mInstance.renderArray.get(ind).fileName.contains("0.3")) // sixth scenario has ratio 0.3
-                curQ=0.3f;
+//            if (mInstance.renderArray.get(ind).fileName.contains("0.6")) // third scenario has ratio 0.6
+//                curQ = 0.6f; // jsut for scenario3 objects are decimated
+//            else if(mInstance.renderArray.get(ind).fileName.contains("0.3")) // sixth scenario has ratio 0.3
+//                curQ=0.3f;
 
             float deg_error = (float) (Math.round((float) (Calculate_deg_er(a, b, c, d, gamma, curQ) * 1000))) / 1000;
             float max_nrmd = mInstance.excel_maxd.get(i);
-           // float nrmdegerror = deg_error / max_nrmd;
-           // =1-nrmdegerror;// update object quality when we call RE Modeling
-            //Nill added
-           // float max_nrmd = mInstance.excel_maxd.get(i);
+
             float cur_degerror = deg_error / max_nrmd;
             float quality= 1- cur_degerror;
             objquality[ind]=quality;

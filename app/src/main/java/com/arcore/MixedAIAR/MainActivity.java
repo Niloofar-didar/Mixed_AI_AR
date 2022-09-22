@@ -11,7 +11,6 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.io.PrintStream;
 import java.io.PrintWriter;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -31,7 +30,6 @@ import android.util.Log;
 
 import java.util.LinkedList;
 import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import android.net.Uri;
 import android.opengl.Matrix;
@@ -53,7 +51,6 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.CompoundButton;
-import android.widget.RelativeLayout;
 import android.widget.SeekBar;
 import android.widget.Spinner;
 import android.widget.Switch;
@@ -149,13 +146,14 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
     //double nextTris = 0;
     //double algNxtTris = 0;
     long t_loop1=0;
+    String odraAlg="1";
     //long t_loop2=0;
     StringBuilder tasks = new StringBuilder();
 
 
 
     double des_Q= 0.7; //# this is avg desired Q
-    double des_Thr = 40; // 0.65*throughput; in line 2063,
+    double des_Thr = 35; // 0.65*throughput; in line 2063,
     ListMultimap<Double, List<Double>> thParamList = ArrayListMultimap.create();//  a map from tot tris to measured RE
 
 
@@ -187,8 +185,11 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
     int orgTrisAllobj=0;
     public int objectCount = 0;
     private String[] assetList = null;
-    private Integer[] objcount = new Integer[]{1, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120, 130, 140, 160, 170, 180, 190, 200, 220, 240, 260, 300, 340, 380, 430, 500};
+    //private Integer[] objcount = new Integer[]{1, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120, 130, 140, 160, 170, 180, 190, 200, 220, 240, 260, 300, 340, 380, 430, 500};
     //private float[] distance_log = new float[]{2.24f,2.0f, 2.24f, 2.83f, 3.61f, 4.47f, 5.39f, 6.32f, 7.28f, 8.25f, 9.22f, 10.2f, 11.18f, 12.17f, 13.15f };
+    private Double[] desiredQ = new Double[]{0.7, 0.5, 0.3 };
+    private String[] desiredalg = new String[]{"1","2" ,"3"};
+    private Double[] desiredThr_weight = new Double[]{1.3,1.1, 0.9, 0.8, 0.7 , 0.6, 0.5};
     private String currentModel = null;
      boolean decAll  = true; // older name :referenceObjectSwitchCheck
     private boolean autoPlace = false;// older name multipleSwitchCheck
@@ -207,7 +208,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
 
     private ArrayList<String> scenarioList = new ArrayList<>();
     private String currentScenario = null;
-    private int scenarioTickLength = 12000;
+    private int scenarioTickLength = 24000;
     //private int removalTickLength = 25000;
     private ArrayList<String> taskConfigList = new ArrayList<>();
     private String currentTaskConfig = null;
@@ -262,6 +263,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
     List<Float> gpusaving = new ArrayList<>();
     List<String> eng_dec = new ArrayList<>();
 
+    int baseline_index=0;// index of all objects ratio of the coarse_ratio array
 
     List<String> quality_log = new ArrayList<>();
     List<String> time_log = new ArrayList<>();
@@ -876,9 +878,9 @@ else{
             sbb.append("lastobj ");
             sbb.append(',');
             sbb.append("objectCount ");
-            sbb.append(',');
+           // sbb.append(',');
 
-            sbb.append("last_obj_quality ");
+           // sbb.append("last_obj_quality ");
             sbb.append('\n');
 
 
@@ -909,6 +911,10 @@ else{
             sbb.append("Tris");
             sbb.append(',');
             sbb.append("Models");
+            sbb.append(',');
+            sbb.append("des_Thr");
+            sbb.append(',');
+            sbb.append("des_Q");
             sbb.append('\n');
             writer.write(sbb.toString());
             System.out.println("done!");
@@ -1058,7 +1064,7 @@ else{
         try {
 
             InputStream inputStream = getResources().getAssets().open("degmodel_file.csv");
-            // openFileInput("degmodel_file.csv");
+
             InputStreamReader inputStreamReader = new InputStreamReader(inputStream);
 
             BufferedReader br = new BufferedReader(inputStreamReader);
@@ -1173,19 +1179,85 @@ else{
         modelSelectAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         modelSpinner.setAdapter(modelSelectAdapter);
 
+        //setup the model drop down for desired Q and throughout selection
+//       Spinner qSpinner = (Spinner) findViewById(R.id.alg);
+//        qSpinner.setOnItemSelectedListener(this);
+//      ArrayAdapter<Double> qSelectAdapter = new ArrayAdapter<Double>(MainActivity.this,
+//               android.R.layout.simple_list_item_1, desiredQ);
+//        qSelectAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+//        qSpinner.setAdapter(qSelectAdapter);
+//
+//
+//        qSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+//                                              @Override
+//           public void onItemSelected(AdapterView<?> parentView, View selectedItemView, int position, long id) {
+//                                                  // your code here
+//               //des_Q= Double.valueOf( qSpinner.getSelectedItem().toString());
+//                 odraAlg=( qSpinner.getSelectedItem().toString());// yes or no
+//
+//                                              }
+//            @Override
+//            public void onNothingSelected(AdapterView<?> parentView) {
+//                // your code here
+//            }
+//        });
 
-        //setup the model drop down for object count selection
-//        Spinner countSpinner = (Spinner) findViewById(R.id.modelSelect2);
-//        countSpinner.setOnItemSelectedListener(this);
-//        ArrayAdapter<Integer> countSelectAdapter = new ArrayAdapter<Integer>(MainActivity.this,
-//                android.R.layout.simple_list_item_1, objcount);
-//        countSelectAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-//        countSpinner.setAdapter(countSelectAdapter);
+
+        Spinner qSpinner = (Spinner) findViewById(R.id.alg);
+        qSpinner.setOnItemSelectedListener(this);
+        ArrayAdapter<String> qSelectAdapter = new ArrayAdapter<String>(MainActivity.this,
+                android.R.layout.simple_list_item_1, desiredalg);
+        qSelectAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        qSpinner.setAdapter(qSelectAdapter);
 
 
-        for (int a = 0; a < temp_ww; a++) {
-            W_Selection[a] = a + 1;
-        }
+        qSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parentView, View selectedItemView, int position, long id) {
+                // your code here
+                //des_Q= Double.valueOf( qSpinner.getSelectedItem().toString());
+                odraAlg=( qSpinner.getSelectedItem().toString());// yes or no
+
+            }
+            @Override
+            public void onNothingSelected(AdapterView<?> parentView) {
+                // your code here
+            }
+        });
+
+
+        //setup the model drop down for desired  throughout selection
+        Spinner thSpinner = (Spinner) findViewById(R.id.thr_w);
+        thSpinner.setOnItemSelectedListener(this);
+        ArrayAdapter<Double> thSelectAdapter = new ArrayAdapter<Double>(MainActivity.this,
+                android.R.layout.simple_list_item_1, desiredThr_weight);
+        thSelectAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        thSpinner.setAdapter(thSelectAdapter);
+
+
+        thSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() { // this is for cancled experiment- no longer needed
+            @Override
+            public void onItemSelected(AdapterView<?> parentView, View selectedItemView, int position, long id) {
+                // your code here
+                if(switchToggleStream.isChecked()) {
+                    //double throughput = getThroughput();
+                    double weight = Double.valueOf(thSpinner.getSelectedItem().toString());
+               //     if (throughput < 80 && throughput > 10)
+                        des_Thr = (double) (Math.round((double) (weight * des_Thr * 1000))) / 1000;
+                }
+            }
+            @Override
+            public void onNothingSelected(AdapterView<?> parentView) {
+                // your code here
+            }
+        });
+
+
+
+
+//            for (int a = 0; a < temp_ww; a++) {
+//            W_Selection[a] = a + 1;
+//        }
         //setup the model drop down for object count selection
 //        Spinner WSpinner = (Spinner) findViewById(R.id.WSelect);
 //        WSpinner.setOnItemSelectedListener(this);
@@ -1439,8 +1511,7 @@ else{
         placeObjectButton.setOnClickListener(new View.OnClickListener() {
             public void onClick(View view) {
 
-               //     while(datacol==true);// wait until the datacollection is done and then place the object
-                   // datacol=true;// not to let datacol thread be activated
+
                     float original_tris=excel_tris.get(excelname.indexOf(currentModel));
                     renderArray.add(objectCount,new decimatedRenderable(modelSpinner.getSelectedItem().toString(),original_tris));
                     addObject(Uri.parse("models/" + currentModel + ".sfb"), renderArray.get(objectCount));
@@ -1778,6 +1849,8 @@ else{
                                     if (record == null) {
 
 
+                                        // just for detailed exp not for exp 4_1
+                                        /*
                                         reParamList.clear();
                                         trisMeanDisk.clear();
                                         trisMeanThr.clear();
@@ -1786,18 +1859,11 @@ else{
                                         reParamList.clear();
                                         // to start over data collection
 
-                                        decTris.clear();
+                                        decTris.clear();*/
 
                                         this.cancel();
 
-                                     /*   for (double curT : trisMeanThr.keySet()) // to have aleast one data in the list
-                                            if(curT!= total_tris){
-                                            trisMeanDisk.get(curT).clear();
-                                            trisMeanThr.get(curT).clear();
-                                            thParamList.get(curT).clear();
-                                            trisRe.get(curT).clear();
 
-                                            }*/
 
 
                                         //commented for motv-exp 1 and desing PAR-PAI experiment: commented switchToggleStream.setChecked(false);
@@ -2098,28 +2164,23 @@ else{
                     public void run() {
 
 
-                        //while (datacol==true);// wait till object is placed - noe need to have both jobs at the same time
-
-//@@@@@@@@@@@ This is to collect total triangle data every 500 ms @@@@@@@@@@@
-                        //long time1= System.nanoTime()/1000000;
-
-
-
-                       // long curTime= SystemClock.uptimeMillis();
-
                         if(switchToggleStream.isChecked()) // in the begining we collect data for zero tris
 
                         {
-                           // datacol=true;// don't let object placement run
-                           if(!setDesTh){
-                               double throughput= getThroughput();
-                               if(throughput <80 && throughput>20)
-                               { des_Thr= 0.72*throughput;
-                               setDesTh=true;}
-                           }
+                          // for exp4_baseline comparisons we fix the desired throughput
+//                           if(!setDesTh){
+//                               double throughput= getThroughput();
+//                               if(throughput <80 && throughput>10)
+//                               { des_Thr=   (double) (Math.round((double) ( 0.72*throughput* 1000))) / 1000;
+//                               setDesTh=true;}
+//                           }
 
-
-                            new dataCol(MainActivity.this).run(); // this is to collect mean thr, total_tris. average dis
+                            if(odraAlg=="1")// either choose the baseline or odra algorithm
+                                 new dataCol(MainActivity.this).run(); // this is to collect mean thr, total_tris. average dis
+                            else  if(odraAlg=="2")
+                                    new baseline_thr(MainActivity.this).run(); // this is throughput wise baseline- periodically checks if throughput goes below the threshold it will decimate all the objects
+                            else
+                                new baseline(MainActivity.this).run(); // this is throughput wise baseline- periodically checks if throughput goes below the threshold it will decimate all the objects
 
                         }
 
@@ -2129,22 +2190,11 @@ else{
                 0,      // run first occurrence immediately
                 2000);
 
-        // periodic tris collection
+
 
     }
 
-//    public void calculate_RE( ){
-//
-//
-//
-//
-////??? make sure when to call this, if delata RE <>1 or PAR or PAI is very far from 1 or periodically???
-//            odraAlg( (float)nextTris);// calls algorithm
-//
-//
-//
-//
-//   }
+
 
      double getThroughput(){
         Log.d("size", String.valueOf(mList.size()));
@@ -3621,7 +3671,7 @@ public float delta (float a, float b , float c1,float creal,  float d, float gam
         TextView posText = (TextView) findViewById(R.id.objnum);
         posText.setText( "obj_num: " +objectCount);
 
-       // File file = new File(this.getExternalFilesDir(null), "/degmodel_file.csv");
+
 
         File tris = new File(MainActivity.this.getFilesDir(), "text");
 
@@ -3900,7 +3950,61 @@ public float delta (float a, float b , float c1,float creal,  float d, float gam
 //    }
 
 
+    private float getCpuPer() { //for single process
+
+        String currentFolder = getExternalFilesDir(null).getAbsolutePath();
+        String FILEPATH = currentFolder + File.separator + "CPU"+ fileseries+".csv";
+
+
+        float cpuPer = 0;
+        try {
+            String[] cmd = {"top", "-n", "1"};
+            Process process = Runtime.getRuntime().exec(cmd);
+            BufferedReader stdInput = new BufferedReader(new
+                    InputStreamReader(process.getInputStream()));
+
+            BufferedReader stdError = new BufferedReader(new
+                    InputStreamReader(process.getErrorStream()));
+
+            String s = null;
+            while ((s = stdInput.readLine()) != null) {
+
+                try (PrintWriter writer = new PrintWriter(new FileOutputStream(FILEPATH, true))) {
+
+                    writer.write(s + "\n");
+
+                    System.out.println("done!");
+
+                } catch (FileNotFoundException e) {
+                    System.out.println(e.getMessage());
+                }
+
+                /*
+                if (s.contains("com.arcore.Mix")) {
+                    String [] arr = s.split(" ");
+                    for (int i = 0; i < arr.length; i++) {
+                        if (arr[i].contains("%")) {
+                            s = arr[i].replace("%", "");
+                            cpuPer = Float.parseFloat(s);
+                            break;
+                        }
+                    }
+                    //System.out.println(s);
+                }*/
+            }
+
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return cpuPer;
+    }
+
+
+
+
     public void givenUsingTimer_whenSchedulingTaskOnce_thenCorrect() {
+
 
 
         String currentFolder = getExternalFilesDir(null).getAbsolutePath();
@@ -3912,6 +4016,9 @@ public float delta (float a, float b , float c1,float creal,  float d, float gam
                 new TimerTask() {
                     //        TimerTask task = new TimerTask() {
                     public void run() {
+/// test cpu perc
+                        getCpuPer();
+
                         //    if(objectCount>=0) { // remove- ni april 21 temperory
                         Float mean_gpu = 0f;
                         float dist = 0;
@@ -3926,7 +4033,7 @@ public float delta (float a, float b , float c1,float creal,  float d, float gam
                         }
                         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss:SSS");
                         dateFormat.format(new Date());
-                        /*
+
                         String current_gpu = null;
                         try {
 
@@ -3934,6 +4041,8 @@ public float delta (float a, float b , float c1,float creal,  float d, float gam
                                     "su", "-c", "cat /sys/class/kgsl/kgsl-3d0/gpu_busy_percentage"};
 
                            // process2 = Runtime.getRuntime().exec(InstallBusyBoxCmd); // this is fro oneplus phone
+
+                           // this is for galaxy s10
                             process2 = Runtime.getRuntime().exec("cat /sys/class/kgsl/kgsl-3d0/gpu_busy_percentage"); // this is for S10 phone
                             BufferedReader stdInput = new BufferedReader(new
                                     InputStreamReader(process2.getInputStream()));
@@ -3949,7 +4058,7 @@ public float delta (float a, float b , float c1,float creal,  float d, float gam
                         } catch (IOException e) {
                             e.printStackTrace();
                         }
-*/
+
                         int sreqs = 0;
                         for (int value : Server_reg_Freq)
                             sreqs += value;
@@ -3967,39 +4076,40 @@ public float delta (float a, float b , float c1,float creal,  float d, float gam
                             sb.append(',');  sb.append(filname);  sb.append(',');
                             sb.append(objectCount);
                             sb.append(',');
-                            if(objectCount>0)
-                            {
-                                int num=objectCount;
-                                String q=quality_log.get(num-1);
-                                if(q!="")
-                                    sb.append( q);
-                                else {
-                                    float r=1f;
-                                    if(ratioArray.size()==num)
-                                       r = ratioArray.get(num-1);// ratio of last object
-                                    if (currentScenario.contains("3")) // third scenario has ratio 0.6
-                                        r = 0.6f; // jsut for scenario3 objects are decimated
-                                    else if(currentScenario.contains("6")) // sixth scenario has ratio 0.3
-                                        r=0.3f;
-                                    int indq = excelname.indexOf(renderArray.get(num - 1).fileName);// search in excel file to find the name of current object and get access to the index of current object
-                                    // excel file has all information for the degredation model
-                                    float gamma = excel_gamma.get(indq);
-                                    float a = excel_alpha.get(indq);
-                                    float b = excel_betta.get(indq);
-                                    float c = excel_c.get(indq);
-                                    float d_k = renderArray.get(num - 1).return_distance();// current distance
-
-                                    float deg_error = Calculate_deg_er(a, b, c, d_k, gamma, r);
-                                    float max_nrmd = excel_maxd.get(indq);
-                                    float nrmdegerror = deg_error / max_nrmd;
-
-                                    float obj_quality = 1 - nrmdegerror;
-                                    quality_log.add(num-1,Float.toString(obj_quality));
-                                    sb.append(obj_quality);
-                                }
-                            }
-                            else
-                              sb.append( "0");
+                            //last obj quality?
+//                            if(objectCount>0)
+//                            {
+//                                int num=objectCount;
+//                                String q=quality_log.get(num-1);
+//                                if(q!="")
+//                                    sb.append( q);
+//                                else {
+//                                    float r=1f;
+//                                    if(ratioArray.size()==num)
+//                                       r = ratioArray.get(num-1);// ratio of last object
+//                                    if (currentScenario.contains("3")) // third scenario has ratio 0.6
+//                                        r = 0.6f; // jsut for scenario3 objects are decimated
+//                                    else if(currentScenario.contains("6")) // sixth scenario has ratio 0.3
+//                                        r=0.3f;
+//                                    int indq = excelname.indexOf(renderArray.get(num - 1).fileName);// search in excel file to find the name of current object and get access to the index of current object
+//                                    // excel file has all information for the degredation model
+//                                    float gamma = excel_gamma.get(indq);
+//                                    float a = excel_alpha.get(indq);
+//                                    float b = excel_betta.get(indq);
+//                                    float c = excel_c.get(indq);
+//                                    float d_k = renderArray.get(num - 1).return_distance();// current distance
+//
+//                                    float deg_error = Calculate_deg_er(a, b, c, d_k, gamma, r);
+//                                    float max_nrmd = excel_maxd.get(indq);
+//                                    float nrmdegerror = deg_error / max_nrmd;
+//
+//                                    float obj_quality = 1 - nrmdegerror;
+//                                    quality_log.add(num-1,Float.toString(obj_quality));
+//                                    sb.append(obj_quality);
+//                                }
+//                            }
+//                            else
+//                              sb.append( "0");
                             sb.append('\n');
 
 
