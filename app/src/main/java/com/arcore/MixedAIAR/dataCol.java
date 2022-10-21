@@ -135,6 +135,10 @@ public class dataCol implements Runnable {
 
             int variousTris = mInstance.trisMeanThr.keySet().size();
 
+
+
+
+
 // this is thr calculated using the modeling
             double predThr = (mInstance.rohT *  totTris) + (mInstance.rohD * pred_meanD) + mInstance.delta;// use predicted distance for almost current period (predicted distance for next 1 sec is the closest one we have)
             predThr = (double) Math.round((double) predThr * 100) / 100;
@@ -529,6 +533,10 @@ public class dataCol implements Runnable {
                         mInstance.lastConscCounter = 0;
 // now we calculate next period tris here :)
 
+//                    if (accmodel==true)
+//                       mInstance.acc_counter++;
+//                   else
+//                        mInstance.acc_counter=0;
 
                     //@@@@ this is to rebalance quality for user percieved quality-> we need to rebalance quality of the decimated objects
                    /* nil commented since it changed re by mistake
@@ -618,15 +626,43 @@ public class dataCol implements Runnable {
                     writeRE(reMsrd, predRE, trainedRE, totTris, nextTris,algNxtTris, trainedTris, PRoAR, PRoAI, accmodel, mInstance.orgTrisAllobj, avgq, mInstance.t_loop1);// writes to the file
 
 
+
+
+
                 }            //  RE modeling and next tris
+
+
+                if( mInstance.trisChanged==true)
+                {  mInstance.cleanedbin=false;
+                    mInstance.trisChanged=false;
+
+                }
+
+
+// heap clean-> memory efficiency
+                if((variousTris % 8==0) && variousTris>2&& mInstance.cleanedbin==false )// every 5x times we check to clear the bins provided that the model is accurate
+                {
+                    mInstance.reParamList.clear();
+                    mInstance.trisMeanDisk.clear();
+                    mInstance.trisMeanThr.clear();
+                    mInstance.thParamList.clear();
+                    mInstance.trisRe.clear();
+                    mInstance.reParamList.clear();
+                    // to start over data collection
+
+                    mInstance.decTris.clear();
+                    mInstance.cleanedbin= true;
+                }
+
+
             }// if we have objs on the screen, we start RE model & training
 
 
 
         }   // if Nan
 
-        else
-            Log.d("Mean Throughput is", "not accepted");
+       // else
+           // Log.d("Mean Throughput is", "not accepted");
 
 
 

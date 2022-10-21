@@ -174,6 +174,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
 
 
     int lastConscCounter=0; // counts the number of consecutive change in tris count, if we reach 5 we will change the tris
+    int acc_counter=0;
     double prevtotTris=0;
     double  rohT=-0.06 ;
     double rohD=0.0001;
@@ -322,7 +323,7 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
     private ArrayList<ArrayList<Float> > nextfivesec = new ArrayList<ArrayList<Float> >();
 
     // RE regression parameters
-
+    boolean cleanedbin=false;
     private float alpha = 0.7f;
    // int max_datapoint=25;
    int max_datapoint=28;
@@ -860,10 +861,27 @@ else{
         }
 
 
+//        String currentFolder = getExternalFilesDir(null).getAbsolutePath();
+//        String FILEPATH = currentFolder + File.separator + "CPU_Mem_"+ fileseries+".csv";
+//        try (PrintWriter writer = new PrintWriter(new FileOutputStream(FILEPATH, false))) {
+//
+//            StringBuilder sbb = new StringBuilder();
+//
+//           sbb.append( "time,7m,PID,USER,PR,NI,VIRT,[RES],SHR,S,%CPU,%MEM,TIME,ARGS");
+//
+//
+//            sbb.append('\n');
+//            writer.write(sbb.toString());
+//
+//            System.out.println("done!");
+//
+//        } catch (FileNotFoundException e) {
+//            System.out.println(e.getMessage());
+//        }
 
 
         String currentFolder = getExternalFilesDir(null).getAbsolutePath();
-        String FILEPATH = currentFolder + File.separator + "GPU_Usage_"+ fileseries+".csv";
+        String  FILEPATH = currentFolder + File.separator + "GPU_Usage_"+ fileseries+".csv";
         try (PrintWriter writer = new PrintWriter(new FileOutputStream(FILEPATH, false))) {
 
             StringBuilder sbb = new StringBuilder();
@@ -875,15 +893,12 @@ else{
             sbb.append(',');
             sbb.append("distance"); //sbb.append(',');  sbb.append("serv_req");
             sbb.append(',');
-            sbb.append("lastobj ");
+            sbb.append("lastobj");
             sbb.append(',');
-            sbb.append("objectCount ");
-           // sbb.append(',');
+            sbb.append("objectCount,");
+            sbb.append( "7m,PID,USER,PR,NI,VIRT,[RES],SHR,S,%CPU,%MEM,TIME,ARGS");
 
-           // sbb.append("last_obj_quality ");
             sbb.append('\n');
-
-
             writer.write(sbb.toString());
 
             System.out.println("done!");
@@ -3950,34 +3965,54 @@ public float delta (float a, float b , float c1,float creal,  float d, float gam
 //    }
 
 
-    private float getCpuPer() { //for single process
+    private void getCpuPer() { //for single process
 
         String currentFolder = getExternalFilesDir(null).getAbsolutePath();
-        String FILEPATH = currentFolder + File.separator + "CPU"+ fileseries+".csv";
+        String FILEPATH = currentFolder + File.separator + "CPU_Mem_"+ fileseries+".csv";
+
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss:SSS");
+
 
 
         float cpuPer = 0;
         try {
-            String[] cmd = {"top", "-n", "1"};
+
+            String[] cmd = {"top", "-s", "6"};
+                    //{"top", "-n", "1"};
+
             Process process = Runtime.getRuntime().exec(cmd);
             BufferedReader stdInput = new BufferedReader(new
                     InputStreamReader(process.getInputStream()));
 
-            BufferedReader stdError = new BufferedReader(new
-                    InputStreamReader(process.getErrorStream()));
 
             String s = null;
-            while ((s = stdInput.readLine()) != null) {
+            while ((s = stdInput.readLine()) != null)
+
+            if(s.contains("com.arcore.Mix") ){
+                    //|| s.contains("%MEM")){
 
                 try (PrintWriter writer = new PrintWriter(new FileOutputStream(FILEPATH, true))) {
 
-                    writer.write(s + "\n");
+                    while(s.contains("  "))
+                        s = s.replaceAll("  "," ");
+
+                    s = s.replaceAll(" ",",");
+
+
+
+                    writer.write( dateFormat.format(new Date())+"," +s + "\n");
 
                     System.out.println("done!");
+
+
 
                 } catch (FileNotFoundException e) {
                     System.out.println(e.getMessage());
                 }
+
+                break; // get out of the loop-> avoids infinite loop
+
+
 
                 /*
                 if (s.contains("com.arcore.Mix")) {
@@ -3997,7 +4032,7 @@ public float delta (float a, float b , float c1,float creal,  float d, float gam
         } catch (IOException e) {
             e.printStackTrace();
         }
-        return cpuPer;
+       // return cpuPer;
     }
 
 
@@ -4010,14 +4045,14 @@ public float delta (float a, float b , float c1,float creal,  float d, float gam
         String currentFolder = getExternalFilesDir(null).getAbsolutePath();
         String FILEPATH = currentFolder + File.separator + "GPU_Usage_"+ fileseries+".csv";
         Timer  t = new Timer();
-       // final int[] count = {0}; // should be before here
+
         t.scheduleAtFixedRate(
 
                 new TimerTask() {
                     //        TimerTask task = new TimerTask() {
                     public void run() {
 /// test cpu perc
-                        getCpuPer();
+                       // getCpuPer();
 
                         //    if(objectCount>=0) { // remove- ni april 21 temperory
                         Float mean_gpu = 0f;
@@ -4032,17 +4067,19 @@ public float delta (float a, float b , float c1,float creal,  float d, float gam
 
                         }
                         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss:SSS");
-                        dateFormat.format(new Date());
+
+                        //dateFormat.format(new Date());
 
                         String current_gpu = null;
+                        String current_cpu=null;
                         try {
 
                             String[] InstallBusyBoxCmd = new String[]{
                                     "su", "-c", "cat /sys/class/kgsl/kgsl-3d0/gpu_busy_percentage"};
 
-                           // process2 = Runtime.getRuntime().exec(InstallBusyBoxCmd); // this is fro oneplus phone
+                            // process2 = Runtime.getRuntime().exec(InstallBusyBoxCmd); // this is fro oneplus phone
 
-                           // this is for galaxy s10
+                            // this is for galaxy s10
                             process2 = Runtime.getRuntime().exec("cat /sys/class/kgsl/kgsl-3d0/gpu_busy_percentage"); // this is for S10 phone
                             BufferedReader stdInput = new BufferedReader(new
                                     InputStreamReader(process2.getInputStream()));
@@ -4055,13 +4092,31 @@ public float delta (float a, float b , float c1,float creal,  float d, float gam
                             }
 
 
-                        } catch (IOException e) {
+                            process2 = Runtime.getRuntime().exec("top -s 6"); // this is for S10 phone
+                            stdInput = new BufferedReader(new
+                                    InputStreamReader(process2.getInputStream()));
+
+                            while ((current_cpu = stdInput.readLine()) != null )
+
+                                if(current_cpu.contains("com.arcore.Mix")){
+                               // PrintWriter writer = new PrintWriter(new FileOutputStream(FILEPATH, true));
+
+                                     while (current_cpu.contains("  "))
+                                        current_cpu =current_cpu.replaceAll("  ", " ");
+
+                                     current_cpu = current_cpu.replaceAll(" ", ",");
+
+
+                                     break;
+
+
+                                     }
+
+                        }
+                           catch (IOException e) {
                             e.printStackTrace();
                         }
 
-                        int sreqs = 0;
-                        for (int value : Server_reg_Freq)
-                            sreqs += value;
 
                       //  String item2 = dateFormat.format(new Date()) + " num_of_tris: " + total_tris + " current_gpu " + mean_gpu + " dis " + dist +  " lastobj "+ filname + objectCount+ "\n";
 
@@ -4072,44 +4127,11 @@ public float delta (float a, float b , float c1,float creal,  float d, float gam
                             sb.append(dateFormat.format(new Date())); sb.append(',');
                             sb.append(total_tris); sb.append(',');sb.append(mean_gpu);sb.append(',');
                             sb.append(dist);
-                            //sb.append(','); sb.append(sreqs);
+
                             sb.append(',');  sb.append(filname);  sb.append(',');
                             sb.append(objectCount);
                             sb.append(',');
-                            //last obj quality?
-//                            if(objectCount>0)
-//                            {
-//                                int num=objectCount;
-//                                String q=quality_log.get(num-1);
-//                                if(q!="")
-//                                    sb.append( q);
-//                                else {
-//                                    float r=1f;
-//                                    if(ratioArray.size()==num)
-//                                       r = ratioArray.get(num-1);// ratio of last object
-//                                    if (currentScenario.contains("3")) // third scenario has ratio 0.6
-//                                        r = 0.6f; // jsut for scenario3 objects are decimated
-//                                    else if(currentScenario.contains("6")) // sixth scenario has ratio 0.3
-//                                        r=0.3f;
-//                                    int indq = excelname.indexOf(renderArray.get(num - 1).fileName);// search in excel file to find the name of current object and get access to the index of current object
-//                                    // excel file has all information for the degredation model
-//                                    float gamma = excel_gamma.get(indq);
-//                                    float a = excel_alpha.get(indq);
-//                                    float b = excel_betta.get(indq);
-//                                    float c = excel_c.get(indq);
-//                                    float d_k = renderArray.get(num - 1).return_distance();// current distance
-//
-//                                    float deg_error = Calculate_deg_er(a, b, c, d_k, gamma, r);
-//                                    float max_nrmd = excel_maxd.get(indq);
-//                                    float nrmdegerror = deg_error / max_nrmd;
-//
-//                                    float obj_quality = 1 - nrmdegerror;
-//                                    quality_log.add(num-1,Float.toString(obj_quality));
-//                                    sb.append(obj_quality);
-//                                }
-//                            }
-//                            else
-//                              sb.append( "0");
+                            sb.append(current_cpu);
                             sb.append('\n');
 
 

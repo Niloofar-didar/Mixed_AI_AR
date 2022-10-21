@@ -80,7 +80,14 @@ dependencies {
     //implementation "com.google.ar.sceneform.ux:sceneform-ux:1.7.0"
 
 
+    //commented 10.20.22 -> deactivates GPU
     implementation 'org.tensorflow:tensorflow-lite-support:0.1.0-rc1'
+    //-> deactivates GPU and just activates NPU
+    implementation 'org.tensorflow:tensorflow-lite:2.0.0'
+
+   // implementation 'org.tensorflow:tensorflow-lite-gpu-delegate-plugin'
+
+
     //   implementation 'org.tensorflow:tensorflow-lite-metadata:0.1.0-rc1'
 
     //implementation "com.google.ar.sceneform.ux:sceneform-ux:1.15.0"
