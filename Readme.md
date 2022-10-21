@@ -10,4 +10,5 @@ The current version of the app uses the decimated objects from the local storage
 To generate the decimated version of the objects, you could use the python program provided in "Files related to decimating and converting OBJ to SFB" folder of the project and follow the guide from that directory.
 You can see below a screenshot of the app.
 
-![Screenshot_20220302-195639](https://user-images.githubusercontent.com/27611369/156475621-3106af4e-08d0-4511-8287-43605abfe6e4.jpg)
+
+![demo](https://user-images.githubusercontent.com/27611369/193911248-1e15edce-d97e-427f-8963-8b02638429ce.jpg)
